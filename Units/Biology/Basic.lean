@@ -1,16 +1,16 @@
--- Bio.lean        -- Biological concentrations, rates, medical units
-import LogosLibrary.Units.Core
-import LogosLibrary.Units.Chemistry
-import LogosLibrary.Units.Mechanics
-import LogosLibrary.Units.Electromagnetism
+-- Basic.lean        -- Biological concentrations, rates, medical units
+import LogosLibrary.Units.Core.SI
+import LogosLibrary.Units.Chemistry.Basic
+import LogosLibrary.Units.Physics.Mechanics
+import LogosLibrary.Units.Physics.Electromagnetism
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
 import Mathlib.Data.Real.Basic
 
-namespace Units.Bio
+namespace Units.Biology.Basic
 
-open Units.SI Units.Mechanics Units.Electromagnetism Chemistry
+open Units.Standard Units.Physics.Mechanics Units.Physics.Electromagnetism Units.Chemistry.Basic
 
 /-
 ================================================================================
@@ -689,4 +689,4 @@ def zFactor_F (positiveControl : Array Float) (negativeControl : Array Float) : 
   let negSD := Float.sqrt (negativeControl.map (fun x => (x - negMean)^2) |>.foldl (· + ·) (0.0 / negativeControl.size.toFloat))
   1.0 - (3.0 * (posSD + negSD) / (posMean - negMean).abs)
 
-end Units.Bio
+end Units.Biology.Basic
