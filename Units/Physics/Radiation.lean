@@ -1,11 +1,12 @@
 -- Radiation.lean -- Nuclear decay, dosimetry, cross sections, radiation protection
+import LogosLibrary.Units.Core.SI
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
 import Mathlib.Data.Real.Basic
-import LogosLibrary.Units.Core
 
-open Units.SI
+
+open Units.Standard
 /-
 ================================================================================
 WAVE PHYSICS UNITS LIBRARY
@@ -39,7 +40,7 @@ quantum number arithmetic, precise unit conversions, avoiding floating-point acc
 ℝ: Theoretical proofs, continuous function analysis, calculus-based derivations,
 mathematical physics formulations, thermodynamic limit calculations, formal verification of physical laws
 -/
-namespace Units.Radiation
+namespace Units.Physics.Radiation
 
 /--
 ================================================================================================
@@ -412,4 +413,4 @@ def mkBuildupFactor_Q (v : ℚ) : Option BuildupFactor_Q :=
 noncomputable def mkBuildupFactor_R (v : ℝ) : Option BuildupFactor_R :=
   if 1.0 ≤ v then some ⟨v⟩ else none
 
-end Units.Radiation
+end Units.Physics.Radiation
