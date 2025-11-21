@@ -1,18 +1,18 @@
 -- Minerals.lean -- Mineralogy, mineral chemistry, and economic geology units
-import LogosLibrary.Units.Core
-import LogosLibrary.Units.Chemistry
-import LogosLibrary.Units.Crystallography
-import LogosLibrary.Units.Mechanics
-import LogosLibrary.Units.Earth
-import LogosLibrary.Units.Materials
-import LogosLibrary.Units.Optics
-import LogosLibrary.Units.Thermal
+import LogosLibrary.Units.Core.SI
+import LogosLibrary.Units.Chemistry.Basic
+import LogosLibrary.Units.Chemistry.Crystallography
+import LogosLibrary.Units.Physics.Mechanics
+import LogosLibrary.Units.Geology.Earth
+import LogosLibrary.Units.Chemistry.Materials
+import LogosLibrary.Units.Physics.Optics
+import LogosLibrary.Units.Physics.Thermal
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
 import Mathlib.Data.Real.Basic
 
-namespace Units.Minerals
+namespace Units.Chemistry.Minerals
 
 open SI Chemistry Mechanics Optics Materials Earth Thermal Crystallography
 
@@ -672,4 +672,4 @@ def oreValue_F (grades : List (String × OreGrade_F)) (prices : List (String × 
     (recoveries : List (String × Recovery_F)) : Float :=
   sorry  -- Calculate total value based on grades, prices, and recoveries
 
-end Units.Minerals
+end Units.Chemistry.Minerals
