@@ -1,11 +1,11 @@
 -- Waves.lean          -- Frequency, wavelength, acoustic quantities
-import LogosLibrary.Units.Core
+import LogosLibrary.Units.Core.SI
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
 import Mathlib.Data.Real.Basic
 
-open Units.SI
+open Units.Standard
 
 namespace Units.Waves
 
