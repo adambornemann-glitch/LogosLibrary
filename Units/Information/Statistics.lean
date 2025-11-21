@@ -1,4 +1,4 @@
--- Stats.lean        -- Statistical measures, tests, and information criteria
+-- Statistics.lean
 import LogosLibrary.Units.Core.SI
 import LogosLibrary.Units.Information.Basic
 import Mathlib.Data.Int.Basic
