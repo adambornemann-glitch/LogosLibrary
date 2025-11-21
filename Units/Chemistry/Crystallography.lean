@@ -1,9 +1,9 @@
 -- Crystallography.lean -- Mineralogy, crystallography, and crystal physics units
-import LogosLibrary.Units.Core
-import LogosLibrary.Units.Materials
-import LogosLibrary.Units.Earth
-import LogosLibrary.Units.Optics
-import LogosLibrary.Units.Mechanics
+import LogosLibrary.Units.Core.SI
+import LogosLibrary.Units.Chemistry.Materials
+import LogosLibrary.Units.Geology.Earth
+import LogosLibrary.Units.Physics.Optics
+import LogosLibrary.Units.Physics.Mechanics
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
