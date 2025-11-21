@@ -1,8 +1,8 @@
 -- Earth.lean        -- Geophysics, atmospheric science, oceanography, earth systems
-import LogosLibrary.Units.Core
-import LogosLibrary.Units.Mechanics
-import LogosLibrary.Units.Fluids
-import LogosLibrary.Units.Chemistry
+import LogosLibrary.Units.Core.SI
+import LogosLibrary.Units.Physics.Mechanics
+import LogosLibrary.Units.Physics.Fluids
+import LogosLibrary.Units.Chemistry.Basic
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
