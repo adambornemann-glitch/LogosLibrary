@@ -1,10 +1,10 @@
--- Core.lean        -- Core SI base and fundamental derived units
+-- SI.lean
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
 import Mathlib.Data.Real.Basic
 
-namespace Units.SI
+namespace Units.Standard
 
 /-
 ================================================================================
@@ -695,4 +695,4 @@ def luminousFlux_F (intensity : Candela_F) (solidAngle : Steradian_F) : Lumen_F 
 def illuminance_F (flux : Lumen_F) (area : Meter2_F) : Lux_F :=
   ⟨flux.val / area.val⟩
 
-end Units.SI
+end Units.Standard
