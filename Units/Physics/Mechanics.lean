@@ -1,6 +1,6 @@
 
 -- Mechanics.lean      -- Force, torque, pressure, stress/strain
-import LogosLibrary.Units.Core
+import LogosLibrary.Units.Core.SI
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
@@ -8,9 +8,9 @@ import Mathlib.Data.Real.Basic
 import Mathlib.Data.Real.Sqrt
 import Mathlib.Analysis.Real.Pi.Irrational
 
-namespace Units.Mechanics
+namespace Units.Physics.Mechanics
 
-open Units.SI Real
+open Units.Standard Real
 
 
 /-
@@ -680,4 +680,4 @@ def parisCrackGrowth_F (C : Float) (m : Float)
     (deltaK : StressIntensity_MPaSqrtM_F) : Float :=
   C * deltaK.val^m  -- da/dN in m/cycle
 
-end Units.Mechanics
+end Units.Physics.Mechanics
