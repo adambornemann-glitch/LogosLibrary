@@ -1,15 +1,15 @@
 -- Astro.lean        -- Astronomy, astrophysics, cosmology units
-import LogosLibrary.Units.Core
-import LogosLibrary.Units.Radiation
-import LogosLibrary.Units.Optics
+import LogosLibrary.Units.Core.SI
+import LogosLibrary.Units.Physics.Radiation
+import LogosLibrary.Units.Physics.Optics
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
 import Mathlib.Data.Real.Basic
 
-namespace Units.Astro
+namespace Units.Physics.Astro
 
-open Units.SI Units.Radiation Units.Optics
+open Units.Standard Units.Physics.Radiation Units.Physics.Optics
 
 /-
 ================================================================================
@@ -824,4 +824,4 @@ def spaceVelocity_F (v_radial : RadialVelocity_F) (v_tan : Velocity_F)
     : Velocity_F :=
   ⟨Float.sqrt ((v_radial.val * 1000.0)^2 + v_tan.val^2)⟩
 
-end Units.Astro
+end Units.Physics.Astro
