@@ -1,6 +1,6 @@
 -- Qinfo.lean        -- Quantum information units and calculations
-import LogosLibrary.Units.Core
-import LogosLibrary.Units.Information
+import LogosLibrary.Units.Core.SI
+import LogosLibrary.Units.Information.Basic
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
