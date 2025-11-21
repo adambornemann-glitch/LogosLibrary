@@ -1,14 +1,14 @@
 -- Fluids.lean        -- Viscosity, flow rates, Reynolds/Mach, fluid mechanics
-import LogosLibrary.Units.Core
-import LogosLibrary.Units.Mechanics
-import LogosLibrary.Units.Thermal
+import LogosLibrary.Units.Core.SI
+import LogosLibrary.Units.Physics.Mechanics
+import LogosLibrary.Units.Physics.Thermal
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
 import Mathlib.Data.Real.Basic
 
-open Units.SI Units.Mechanics Units.Thermal
-namespace Units.Fluids
+open Units.Standard Units.Physics.Mechanics Units.Physics.Thermal
+namespace Units.Physics.Fluids
 /-
 ================================================================================
 FLUID MECHANICS UNITS LIBRARY
@@ -810,4 +810,4 @@ def colebrookWhiteGuess_F (re : Reynolds_F) (relRoughness : Float)
   let logTerm := Float.log (term1 + term2) / Float.log 10.0
   ⟨0.25 / (logTerm^2)⟩
 
-end Units.Fluids
+end Units.Physics.Fluids
