@@ -1,11 +1,12 @@
 -- Relativity.lean -- Special and General Relativity Units
+import LogosLibrary.Units.Core.SI  -- Import base SI units
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
 import Mathlib.Data.Real.Basic
-import LogosLibrary.Units.Core  -- Import base SI units
 
-namespace Units.Relativity
+
+namespace Units.Physics.Relativity
 
 /-
 ================================================================================
@@ -429,4 +430,4 @@ def isFourVelocityNormalized_F (u : FourVelocity_F) (tolerance : Float := 1e-6) 
   let norm_squared := -(u.u0 * u.u0) + u.u1 * u.u1 + u.u2 * u.u2 + u.u3 * u.u3
   Float.abs (norm_squared + c_F * c_F) < tolerance
 
-end Units.Relativity
+end Units.Physics.Relativity
