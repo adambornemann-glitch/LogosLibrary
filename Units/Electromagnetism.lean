@@ -1,7 +1,7 @@
 -- Electromagnetism.lean        -- Electric, magnetic, and electromagnetic units
-import LogosLibrary.Units.Core
-import LogosLibrary.Units.Mechanics
-import LogosLibrary.Units.Waves
+import LogosLibrary.Units.Core.SI
+import LogosLibrary.Units.Physics.Mechanics
+import LogosLibrary.Units.Physics.Waves
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
@@ -9,9 +9,9 @@ import Mathlib.Data.Real.Basic
 import Mathlib.Data.Complex.Basic
 import Mathlib.Util.CountHeartbeats
 
-namespace Units.Electromagnetism
+namespace Units.Physics.Electromagnetism
 
-open Units.SI Units.Mechanics Units.Waves
+open Units.Standard Units.Physics.Mechanics Units.Physics.Waves
 
 /-
 ================================================================================
@@ -985,4 +985,4 @@ def mosfetTransconductance_F (mu : Mobility_F) (cox : Farad_F)
     (w : Meter_F) (l : Meter_F) (vgs : Volt_F) (vth : Volt_F) : Siemens_F :=
   ⟨mu.val * cox.val * (w.val / l.val) * (vgs.val - vth.val)⟩
 
-end Units.Electromagnetism
+end Units.Physics.Electromagnetism
