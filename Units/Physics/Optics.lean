@@ -1,11 +1,11 @@
 -- Optics.lean -- Photometry, radiometry, polarization, optical properties
+import LogosLibrary.Units.Core.SI
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
 import Mathlib.Data.Real.Basic
-import LogosLibrary.Units.Core
 
-open Units.SI
+open Units.Standard
 /-
 ================================================================================
 OPTICS PHYSICS UNITS LIBRARY
@@ -47,7 +47,7 @@ electromagnetic wave propagation, mode theory, nonlinear optics theory,
 quantum optical states, coherence theory, radiative transfer equations,
 scattering theory, optical theorem proofs, aberration theory
 -/
-namespace Units.Optics
+namespace Units.Physics.Optics
 /--
 ================================================================================================
    Mathematical Constants for Float Calculations
@@ -794,4 +794,4 @@ def dispersionDelay_F (dispersion : ChromaticDispersion_F)
   dispersion.val * length_km * spectral_width_nm  -- In ps
 
 
-end Units.Optics
+end Units.Physics.Optics
