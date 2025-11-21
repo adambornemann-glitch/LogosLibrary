@@ -1,15 +1,15 @@
 -- Thermal.lean        -- Heat transfer, thermal conductivity, entropy
-import LogosLibrary.Units.Core
-import LogosLibrary.Units.Mechanics
-import LogosLibrary.Units.Electromagnetism
+import LogosLibrary.Units.Core.SI
+import LogosLibrary.Units.Physics.Mechanics
+import LogosLibrary.Units.Physics.Electromagnetism
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
 import Mathlib.Data.Real.Basic
 
-namespace Units.Thermal
+namespace Units.Physics.Thermal
 
-open Units.SI Units.Mechanics Units.Electromagnetism
+open Units.Standard Units.Physics.Mechanics Units.Physics.Electromagnetism
 
 /-
 ================================================================================
@@ -603,4 +603,4 @@ def fourierNumber_F (alpha : M2PerS_F) (time : Second_F)
     (L : Meter_F) : Fourier_F :=
   ⟨alpha.val * time.val / (L.val^2)⟩
 
-end Units.Thermal
+end Units.Physics.Thermal
