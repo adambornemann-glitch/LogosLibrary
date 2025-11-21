@@ -1,14 +1,14 @@
 -- Chemistry.lean        -- Reaction kinetics, equilibria, thermochemistry, electrochemistry
-import LogosLibrary.Units.Core
-import LogosLibrary.Units.Thermal
-import LogosLibrary.Units.Mechanics
+import LogosLibrary.Units.Core.SI
+import LogosLibrary.Units.Physics.Thermal
+import LogosLibrary.Units.Physics.Mechanics
 --import LogosLibrary.Units.Bio
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
 import Mathlib.Data.Real.Basic
 
-namespace Units.Chemistry
+namespace Units.Chemistry.Basic
 
 open Units.SI Units.Thermal Units.Mechanics
 
@@ -888,4 +888,4 @@ def collisionFrequency_F (n : Float) (sigma : Float) (T : Kelvin_F)
   let v_avg := Float.sqrt (8.0 * k_B_F * T.val / (pi_F * M))
   n * sigma * v_avg
 
-end Units.Chemistry
+end Units.Chemistry.Basic
