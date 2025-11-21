@@ -1,8 +1,8 @@
 -- Materials.lean        -- Materials science units and properties
-import LogosLibrary.Units.Core
-import LogosLibrary.Units.Mechanics
-import LogosLibrary.Units.Thermal
-import LogosLibrary.Units.Electromagnetism
+import LogosLibrary.Units.Core.SI
+import LogosLibrary.Units.Physics.Mechanics
+import LogosLibrary.Units.Physics.Thermal
+import LogosLibrary.Units.Physics.Electromagnetism
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
