@@ -1,12 +1,12 @@
 -- Stats.lean        -- Statistical measures, tests, and information criteria
-import LogosLibrary.Units.Core
-import LogosLibrary.Units.Information
+import LogosLibrary.Units.Core.SI
+import LogosLibrary.Units.Information.Basic
 import Mathlib.Data.Int.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Rat.Defs
 import Mathlib.Data.Real.Basic
 
-namespace Units.Statistics
+namespace Units.Stats
 
 open Units.SI Units.Information
 
@@ -965,4 +965,4 @@ def relativeRisk_F (a b c d : Float) : RelativeRisk_F :=
   else
     ⟨1e308⟩  -- Large number approximating infinity
 
-end Units.Statistics
+end Units.Stats
