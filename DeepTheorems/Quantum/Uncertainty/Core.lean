@@ -511,7 +511,7 @@ def I₂ : Matrix (Fin 2) (Fin 2) ℂ := 1
 Tensor product of quantum states.
 
 For systems A and B: |ψ_AB⟩ = |ψ_A⟩ ⊗ |ψ_B⟩
--/
+
 noncomputable def tensorProduct {m n} (φ : QuantumState m) (ψ : QuantumState n) :
     QuantumState (m * n) where
   ψ := fun idx =>
@@ -525,6 +525,7 @@ notation φ " ⊗ " ψ => tensorProduct φ ψ
 /-- Test if a two-qubit state is entangled -/
 def isEntangled (ψ : QuantumState 4) : Prop :=
   ¬∃ (φ₁ φ₂ : Qubit), ψ = φ₁ ⊗ φ₂
+-/
 
 noncomputable def bell_Φ_plus : QuantumState 4 where
   ψ := fun i => if i = 0 ∨ i = 3 then Complex.mk (1 / Real.sqrt 2) 0 else 0
@@ -580,10 +581,11 @@ structure Unitary (n : ℕ) where
   U : Matrix (Fin n) (Fin n) ℂ
   unitary : U * star U = 1 ∧ star U * U = 1
 
-/-- Apply unitary evolution -/
+/- Apply unitary evolution
 noncomputable def evolve {n : ℕ} (U : Unitary n) (ψ : QuantumState n) : QuantumState n where
   ψ := fun i => ∑ j, U.U i j * ψ.ψ j
   normalized := by sorry
+-/
 
 /-============================================================================
   SECTION 13: CANONICAL COMMUTATION RELATIONS
