@@ -1,8 +1,7 @@
 /-
 Author: Adam Bornemann
 Created: 9/16/2025
-Updated: 11/15/2025
-
+Updated: 11/17/2025
 ================================================================================
 QUANTUM MECHANICS FOUNDATIONS FOR ROBERTSON'S UNCERTAINTY RELATION
 ================================================================================
@@ -466,14 +465,27 @@ def ket1 : Qubit where
 noncomputable def ketPlus : Qubit where
   ψ := fun i => Complex.mk (1 / Real.sqrt 2) 0
   normalized := by
-  {simp_all!; ring_nf!; sorry}
+  {simp_all!; ring_nf!; simp}
 
 
 /-- Hadamard basis state |−⟩ = (|0⟩ - |1⟩)/√2 -/
 noncomputable def ketMinus : Qubit where
   ψ := fun i => if i = 0 then Complex.mk (1 / Real.sqrt 2) 0
                 else Complex.mk (-1 / Real.sqrt 2) 0
-  normalized := by sorry
+  normalized := by
+    simp only [Fin.sum_univ_two, Fin.isValue]
+    simp only [↓reduceIte, Complex.normSq_mk]
+    -- (1/√2)² + (-1/√2)² = 1/2 + 1/2 = 1
+    have h : (-1 / Real.sqrt 2) ^ 2 = (1 / Real.sqrt 2) ^ 2 := by ring
+    rw [← normSq_mk]
+    have hsqrt : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)
+    field_simp
+    rw [← hsqrt]
+    ring_nf
+    simp_all only [one_div, inv_pow, Nat.ofNat_nonneg, Real.sq_sqrt, normSq_mk, mul_zero, add_zero, Fin.isValue,
+    one_ne_zero, ↓reduceIte, mul_neg, neg_mul, neg_neg]
+    rw [← two_mul, ← mul_inv, Real.mul_self_sqrt (by norm_num : (0 : ℝ) ≤ 2)]
+    norm_num
 
 /-
 PAULI MATRICES: Fundamental observables for spin-1/2 systems.
@@ -514,15 +526,28 @@ notation φ " ⊗ " ψ => tensorProduct φ ψ
 def isEntangled (ψ : QuantumState 4) : Prop :=
   ¬∃ (φ₁ φ₂ : Qubit), ψ = φ₁ ⊗ φ₂
 
-/-- Bell state |Φ⁺⟩ = (|00⟩ + |11⟩)/√2 -/
 noncomputable def bell_Φ_plus : QuantumState 4 where
   ψ := fun i => if i = 0 ∨ i = 3 then Complex.mk (1 / Real.sqrt 2) 0 else 0
-  normalized := by sorry
+  normalized := by
+    simp only [Fin.sum_univ_four, Fin.isValue]
+    -- Only i=0 and i=3 are nonzero
+    norm_num
+    simp only [Fin.isValue, Fin.reduceEq, ↓reduceIte, normSq_zero, add_zero, or_self]
+    have hsqrt : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)
+    field_simp
+    rw [hsqrt]
+    ring_nf
 
-/-- GHZ state: |GHZ⟩ = (|000⟩ + |111⟩)/√2 -/
 noncomputable def GHZ : QuantumState 8 where
   ψ := fun i => if i = 0 ∨ i = 7 then Complex.mk (1 / Real.sqrt 2) 0 else 0
-  normalized := by sorry
+  normalized := by
+    simp only [Fin.sum_univ_eight, Fin.isValue]  -- May need Fin.sum_univ_succ iterations
+    norm_num
+    simp only [Fin.isValue, Fin.reduceEq, ↓reduceIte, normSq_zero, add_zero, or_self]
+    have hsqrt : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)
+    field_simp
+    rw [hsqrt]
+    ring
 
 /-============================================================================
   SECTION 11: MEASUREMENT AND BORN RULE
@@ -575,11 +600,12 @@ structure CanonicalPair (n : ℕ) where
   commutation : X.M * P.M - P.M * X.M =
     Complex.I • (ℏ • (1 : Matrix (Fin n) (Fin n) ℂ))
 
-/-============================================================================
+/-
+============================================================================
   SECTION 14: ROBERTSON'S UNCERTAINTY RELATION
-============================================================================-/
+============================================================================
 
-/--
+
 Robertson's Uncertainty Principle.
 
 For any two observables A and B with non-zero commutator,
@@ -589,7 +615,7 @@ their standard deviations satisfy:
 
 This is the fundamental limit on simultaneous knowledge of
 non-commuting observables.
--/
+
 theorem robertson_uncertainty {n : ℕ} (ψ : QuantumState n) (A B : MatrixObservable n)
     (h_nonzero : expectation_matrix ψ [A.M, B.M] ≠ 0) :
     ∃ (bound : ℝ), bound > 0 ∧
@@ -597,9 +623,10 @@ theorem robertson_uncertainty {n : ℕ} (ψ : QuantumState n) (A B : MatrixObser
     -- where bound = |⟨[A,B]⟩|/2
     sorry := by sorry
 
-/-============================================================================
+============================================================================
   SECTION 15: FUNDAMENTAL AXIOMS
-============================================================================-/
+============================================================================
+-/
 
 /--
 The Gaussian integral - fundamental for quantum mechanics.
