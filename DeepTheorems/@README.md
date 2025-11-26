@@ -96,21 +96,27 @@ Key features of a good blueprint:
 DeepTheorems/
 ├── Quantum/
 │   ├── Uncertainty/
-│   │   └── Robertson/
-│   │       ├── Blueprint.md         ✅ COMPLETE
-│   │       ├── Core.lean            ✅ PROVEN
-│   │       ├── Examples.lean        ✅ COMPLETE
-│   │       └── Tests.lean           ✅ COMPLETE
+│   │   ├── Robertson/
+│   │   │   ├── Theorem.lean         ✅ PROVEN
+│   │   │   ├── Core.md              ✅ COMPLETE
+│   │   │   ├── Lemmas.lean          ✅ COMPLETE
+│   │   │   └── Angular.lean         ✅ COMPLETE
+│   │   │
+│   │   └── Heisenberg/
+│   │       └── Core.md              ⏳ PLANNED
+│   │   
 │   └── Evolution/
 │       └── Stone/
-│           ├── Blueprint.md         ✅ COMPLETE
-│           ├── Core.lean            🔄 IN PROGRESS
-│           ├── Resolvent.lean       🔄 IN PROGRESS
-│           └── Spectral.lean        ⏳ PLANNED
+│           ├── Theorem.lean         ⏳ PLANNED
+│           ├── Core.lean            ✅ COMPLETE
+│           ├── Resolvent.lean       ✅ COMPLETE
+│           └── Exponential.lean     🔄 IN PROGRESS
+│
 ├── Gravity/
 │   └── Thermodynamics/
 │       ├── Blueprint.md             🔄 DRAFT
 │       └── Padmanabhan.lean         ⏳ PLANNED
+│
 └── Holography/
     └── RyuTakayanagi/
         ├── Blueprint.md             ⏳ PLANNED
