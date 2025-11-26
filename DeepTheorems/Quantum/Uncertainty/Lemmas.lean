@@ -1,5 +1,7 @@
-import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Robertson.Core
 /-
+Author: Adam Bornemann
+Created: 9/19/2025
+
 ================================================================================
 SUPPORTING LEMMAS FOR ROBERTSON'S UNCERTAINTY RELATION
 ================================================================================
@@ -26,6 +28,7 @@ References:
   - Griffiths, D.J. "Introduction to Quantum Mechanics" Section 3.5
   - Hall, B.C. "Quantum Theory for Mathematicians" Chapter 9
 -/
+import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Core
 namespace Robertson.Lemmas
 
 open InnerProductSpace MeasureTheory Complex
