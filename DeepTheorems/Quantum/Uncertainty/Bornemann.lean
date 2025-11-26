@@ -1,13 +1,27 @@
---import LogosLibrary.DeepTheorems.Relativity.SR.MinkowskiSpacetime
-import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Robertson.Core -- For unbounded operators
-import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Robertson.Theorem -- For unbounded operators
+/-
+Author: Adam Bornemann (yeah, that's right- this is MY principle)
+Created: 11/5/2025
+Updated: 11/16/2025
+
+================================================================================
+BORNEMANN ANGULAR MOMENTUM UNCERTAINTY PRINCIPLE
+================================================================================
+
+**References:**
+- Heisenberg, W. (1927). "Über den anschaulichen Inhalt der quantentheoretischen
+  Kinematik und Mechanik". Z. Physik 43, 172-198.
+- Kennard, E.H. (1927). "Zur Quantenmechanik einfacher Bewegungstypen".
+  Z. Physik 44, 326-352. (First rigorous proof of σₓσₚ ≥ ℏ/2)
+- Robertson, H.P. (1929). "The Uncertainty Principle". Phys. Rev. 34, 163-164.
+- ME.
+-/
+import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Core -- For unbounded operators
+import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Robertson -- For unbounded operators
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 open Robertson.Core Robertson.Theorem
 
-namespace AngularUnertainty
-
-
+namespace Bornemann
 /-!
 ### Angular Momentum Operators and Commutation Relations
 
@@ -376,4 +390,4 @@ theorem angular_momentum_uncertainty_nonzero {H : Type*} [NormedAddCommGroup H]
         _ ≥ (ℏ / 2) * ‖@inner ℂ H _ ψ (L.L_z.op ψ)‖ := h_ineq
     linarith
 
-end AngularUnertainty
+end Bornemann
