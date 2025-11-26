@@ -1,6 +1,7 @@
-import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Robertson.Core
-import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Robertson.Lemmas
 /-
+Author: Adam Bornemann
+Created: 9/19/2025
+
 ================================================================================
 ROBERTSON'S UNCERTAINTY PRINCIPLE - COMPLETE PROOF
 ================================================================================
@@ -25,6 +26,9 @@ References:
   - Robertson, H.P. (1929). Phys. Rev. 34, 163
   - Schrödinger, E. (1930). Sitzungsber. Preuss. Akad. Wiss. 14, 296
 -/
+import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Core
+import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Lemmas
+
 namespace Robertson.Theorem
 
 open InnerProductSpace MeasureTheory Complex
