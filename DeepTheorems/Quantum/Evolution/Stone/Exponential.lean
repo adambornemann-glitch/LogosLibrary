@@ -856,13 +856,82 @@ the group law for `exp(itA)`.
 -/
 theorem expBounded_group_law (B : H →L[ℂ] H) (s t : ℝ) :
     expBounded B (s + t) = (expBounded B s).comp (expBounded B t) := by
-  sorry
+  unfold expBounded
+  
+  -- Our tsum equals NormedSpace.exp  
+  have h_eq_exp : ∀ c : ℂ, (∑' k : ℕ, (1 / k.factorial : ℂ) • (c • B) ^ k) = 
+      NormedSpace.exp ℂ (c • B) := by
+    intro c
+    rw [NormedSpace.exp_eq_tsum]
+    congr 1
+    ext k
+    rw [one_div]  -- 1 / n! = (n!)⁻¹
+    
+  -- sB and tB commute (both are scalar multiples of B)
+  have h_comm : Commute ((s : ℂ) • B) ((t : ℂ) • B) := by
+    show ((s : ℂ) • B) * ((t : ℂ) • B) = ((t : ℂ) • B) * ((s : ℂ) • B)
+    rw [smul_mul_smul, smul_mul_smul, mul_comm (s : ℂ) (t : ℂ)]
+  
+  -- Rewrite all three series as NormedSpace.exp
+  simp only [h_eq_exp]
+  -- Key: ((s + t : ℝ) : ℂ) • B = (s : ℂ) • B + (t : ℂ) • B
+  simp only [Complex.ofReal_add, add_smul]
+  -- Apply exp(x + y) = exp(x) * exp(y) for commuting elements
+  rw [NormedSpace.exp_add_of_commute h_comm]
+  -- * and .comp are definitionally equal for ContinuousLinearMap
+  rfl
 
-
-/-- Exponential norm bound -/
+/- Exponential norm bound -/
 theorem expBounded_norm_bound (B : H →L[ℂ] H) (t : ℝ) :
     ‖expBounded B t‖ ≤ Real.exp (|t| * ‖B‖) := by
-  sorry
+  unfold expBounded
+  set X := (t : ℂ) • B with hX
+  set f := (fun n : ℕ => (n.factorial : ℂ)⁻¹ • X ^ n) with hf
+  set g := (fun n : ℕ => ‖X‖ ^ n / n.factorial) with hg
+  
+  have h_norm_summable : Summable g := Real.summable_pow_div_factorial ‖X‖
+  
+  have h_term_le : ∀ n, ‖f n‖ ≤ g n := fun n => by
+    simp only [hf, hg]
+    rw [norm_smul, norm_inv, Complex.norm_natCast, div_eq_inv_mul]
+    gcongr
+    exact opNorm_pow_le X n
+    
+  have h_summable : Summable f := 
+    Summable.of_norm_bounded (g := g) h_norm_summable h_term_le
+  
+  have h_eq_exp : (∑' k : ℕ, (1 / k.factorial : ℂ) • ((t : ℂ) • B) ^ k) = 
+      ∑' n, f n := by
+    congr 1; ext k
+    simp only [hf, one_div]
+    abel
+  have h_exp_eq : NormedSpace.exp ℂ X = ∑' n, f n := by
+    rw [NormedSpace.exp_eq_tsum]
+    
+  have h_norm_f_summable : Summable (fun n => ‖f n‖) := 
+    Summable.of_nonneg_of_le (fun n => norm_nonneg _) h_term_le h_norm_summable
+
+  have h1 : ‖∑' n, f n‖ ≤ ∑' n, ‖f n‖ := by
+    apply norm_tsum_le_tsum_norm
+    exact h_norm_f_summable
+    
+  have h2 : ∑' n, ‖f n‖ ≤ ∑' n, g n := by
+    apply Summable.tsum_le_tsum h_term_le h_norm_f_summable h_norm_summable
+  
+  have h3 : ∑' n, g n = Real.exp ‖X‖ := by
+    simp only [hg]
+    rw [Real.exp_eq_exp_ℝ, NormedSpace.exp_eq_tsum_div]
+    
+  have h4 : ‖X‖ = |t| * ‖B‖ := by
+    simp only [hX]
+    rw [norm_smul, Complex.norm_real, Real.norm_eq_abs]
+  
+  rw [h_eq_exp]
+  calc ‖∑' n, f n‖ 
+      ≤ ∑' n, ‖f n‖ := h1
+    _ ≤ ∑' n, g n := h2
+    _ = Real.exp ‖X‖ := h3
+    _ = Real.exp (|t| * ‖B‖) := by rw [h4]
 
 /-!
 ================================================================================
