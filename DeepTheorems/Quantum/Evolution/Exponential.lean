@@ -1,6 +1,7 @@
 /-
 Author: Adam Bornemann
-Created: [11-28-2025]
+Created: 11-20-2025
+Updated: 11-27-2025
 
 ============================================================================================================================
 EXPONENTIAL OF SELF-ADJOINT OPERATORS VIA YOSIDA APPROXIMATION
@@ -76,8 +77,8 @@ References:
   [3] Stone, M.H. "On one-parameter unitary groups" (1932) - Original theorem
 -/
 
-import LogosLibrary.DeepTheorems.Quantum.Evolution.Stone.Resolvent
-
+import LogosLibrary.DeepTheorems.Quantum.Evolution.Resolvent
+import LogosLibrary.DeepTheorems.Quantum.Evolution.Bochner
 namespace StonesTheorem.Exponential
 open InnerProductSpace MeasureTheory Complex Filter Topology StonesTheorem.Resolvent Generator
 
@@ -2419,6 +2420,61 @@ With Cauchy sequences established, we define:
 This is the strong operator limit, existing by completeness of H.
 -/
 
+
+/-!
+================================================================================
+SECTION X: UNIFORM CONVERGENCE ON COMPACT ORBITS
+================================================================================
+
+The final piece needed for the convergence theorem.
+-/
+
+section UniformConvergence
+
+open StonesTheorem.Resolvent StonesTheorem.Exponential
+
+variable (U_grp : OneParameterUnitaryGroup (H := H))
+variable (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
+variable (h_dense : Dense (gen.domain : Set H))
+
+/-- The orbit {U(s)φ : s ∈ [0, |t|]} is compact. -/
+lemma orbit_compact (t : ℝ) (φ : H) :
+    IsCompact {ψ : H | ∃ s ∈ Set.Icc 0 |t|, ψ = U_grp.U s φ} := by
+  -- Continuous image of compact set [0, |t|]
+  sorry
+
+/-- The Yosida approximants are equicontinuous (uniformly bounded). -/
+lemma yosidaApproxSym_equicontinuous :
+    ∀ n : ℕ+, ‖yosidaApproxSym gen hsa n‖ ≤ 2 * n := by
+  sorry
+
+/-- Pointwise convergence of Yosida approximants on the domain. -/
+lemma yosidaApproxSym_pointwise
+    (h_dense : Dense (gen.domain : Set H))
+    (ψ : H) (hψ : ψ ∈ gen.domain) :
+    Tendsto (fun n : ℕ+ => yosidaApproxSym gen hsa n ψ) atTop (𝓝 (gen.op ψ)) := by
+  exact yosidaApproxSym_tendsto_on_domain gen hsa h_dense ψ hψ
+
+/-- **Uniform Convergence on Orbit**
+
+For φ ∈ D(A), the Yosida approximants converge uniformly to A on the orbit.
+-/
+theorem yosidaApproxSym_uniform_on_orbit (t : ℝ) (φ : H) (hφ : φ ∈ gen.domain) :
+    Tendsto (fun n : ℕ+ => ⨆ s ∈ Set.Icc 0 |t|,
+              ‖(gen.op - yosidaApproxSym gen hsa n) (U_grp.U s φ)‖)
+            atTop (𝓝 0) := by
+  -- Strategy:
+  -- 1. The orbit K = {U(s)φ : s ∈ [0,|t|]} is compact
+  -- 2. U(s)φ ∈ D(A) for all s (domain invariance)
+  -- 3. Aₙ(ψ) → A(ψ) pointwise for all ψ ∈ D(A)
+  -- 4. {Aₙ} is equicontinuous (uniformly bounded)
+  -- 5. Apply Arzelà-Ascoli / equicontinuity argument:
+  --    pointwise convergence + equicontinuity on compact = uniform convergence
+  sorry
+
+end UniformConvergence
+
+
 /-- **Exponential at t=0 is Identity**
 
 For any bounded operator B: exp(0·B) = I.
@@ -2550,6 +2606,60 @@ lemma generator_commutes_unitary
 
 
 
+
+/-
+# MASSIVE TO-DO!!!
+-/
+/-!
+================================================================================
+SECTION 6: DUHAMEL FORMULA
+================================================================================
+
+The variation of parameters formula for comparing U(t) with exp(tB).
+-/
+
+section DuhamelFormula
+
+open StonesTheorem.Resolvent
+variable (U_grp : OneParameterUnitaryGroup (H := H))
+variable (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
+variable (h_dense : Dense (gen.domain : Set H))
+
+/-- The integrand in the Duhamel formula:
+    f(s) = exp((t-s)B) · (iA - B) · U(s)φ
+where B = i·Aₙˢʸᵐ -/
+noncomputable def duhamelIntegrand
+    (n : ℕ+) (t : ℝ) (φ : H) (s : ℝ) : H :=
+  expBounded (I • yosidaApproxSym gen hsa n) (t - s)
+    ((I • gen.op - I • yosidaApproxSym gen hsa n) (U_grp.U s φ))
+
+/-- The integrand is continuous in s. -/
+lemma duhamelIntegrand_continuous (n : ℕ+) (t : ℝ) (φ : H) (hφ : φ ∈ gen.domain) :
+    Continuous (duhamelIntegrand U_grp gen hsa n t φ) := by
+  sorry
+
+/-- The integrand is bounded. -/
+lemma duhamelIntegrand_bound (n : ℕ+) (t : ℝ) (φ : H) (hφ : φ ∈ gen.domain) (s : ℝ)
+    (hs : s ∈ Set.Icc 0 |t|) :
+    ‖duhamelIntegrand U_grp gen hsa n t φ s‖ ≤
+    ‖(I • gen.op - I • yosidaApproxSym gen hsa n) (U_grp.U s φ)‖ := by
+  -- Uses that exp((t-s)B) is an isometry
+  sorry
+
+/-- The Duhamel formula as an integral identity.
+
+For φ ∈ D(A):
+  U(t)φ - exp(t·i·Aₙˢʸᵐ)φ = ∫₀ᵗ exp((t-s)·i·Aₙˢʸᵐ) · i·(A - Aₙˢʸᵐ) · U(s)φ ds
+
+This is proven by showing the integrand is the derivative of
+  s ↦ exp((t-s)·i·Aₙˢʸᵐ) · U(s)φ
+-/
+theorem duhamel_identity (n : ℕ+) (t : ℝ) (φ : H) (hφ : φ ∈ gen.domain) :
+    U_grp.U t φ - expBounded (I • yosidaApproxSym gen hsa n) t φ =
+    ∫ s in Set.Ioc 0 t, duhamelIntegrand U_grp gen hsa n t φ s := by
+  sorry
+
+
 /-- **Duhamel Estimate for Yosida Exponentials**
 
 For φ ∈ D(A) and t ∈ ℝ:
@@ -2585,7 +2695,17 @@ lemma duhamel_estimate
     ‖U_grp.U t φ - expBounded (I • yosidaApproxSym gen hsa n) t φ‖ ≤
     |t| * ⨆ (s : Set.Icc 0 |t|), ‖gen.op (U_grp.U s φ) - yosidaApproxSym gen hsa n (U_grp.U s φ)‖ := by
   sorry
+/-- **Duhamel Estimate**
 
+The error between U(t) and the Yosida exponential is controlled by the
+supremum of the approximation error on the orbit.
+-/
+theorem duhamel_estimate' (n : ℕ+) (t : ℝ) (φ : H) (hφ : φ ∈ gen.domain) :
+    ‖U_grp.U t φ - expBounded (I • yosidaApproxSym gen hsa n) t φ‖ ≤
+    |t| * ⨆ s ∈ Set.Icc 0 |t|, ‖(gen.op - yosidaApproxSym gen hsa n) (U_grp.U s φ)‖ := by
+  sorry
+
+end DuhamelFormula
 /-- **Uniform Convergence of Approximant on Orbit**
 
 For φ ∈ D(A), the approximants converge uniformly on the orbit {U(s)φ : s ∈ [0,|t|]}:
@@ -3351,6 +3471,7 @@ Section 5: Yosida approximant convergence (Aₙφ → Aφ on domain)
 Section 6: Exponential of bounded operators (definition, group law, adjoint, unitarity)
 Section 7: Unitarity of Yosida exponentials (inner product and norm preservation)
 Section 8: Cauchy sequences and exponential definition (Duhamel estimate, convergence)
+- Epanded with Bochner and Uniform Convergence for Duhamel
 Section 9: Properties of exp(itA) (unitarity, group law, strong continuity, generator = A)
 Axiomatized results (marked with sorry):
 
@@ -3358,7 +3479,7 @@ duhamel_estimate: Requires Bochner integration
 yosidaApproxSym_uniform_convergence_on_orbit: Requires compactness/Dini's theorem machinery
 exponential_tendsto: Relates operator limit to pointwise limit
 
-These axiomatizations isolate the analytic/measure-theoretic content from the algebraic structure, 
+These axiomatizations isolate the analytic/measure-theoretic content from the algebraic structure,
 following the same philosophy as VonNeumann.lean.
 -/
 
