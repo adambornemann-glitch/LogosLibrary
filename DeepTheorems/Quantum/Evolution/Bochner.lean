@@ -1,7 +1,7 @@
 /-
 Author: Adam Bornemann
-Created: 11-26-2025
-
+Created: 11-24-2025
+Updated: 11-27-205
 ================================================================================
 STONE'S THEOREM: BOCHNER INTEGRATION MACHINERY
 ================================================================================
@@ -46,7 +46,7 @@ import Mathlib.Topology.MetricSpace.Basic
 --import Mathlib.MeasureTheory.Function.L1Space
 --import Mathlib.Analysis.SpecialFunctions.Integrals
 
-import LogosLibrary.DeepTheorems.Quantum.Evolution.Stone.Resolvent
+import LogosLibrary.DeepTheorems.Quantum.Evolution.Resolvent
 
 namespace StonesTheorem.Bochner
 
@@ -76,18 +76,18 @@ lemma integrable_exp_decay_continuous
   set M := max |C| 1 with hM_def
   have hM_pos : 0 < M := lt_max_of_lt_right one_pos
   have hM_ge : |C| ≤ M := le_max_left _ _
-  
+
   -- Step 1: The bound function M * e^{-t} is integrable on [0, ∞)
   have h_exp_int : IntegrableOn (fun t => Real.exp (-t)) (Set.Ici 0) volume := by
     rw [integrableOn_Ici_iff_integrableOn_Ioi]
-    refine integrableOn_Ioi_of_intervalIntegral_norm_bounded (ι := ℕ) (l := atTop) 
+    refine integrableOn_Ioi_of_intervalIntegral_norm_bounded (ι := ℕ) (l := atTop)
           (b := fun n => (n : ℝ)) 1 0 ?_ ?_ ?_
     · intro i
       apply Continuous.integrableOn_Ioc
       exact Real.continuous_exp.comp continuous_neg
     · exact tendsto_natCast_atTop_atTop
     · filter_upwards with n
-      have h_norm_eq : ∀ x, ‖Real.exp (-x)‖ = Real.exp (-x) := fun x => 
+      have h_norm_eq : ∀ x, ‖Real.exp (-x)‖ = Real.exp (-x) := fun x =>
         Real.norm_of_nonneg (le_of_lt (Real.exp_pos _))
       simp_rw [h_norm_eq]
       have h_cont : Continuous (fun t => Real.exp (-t)) := Real.continuous_exp.comp continuous_neg
@@ -104,35 +104,35 @@ lemma integrable_exp_decay_continuous
           simp only [mul_neg, mul_one] at h3
           convert h3.neg using 1
           ring
-      calc ∫ x in (0 : ℝ)..n, Real.exp (-x) 
+      calc ∫ x in (0 : ℝ)..n, Real.exp (-x)
           = -Real.exp (-↑n) - -Real.exp 0 := h_int
         _ = -Real.exp (-↑n) - -1 := by rw [Real.exp_zero]
         _ = 1 - Real.exp (-↑n) := by ring
         _ ≤ 1 := by linarith [Real.exp_pos (-↑n)]
-      
+
   have h_bound_int : IntegrableOn (fun t => M * Real.exp (-t)) (Set.Ici 0) volume :=
     h_exp_int.const_mul M
-  
+
   -- Step 2: Our function is measurable
-  have h_meas : AEStronglyMeasurable (fun t => Real.exp (-t) • f t) 
+  have h_meas : AEStronglyMeasurable (fun t => Real.exp (-t) • f t)
                                       (volume.restrict (Set.Ici 0)) := by
     apply AEStronglyMeasurable.smul
     · exact (Real.continuous_exp.comp continuous_neg).aestronglyMeasurable.restrict
     · exact hf_cont.aestronglyMeasurable.restrict
-  
+
   -- Step 3: Pointwise bound
-  have h_bound : ∀ᵐ t ∂(volume.restrict (Set.Ici 0)), 
+  have h_bound : ∀ᵐ t ∂(volume.restrict (Set.Ici 0)),
                   ‖Real.exp (-t) • f t‖ ≤ M * Real.exp (-t) := by
     filter_upwards [ae_restrict_mem measurableSet_Ici] with t ht
     rw [norm_smul, Real.norm_of_nonneg (le_of_lt (Real.exp_pos _))]
-    calc Real.exp (-t) * ‖f t‖ 
+    calc Real.exp (-t) * ‖f t‖
         ≤ Real.exp (-t) * |C| := by
             apply mul_le_mul_of_nonneg_left _ (Real.exp_pos _).le
             calc ‖f t‖ ≤ C := hC t ht
               _ ≤ |C| := le_abs_self C
       _ ≤ Real.exp (-t) * M := mul_le_mul_of_nonneg_left hM_ge (Real.exp_pos _).le
       _ = M * Real.exp (-t) := mul_comm _ _
-  
+
   -- Step 4: Apply domination
   exact Integrable.mono' h_bound_int h_meas h_bound
 
@@ -141,9 +141,9 @@ lemma integrable_exp_decay_continuous
 lemma integral_exp_neg_eq_one :
     ∫ t in Set.Ici (0 : ℝ), Real.exp (-t) = 1 := by
   rw [integral_Ici_eq_integral_Ioi]
-  
+
   -- Apply FTC for improper integrals
-  rw [MeasureTheory.integral_Ioi_of_hasDerivAt_of_tendsto' (a := 0) 
+  rw [MeasureTheory.integral_Ioi_of_hasDerivAt_of_tendsto' (a := 0)
       (f := fun t => -Real.exp (-t)) (m := 0)]
   · simp [Real.exp_zero]
   · intro x _
@@ -154,14 +154,14 @@ lemma integral_exp_neg_eq_one :
     convert h3.neg using 1
     ring
   · -- IntegrableOn (fun t => Real.exp (-t)) (Set.Ioi 0) volume
-    refine integrableOn_Ioi_of_intervalIntegral_norm_bounded (ι := ℕ) (l := atTop) 
+    refine integrableOn_Ioi_of_intervalIntegral_norm_bounded (ι := ℕ) (l := atTop)
            (b := fun n => (n : ℝ)) 1 0 ?_ ?_ ?_
     · intro i
       apply Continuous.integrableOn_Ioc
       exact Real.continuous_exp.comp continuous_neg
     · exact tendsto_natCast_atTop_atTop
     · filter_upwards with n
-      have h_norm_eq : ∀ x, ‖Real.exp (-x)‖ = Real.exp (-x) := fun x => 
+      have h_norm_eq : ∀ x, ‖Real.exp (-x)‖ = Real.exp (-x) := fun x =>
         Real.norm_of_nonneg (le_of_lt (Real.exp_pos _))
       simp_rw [h_norm_eq]
       have h_cont : Continuous (fun t => Real.exp (-t)) := Real.continuous_exp.comp continuous_neg
@@ -178,7 +178,7 @@ lemma integral_exp_neg_eq_one :
           simp only [mul_neg, mul_one] at h3
           convert h3.neg using 1
           ring
-      calc ∫ x in (0 : ℝ)..n, Real.exp (-x) 
+      calc ∫ x in (0 : ℝ)..n, Real.exp (-x)
           = -Real.exp (-↑n) - -Real.exp 0 := h_int
         _ = -Real.exp (-↑n) - -1 := by rw [Real.exp_zero]
         _ = 1 - Real.exp (-↑n) := by ring
@@ -186,7 +186,7 @@ lemma integral_exp_neg_eq_one :
   -- ⊢ Tendsto (fun t => -Real.exp (-t)) atTop (𝓝 0)
   · convert (Real.tendsto_exp_atBot.comp tendsto_neg_atTop_atBot).neg using 1
     simp
-  
+
 
 /-- Integral bound for exponentially decaying functions. -/
 lemma norm_integral_exp_decay_le
@@ -194,20 +194,20 @@ lemma norm_integral_exp_decay_le
     (C : ℝ) (hC : ∀ t ≥ 0, ‖f t‖ ≤ C) (_ /-hC_pos-/ : 0 ≤ C) :
     ‖∫ t in Set.Ici 0, Real.exp (-t) • f t‖ ≤ C := by
   -- Get integrability from previous lemma
-  have h_integrand_int : IntegrableOn (fun t => Real.exp (-t) • f t) (Set.Ici 0) volume := 
+  have h_integrand_int : IntegrableOn (fun t => Real.exp (-t) • f t) (Set.Ici 0) volume :=
     integrable_exp_decay_continuous f hf_cont C hC
-  
+
   -- Integrability of exp(-t)
   have h_exp_int : IntegrableOn (fun t => Real.exp (-t)) (Set.Ici 0) volume := by
     rw [integrableOn_Ici_iff_integrableOn_Ioi]
-    refine integrableOn_Ioi_of_intervalIntegral_norm_bounded (ι := ℕ) (l := atTop) 
+    refine integrableOn_Ioi_of_intervalIntegral_norm_bounded (ι := ℕ) (l := atTop)
            (b := fun n => (n : ℝ)) 1 0 ?_ ?_ ?_
     · intro i
       apply Continuous.integrableOn_Ioc
       exact Real.continuous_exp.comp continuous_neg
     · exact tendsto_natCast_atTop_atTop
     · filter_upwards with n
-      have h_norm_eq : ∀ x, ‖Real.exp (-x)‖ = Real.exp (-x) := fun x => 
+      have h_norm_eq : ∀ x, ‖Real.exp (-x)‖ = Real.exp (-x) := fun x =>
         Real.norm_of_nonneg (le_of_lt (Real.exp_pos _))
       simp_rw [h_norm_eq]
       have h_cont : Continuous (fun t => Real.exp (-t)) := Real.continuous_exp.comp continuous_neg
@@ -224,19 +224,19 @@ lemma norm_integral_exp_decay_le
           simp only [mul_neg, mul_one] at h3
           convert h3.neg using 1
           ring
-      calc ∫ x in (0 : ℝ)..n, Real.exp (-x) 
+      calc ∫ x in (0 : ℝ)..n, Real.exp (-x)
           = -Real.exp (-↑n) - -Real.exp 0 := h_int
         _ = -Real.exp (-↑n) - -1 := by rw [Real.exp_zero]
         _ = 1 - Real.exp (-↑n) := by ring
         _ ≤ 1 := by linarith [Real.exp_pos (-↑n)]
 
-  calc ‖∫ t in Set.Ici 0, Real.exp (-t) • f t‖ 
+  calc ‖∫ t in Set.Ici 0, Real.exp (-t) • f t‖
       ≤ ∫ t in Set.Ici 0, ‖Real.exp (-t) • f t‖ := norm_integral_le_integral_norm _
     _ ≤ ∫ t in Set.Ici 0, C * Real.exp (-t) := by
         apply setIntegral_mono_on h_integrand_int.norm (h_exp_int.const_mul C) measurableSet_Ici
         intro t ht
         rw [norm_smul, Real.norm_of_nonneg (le_of_lt (Real.exp_pos _))]
-        calc Real.exp (-t) * ‖f t‖ 
+        calc Real.exp (-t) * ‖f t‖
             ≤ Real.exp (-t) * C := mul_le_mul_of_nonneg_left (hC t ht) (Real.exp_pos _).le
           _ = C * Real.exp (-t) := mul_comm _ _
     _ = C * ∫ t in Set.Ici 0, Real.exp (-t) := by exact MeasureTheory.integral_const_mul C fun a => Real.exp (-a)
@@ -253,28 +253,28 @@ lemma tendsto_integral_Ioc_exp_decay
             atTop
             (𝓝 (∫ t in Set.Ici 0, Real.exp (-t) • f t)) := by
   rw [integral_Ici_eq_integral_Ioi]
-  
-  have h_int : IntegrableOn (fun t => Real.exp (-t) • f t) (Set.Ioi 0) volume := 
+
+  have h_int : IntegrableOn (fun t => Real.exp (-t) • f t) (Set.Ioi 0) volume :=
     (integrable_exp_decay_continuous f hf_cont C hC).mono_set Set.Ioi_subset_Ici_self
-  
+
   rw [Metric.tendsto_atTop]
   intro ε hε
-  
+
   -- Use that ∫_{Ioi n} ‖g‖ → 0 for integrable g
   set M := max C 0 with hM_def
   have hM_nonneg : 0 ≤ M := le_max_right _ _
-  
+
   -- Bound: ‖e^{-t} • f t‖ ≤ M * e^{-t}
   have h_norm_int : IntegrableOn (fun t => M * Real.exp (-t)) (Set.Ioi 0) volume := by
     have h_exp : IntegrableOn (fun t => Real.exp (-t)) (Set.Ioi 0) volume := by
-      refine integrableOn_Ioi_of_intervalIntegral_norm_bounded (ι := ℕ) (l := atTop) 
+      refine integrableOn_Ioi_of_intervalIntegral_norm_bounded (ι := ℕ) (l := atTop)
              (b := fun n => (n : ℝ)) 1 0 ?_ ?_ ?_
       · intro i
         apply Continuous.integrableOn_Ioc
         exact Real.continuous_exp.comp continuous_neg
       · exact tendsto_natCast_atTop_atTop
       · filter_upwards with n
-        have h_norm_eq : ∀ x, ‖Real.exp (-x)‖ = Real.exp (-x) := fun x => 
+        have h_norm_eq : ∀ x, ‖Real.exp (-x)‖ = Real.exp (-x) := fun x =>
           Real.norm_of_nonneg (le_of_lt (Real.exp_pos _))
         simp_rw [h_norm_eq]
         have h_cont : Continuous (fun t => Real.exp (-t)) := Real.continuous_exp.comp continuous_neg
@@ -282,7 +282,7 @@ lemma tendsto_integral_Ioc_exp_decay
         have h_int : ∫ x in (0 : ℝ)..n, Real.exp (-x) = -Real.exp (-↑n) - -Real.exp 0 := by
           convert intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le (a := 0) (b := n)
                   (f := fun t => -Real.exp (-t)) (f' := fun t => Real.exp (-t))
-                  (by linarith) h_antideriv_cont.continuousOn ?_ 
+                  (by linarith) h_antideriv_cont.continuousOn ?_
                   (h_cont.integrableOn_Icc.intervalIntegrable) using 1
           · simp only [neg_zero, Real.exp_zero]
           · intro x _
@@ -292,13 +292,13 @@ lemma tendsto_integral_Ioc_exp_decay
             simp only [mul_neg, mul_one] at h3
             convert h3.neg using 1
             ring
-        calc ∫ x in (0 : ℝ)..n, Real.exp (-x) 
+        calc ∫ x in (0 : ℝ)..n, Real.exp (-x)
             = -Real.exp (-↑n) - -Real.exp 0 := h_int
           _ = -Real.exp (-↑n) - -1 := by rw [Real.exp_zero]
           _ = 1 - Real.exp (-↑n) := by ring
           _ ≤ 1 := by linarith [Real.exp_pos (-↑n)]
     exact h_exp.const_mul M
-  
+
   -- The tail ∫_{Ioi T} M * e^{-t} dt = M * e^{-T} → 0
   have h_tail_bound : ∀ T ≥ 0, ∫ t in Set.Ioi T, M * Real.exp (-t) = M * Real.exp (-T) := by
     intro T hT
@@ -307,13 +307,13 @@ lemma tendsto_integral_Ioc_exp_decay
       have h1 : HasDerivAt (fun t => -t) (-1) x := hasDerivAt_neg x
       have h2 : HasDerivAt Real.exp (Real.exp (-x)) (-x) := Real.hasDerivAt_exp (-x)
       have h3 := h2.comp x h1
-      have h4 : HasDerivAt (fun t => M * Real.exp (-t)) (M * (Real.exp (-x) * -1)) x := 
+      have h4 : HasDerivAt (fun t => M * Real.exp (-t)) (M * (Real.exp (-x) * -1)) x :=
         h3.const_mul M
       have h5 := h4.neg
       -- h5 : HasDerivAt (fun t => -(M * Real.exp (-t))) (-(M * (Real.exp (-x) * -1))) x
       convert h5 using 1 <;> ring_nf ; exact rfl
 
-    have h_int : IntegrableOn (fun t => M * Real.exp (-t)) (Set.Ioi T) volume := 
+    have h_int : IntegrableOn (fun t => M * Real.exp (-t)) (Set.Ioi T) volume :=
       h_norm_int.mono_set (Set.Ioi_subset_Ioi hT)
     have h_tend : Tendsto (fun t => -M * Real.exp (-t)) atTop (𝓝 0) := by
       have : Tendsto (fun t => -M * Real.exp (-t)) atTop (𝓝 (-M * 0)) := by
@@ -324,8 +324,8 @@ lemma tendsto_integral_Ioc_exp_decay
     rw [integral_Ioi_of_hasDerivAt_of_tendsto' (a := T) (f := fun t => -M * Real.exp (-t)) (m := 0)
         h_deriv h_int h_tend]
     ring
-    
-  
+
+
   -- Choose T large enough that M * e^{-T} < ε
   obtain ⟨N, hN⟩ : ∃ N : ℕ, M * Real.exp (-(N : ℝ)) < ε := by
     by_cases hM_zero : M = 0
@@ -336,7 +336,7 @@ lemma tendsto_integral_Ioc_exp_decay
         exact Real.tendsto_exp_atBot.comp (tendsto_neg_atTop_atBot.comp tendsto_natCast_atTop_atTop)
       simp at this
       exact (this.eventually (gt_mem_nhds hε)).exists
-  
+
   use max 1 N
   intro T hT
   have hT_pos : 0 < T := by
@@ -344,8 +344,8 @@ lemma tendsto_integral_Ioc_exp_decay
     linarith
 
   -- Split the integral
-  have h_split : ∫ t in Set.Ioi 0, Real.exp (-t) • f t ∂volume = 
-                 (∫ t in Set.Ioc 0 T, Real.exp (-t) • f t ∂volume) + 
+  have h_split : ∫ t in Set.Ioi 0, Real.exp (-t) • f t ∂volume =
+                 (∫ t in Set.Ioc 0 T, Real.exp (-t) • f t ∂volume) +
                  (∫ t in Set.Ioi T, Real.exp (-t) • f t ∂volume) := by
     have h_union : Set.Ioc 0 T ∪ Set.Ioi T = Set.Ioi 0 := by
       ext x
@@ -358,16 +358,16 @@ lemma tendsto_integral_Ioc_exp_decay
         by_cases hxT : x ≤ T
         · left; exact ⟨hx, hxT⟩
         · right; exact lt_of_not_ge hxT
-    rw [← h_union, setIntegral_union (Set.Ioc_disjoint_Ioi (le_refl T)) measurableSet_Ioi 
+    rw [← h_union, setIntegral_union (Set.Ioc_disjoint_Ioi (le_refl T)) measurableSet_Ioi
           (h_int.mono_set Set.Ioc_subset_Ioi_self) (h_int.mono_set (Set.Ioi_subset_Ioi hT_pos.le))]
-  
+
   rw [h_split, dist_eq_norm]
-  have h_simp : (∫ t in Set.Ioc 0 T, Real.exp (-t) • f t) - 
-                ((∫ t in Set.Ioc 0 T, Real.exp (-t) • f t) + ∫ t in Set.Ioi T, Real.exp (-t) • f t) = 
+  have h_simp : (∫ t in Set.Ioc 0 T, Real.exp (-t) • f t) -
+                ((∫ t in Set.Ioc 0 T, Real.exp (-t) • f t) + ∫ t in Set.Ioi T, Real.exp (-t) • f t) =
                 -(∫ t in Set.Ioi T, Real.exp (-t) • f t) := by abel
   rw [h_simp, norm_neg]
   -- Bound: ‖∫_{Ioi T} g‖ ≤ ∫_{Ioi T} ‖g‖ ≤ ∫_{Ioi T} M * e^{-t}
-  calc ‖∫ t in Set.Ioi T, Real.exp (-t) • f t‖ 
+  calc ‖∫ t in Set.Ioi T, Real.exp (-t) • f t‖
       ≤ ∫ t in Set.Ioi T, ‖Real.exp (-t) • f t‖ := norm_integral_le_integral_norm _
     _ ≤ ∫ t in Set.Ioi T, M * Real.exp (-t) := by
         apply setIntegral_mono_on (h_int.mono_set (Set.Ioi_subset_Ioi hT_pos.le)).norm
@@ -418,7 +418,7 @@ lemma hasDerivAt_integral_of_exp_decay
     · exact (Real.continuous_exp.comp continuous_neg).aestronglyMeasurable
     · exact (hf_cont.comp (continuous_const.prodMk continuous_id)).aestronglyMeasurable
   case hF_int =>
-    have hf_t_cont : Continuous (fun s => f t s) := 
+    have hf_t_cont : Continuous (fun s => f t s) :=
       hf_cont.comp (continuous_const.prodMk continuous_id)
     have hf_t_bound : ∀ s ≥ 0, ‖f t s‖ ≤ |C| := fun s hs => (hC t s hs).trans (le_abs_self C)
     exact integrable_exp_decay_continuous (fun s => f t s) hf_t_cont |C| hf_t_bound
@@ -430,7 +430,7 @@ lemma hasDerivAt_integral_of_exp_decay
     filter_upwards [ae_restrict_mem measurableSet_Ici] with s hs τ _
     rw [norm_smul, Real.norm_of_nonneg (le_of_lt (Real.exp_pos _))]
     have h1 : ‖deriv (f · s) τ‖ ≤ C := hC' τ s hs
-    calc Real.exp (-s) * ‖deriv (f · s) τ‖ 
+    calc Real.exp (-s) * ‖deriv (f · s) τ‖
         ≤ Real.exp (-s) * M := by
           apply mul_le_mul_of_nonneg_left
           exact h1.trans ((le_abs_self C).trans hC_le_M)
@@ -440,7 +440,7 @@ lemma hasDerivAt_integral_of_exp_decay
     -- M * exp(-s) integrable on [0,∞)
     have h_exp_int : IntegrableOn (fun s => Real.exp (-s)) (Set.Ici 0) volume := by
       rw [integrableOn_Ici_iff_integrableOn_Ioi]
-      refine integrableOn_Ioi_of_intervalIntegral_norm_bounded (ι := ℕ) (l := atTop) 
+      refine integrableOn_Ioi_of_intervalIntegral_norm_bounded (ι := ℕ) (l := atTop)
             (b := fun n => (n : ℝ)) 1 0 ?_ ?_ ?_
       · -- IntegrableOn on finite intervals
         intro i
