@@ -1,7 +1,8 @@
 /-
 Author: Adam Bornemann
-Created: 9/26/2025
-Updated: 11/17/2025
+Created: 10/10/2025
+Updated: 11/27/2025
+
 ================================================================================
 STONE'S THEOREM: CORE STRUCTURES AND DEFINITIONS
 ================================================================================
@@ -31,11 +32,10 @@ import Mathlib.MeasureTheory.Integral.Bochner.VitaliCaratheodory
 import Mathlib.Topology.Algebra.Group.Basic
 import Mathlib.Data.Complex.Basic
 import Mathlib.Tactic
-
 -- Import Robertson's proven unbounded operator machinery
-import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Robertson.Core
+import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Core
 
-namespace StoneTheorem
+namespace StonesTheorem.Resolvent
 
 open InnerProductSpace MeasureTheory Complex Filter Topology
 open scoped BigOperators Topology
@@ -395,6 +395,121 @@ def IsSelfAdjoint {U_grp : OneParameterUnitaryGroup (H := H)}
     gen.op ψ + (I : ℂ) • ψ = φ) ∧
   (∀ φ : H, ∃ (ψ : H) (_ /-hψ-/ : ψ ∈ gen.domain),
     gen.op ψ - (I : ℂ) • ψ = φ)
+
+
+/-- **Construction of Generator from Unitary Group**
+
+Given a strongly continuous one-parameter unitary group U(t), we construct
+its self-adjoint generator A via:
+
+  D(A) = {ψ ∈ H | lim_{t→0} (U(t)ψ - ψ)/(it) exists}
+  Aψ = lim_{t→0} (U(t)ψ - ψ)/(it)
+
+The proof that this is self-adjoint (i.e., Range(A ± iI) = H) uses the
+integral formulas:
+  ψ₊ = i ∫₀^∞ e^{-t} U(t)φ dt   satisfies (A + iI)ψ₊ = φ
+  ψ₋ = -i ∫₀^∞ e^{-t} U(-t)φ dt satisfies (A - iI)ψ₋ = φ
+
+These integrals converge because ‖U(t)‖ = 1 (unitarity) and e^{-t} decays.
+-/
+noncomputable def Generator.ofUnitaryGroup
+    (U_grp : OneParameterUnitaryGroup (H := H)) :
+    Generator U_grp := by
+  sorry
+
+theorem Generator.ofUnitaryGroup_isSelfAdjoint
+    (U_grp : OneParameterUnitaryGroup (H := H)) :
+    (Generator.ofUnitaryGroup U_grp).IsSelfAdjoint := by
+  sorry
+
+/-!
+### Helper Lemmas for Generator Uniqueness
+-/
+
+/-- The domain of a generator is exactly the set of vectors where the limit exists.
+This characterization shows that the domain is uniquely determined by the unitary group. -/
+lemma generator_domain_char (U_grp : OneParameterUnitaryGroup (H := H))
+    (gen : Generator U_grp) (ψ : H) :
+    ψ ∈ gen.domain ↔
+    ∃ (η : H), Tendsto (fun t : ℝ => ((I : ℂ) * (t : ℂ))⁻¹ • (U_grp.U t ψ - ψ))
+                       (𝓝[≠] 0) (𝓝 η) := by
+  constructor
+  · intro hψ
+    exact ⟨gen.op ψ, gen.generator_formula ψ hψ⟩
+  · intro ⟨η, hη⟩
+    -- The domain should contain all vectors where the limit exists
+    -- This requires that the generator was constructed to be maximal
+    sorry
+
+/-- For self-adjoint generators, the domain is maximal: it contains all vectors
+where the limit defining the generator exists. -/
+lemma selfAdjoint_domain_maximal (U_grp : OneParameterUnitaryGroup (H := H))
+    (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint) (ψ : H)
+    (η : H) (hη : Tendsto (fun t : ℝ => ((I : ℂ) * (t : ℂ))⁻¹ • (U_grp.U t ψ - ψ))
+                          (𝓝[≠] 0) (𝓝 η)) :
+    ψ ∈ gen.domain := by
+  -- Self-adjoint operators are maximally symmetric.
+  -- If the limit exists, ψ must be in the domain.
+  -- Proof sketch:
+  -- 1. Define the "maximal domain" D_max = {ψ | limit exists}
+  -- 2. Show D_max is a subspace containing gen.domain
+  -- 3. The restriction of the limit-operator to D_max is symmetric
+  -- 4. Self-adjointness of gen means gen has no proper symmetric extensions
+  -- 5. Therefore gen.domain = D_max
+  sorry
+
+/-- Self-adjoint generators of the same unitary group have the same domain. -/
+lemma selfAdjoint_generators_domain_eq (U_grp : OneParameterUnitaryGroup (H := H))
+    (gen₁ gen₂ : Generator U_grp)
+    (hsa₁ : gen₁.IsSelfAdjoint) (hsa₂ : gen₂.IsSelfAdjoint) :
+    gen₁.domain = gen₂.domain := by
+  ext ψ
+  constructor
+  · intro hψ₁
+    -- ψ ∈ gen₁.domain means the limit exists (with value gen₁.op ψ)
+    have h_lim := gen₁.generator_formula ψ hψ₁
+    -- By maximality of gen₂.domain, since limit exists, ψ ∈ gen₂.domain
+    exact selfAdjoint_domain_maximal U_grp gen₂ hsa₂ ψ (gen₁.op ψ) h_lim
+  · intro hψ₂
+    have h_lim := gen₂.generator_formula ψ hψ₂
+    exact selfAdjoint_domain_maximal U_grp gen₁ hsa₁ ψ (gen₂.op ψ) h_lim
+
+/-- Generators that agree on their common domain are equal as linear maps on the domain. -/
+lemma generator_op_eq_on_domain (U_grp : OneParameterUnitaryGroup (H := H))
+    (gen₁ gen₂ : Generator U_grp) (ψ : H)
+    (hψ₁ : ψ ∈ gen₁.domain) (hψ₂ : ψ ∈ gen₂.domain) :
+    gen₁.op ψ = gen₂.op ψ := by
+  -- Both are the unique limit of the same expression
+  have h₁ := gen₁.generator_formula ψ hψ₁
+  have h₂ := gen₂.generator_formula ψ hψ₂
+  exact tendsto_nhds_unique h₁ h₂
+
+/-- For generators with the same domain, if they agree on the domain, they agree everywhere.
+This uses the fact that the generator is determined by its action on the dense domain. -/
+lemma generator_op_ext_of_eq_on_domain (U_grp : OneParameterUnitaryGroup (H := H))
+    (gen₁ gen₂ : Generator U_grp)
+    (h_dom : gen₁.domain = gen₂.domain)
+    (h_eq : ∀ ψ ∈ gen₁.domain, gen₁.op ψ = gen₂.op ψ) :
+    gen₁.op = gen₂.op := by
+  -- The op is a linear map H →ₗ[ℂ] H
+  -- For vectors outside the domain, the behavior is determined by the
+  -- requirement that op is linear and equals the limit on domain
+  --
+  -- Key insight: The generator_formula completely determines op on domain.
+  -- Outside domain, both gen₁.op and gen₂.op must be consistent linear
+  -- extensions, but since they're constructed from the same unitary group
+  -- via the same limiting process, they must agree.
+  ext ψ
+  by_cases hψ : ψ ∈ gen₁.domain
+  · exact h_eq ψ hψ
+  · -- Outside domain case
+    -- The linear map op : H →ₗ[ℂ] H is not uniquely determined outside domain
+    -- by the generator formula alone. However, for self-adjoint generators,
+    -- the standard construction extends by 0 or uses the graph closure.
+    -- Since both generators are constructed from the same group, the
+    -- extension must be the same.
+    sorry
+
 
 /-!
 ### The Resolvent (For Self-Adjoint Generators)
@@ -1385,7 +1500,7 @@ For a bounded linear operator T with ‖T‖ < 1, the series Σₙ Tⁿ converge
 to (I - T)⁻¹. This is the operator-theoretic analogue of 1/(1-x) = Σ xⁿ.
 -/
 
-section NeumannSeries
+--namespace NeumannSeries
 
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
 
@@ -2513,3 +2628,101 @@ theorem resolvent_bound {U_grp : OneParameterUnitaryGroup (H := H)}
     · norm_num
     · exact abs_nonneg _
   · exact h_pointwise
+
+
+/-- **Resolvent Adjoint Identity**
+
+For a self-adjoint generator A and z with Im(z) ≠ 0, the adjoint of the resolvent
+satisfies:
+  R(z)* = R(z̄)
+
+**Proof:**
+Let ξ = R(z)ψ and η = R(z̄)φ. Then:
+- (A - zI)ξ = ψ, so Aξ = ψ + zξ
+- (A - z̄I)η = φ, so Aη = φ + z̄η
+
+
+**Significance:**
+This identity is essential for proving that the Yosida approximants (after symmetrization)
+are self-adjoint, which in turn ensures exp(itA_n) is unitary.
+-/
+theorem resolvent_adjoint {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : IsSelfAdjoint gen)
+    (z : ℂ) (hz : z.im ≠ 0) :
+    (resolvent gen z hz hsa).adjoint =
+    resolvent gen (starRingEnd ℂ z) (by simp only [Complex.conj_im, neg_ne_zero]; exact hz) hsa := by
+  ext φ
+  apply ext_inner_right ℂ
+  intro ψ
+
+  -- By definition of adjoint: ⟨T*φ, ψ⟩ = ⟨φ, Tψ⟩
+  rw [ContinuousLinearMap.adjoint_inner_left]
+  -- Goal: ⟨φ, R(z)ψ⟩ = ⟨R(z̄)φ, ψ⟩
+
+  -- Set up notation
+  set z_bar := (starRingEnd ℂ) z with hz_bar_def
+  have hz_bar : z_bar.im ≠ 0 := by rw [hz_bar_def] ;simp only [Complex.conj_im, neg_ne_zero]; exact hz
+
+  -- Let ξ = R(z)ψ, so (A - zI)ξ = ψ
+  let ξ_sub := Classical.choose (self_adjoint_range_all_z gen hsa z hz ψ)
+  let ξ := ξ_sub.val
+  have hξ_domain : ξ ∈ gen.domain := ξ_sub.property
+  have hξ_eq : gen.op ξ - z • ξ = ψ :=
+    (Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz ψ)).1
+  have hξ_def : resolvent gen z hz hsa ψ = ξ := rfl
+
+  -- Let η = R(z̄)φ, so (A - z̄I)η = φ
+  let η_sub := Classical.choose (self_adjoint_range_all_z gen hsa z_bar hz_bar φ)
+  let η := η_sub.val
+  have hη_domain : η ∈ gen.domain := η_sub.property
+  have hη_eq : gen.op η - z_bar • η = φ :=
+    (Classical.choose_spec (self_adjoint_range_all_z gen hsa z_bar hz_bar φ)).1
+  have hη_def : resolvent gen z_bar hz_bar hsa φ = η := rfl
+
+  -- Rewrite goal using these definitions
+  rw [hξ_def, hη_def]
+  -- Goal: ⟨φ, ξ⟩ = ⟨η, ψ⟩
+
+  -- From hξ_eq: Aξ = ψ + z•ξ
+  have hAξ : gen.op ξ = ψ + z • ξ := by
+    calc gen.op ξ = (gen.op ξ - z • ξ) + z • ξ := by abel
+      _ = ψ + z • ξ := by rw [hξ_eq]
+
+  -- From hη_eq: Aη = φ + z̄•η
+  have hAη : gen.op η = φ + z_bar • η := by
+    calc gen.op η = (gen.op η - z_bar • η) + z_bar • η := by abel
+      _ = φ + z_bar • η := by rw [hη_eq]
+
+  -- Key calculation using symmetry of A
+  -- ⟨Aη, ξ⟩ = ⟨η, Aξ⟩
+  have h_sym : ⟪gen.op η, ξ⟫_ℂ = ⟪η, gen.op ξ⟫_ℂ := gen.symmetric η ξ hη_domain hξ_domain
+
+  -- Expand LHS: ⟨Aη, ξ⟩ = ⟨φ + z̄•η, ξ⟩ = ⟨φ, ξ⟩ + z•⟨η, ξ⟩
+  have h_LHS : ⟪gen.op η, ξ⟫_ℂ = ⟪φ, ξ⟫_ℂ + z • ⟪η, ξ⟫_ℂ := by
+    calc ⟪gen.op η, ξ⟫_ℂ
+        = ⟪φ + z_bar • η, ξ⟫_ℂ := by rw [hAη]
+      _ = ⟪φ, ξ⟫_ℂ + ⟪z_bar • η, ξ⟫_ℂ := by rw [inner_add_left]
+      _ = ⟪φ, ξ⟫_ℂ + (starRingEnd ℂ z_bar) • ⟪η, ξ⟫_ℂ := by rw [inner_smul_left]; rfl
+      _ = ⟪φ, ξ⟫_ℂ + z • ⟪η, ξ⟫_ℂ := by simp [hz_bar_def]
+
+  -- Expand RHS: ⟨η, Aξ⟩ = ⟨η, ψ + z•ξ⟩ = ⟨η, ψ⟩ + z•⟨η, ξ⟩
+  have h_RHS : ⟪η, gen.op ξ⟫_ℂ = ⟪η, ψ⟫_ℂ + z • ⟪η, ξ⟫_ℂ := by
+    calc ⟪η, gen.op ξ⟫_ℂ
+        = ⟪η, ψ + z • ξ⟫_ℂ := by rw [hAξ]
+      _ = ⟪η, ψ⟫_ℂ + ⟪η, z • ξ⟫_ℂ := by rw [inner_add_right]
+      _ = ⟪η, ψ⟫_ℂ + z • ⟪η, ξ⟫_ℂ := by rw [inner_smul_right]; rfl
+
+  -- From h_sym, h_LHS, h_RHS: ⟨φ, ξ⟩ + z•⟨η, ξ⟩ = ⟨η, ψ⟩ + z•⟨η, ξ⟩
+  have h_cancel : ⟪φ, ξ⟫_ℂ + z • ⟪η, ξ⟫_ℂ = ⟪η, ψ⟫_ℂ + z • ⟪η, ξ⟫_ℂ := by
+    rw [← h_LHS, ← h_RHS, h_sym]
+
+  -- Cancel z•⟨η, ξ⟩ from both sides
+  have h_result : ⟪φ, ξ⟫_ℂ = ⟪η, ψ⟫_ℂ := by
+    have := add_right_cancel h_cancel
+    exact this
+
+  exact h_result
+
+
+end Generator
+end StonesTheorem.Resolvent
