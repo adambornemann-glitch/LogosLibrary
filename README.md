@@ -1,214 +1,166 @@
 # Logos Library
 
-**Formally Verified Scientific Knowledge Infrastructure**
+**Formally Verified Foundations for Mathematical Physics**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Lean 4](https://img.shields.io/badge/Lean-4-blue)](https://leanprover.github.io/)
-[![Lines](https://img.shields.io/badge/Lines-100k+-green)]()
+[![Lines](https://img.shields.io/badge/Lines-70k+-green)]()
+
+---
+
+## Highlights
+
+**First-ever formalizations in any theorem prover:**
+
+| Theorem | Status | Lines | Notes |
+|---------|--------|-------|-------|
+| Robertson Uncertainty Principle | ✅ Complete | ~1,200 | Unbounded operators, not the bounded simplification |
+| Stone's Theorem | ✅ Complete | ~11,000 | 1932 approach via Bochner-Yosida, both directions |
+| Resolvent Theory (Unbounded) | ✅ Complete | ~2,500 | Full theory with spectral-ready infrastructure |
+
+These results handle **unbounded operators** properly—the physically relevant case for quantum mechanics. Previous formalizations either avoided unbounded operators entirely or treated only bounded approximations.
 
 ---
 
 ## What This Is
 
-Logos Library is a formal verification project spanning physics, mathematics, and chemistry. Every claim is backed by proof in Lean 4's type system - no hand-waving, no "it's obvious," no informal arguments.
+Logos Library is a Lean 4 formalization project building verified foundations for physics. Every theorem is machine-checked with no gaps.
 
-**Current Status**: Private development. ~70,000 lines of verified code across units, pedagogy, deep theorems, and epistemic detectors.
+**Completed Infrastructure:**
+- Complete resolvent theory for unbounded self-adjoint operators
+- Yosida approximation and operator exponentials
+- Bochner's theorem for positive definite functions
+- Schrödinger equation as corollary of Stone's theorem
 
-**The Vision**: 50M+ lines of formally verified scientific knowledge serving as both AI training corpus and epistemic immune system for humans.
+**In Progress:**
+- Spectral theory for unbounded operators
+- General relativity (ADM formalism)
+- Holographic entropy bounds
+
+---
+
+## Why This Matters
+
+Most theorem provers have only basic Hilbert space theory. The gap between "bounded operators on a Hilbert space" and "actual quantum mechanics" is substantial:
+
+| What exists elsewhere | What Logos Library has |
+|----------------------|------------------------|
+| Bounded operators | Unbounded self-adjoint operators with domains |
+| Spectral theory (bounded) | Resolvent theory (unbounded), spectral in progress |
+| No Stone's theorem | Complete Stone's theorem, both directions |
+| No uncertainty principle | Robertson for unbounded observables |
+
+The 1932 approach to Stone's theorem is dependency-optimal: Stone enables spectral theory, not the other way around. This means clean foundations for everything built on top.
+
+---
+
+## Technical Approach
+
+**Stone's Theorem (~11,000 lines):**
+```
+Generator.lean     - Structures and definitions (~700 lines)
+Bochner.lean       - Positive definite functions → measures (~2,500 lines)
+Resolvent.lean     - Complete resolvent theory (~2,500 lines)
+Yosida.lean        - Bounded approximations to unbounded generators (~5,000 lines)
+Theorem.lean       - Assembly and bijection (~500 lines)
+```
+
+Key results:
+- Lower bound estimate: `‖(A - zI)ψ‖ ≥ |Im(z)| · ‖ψ‖`
+- Resolvent bound: `‖R(z)‖ ≤ 1/|Im(z)|`
+- Resolvent identity, adjoint formula, Neumann series
+- Full bijection: unitary groups ↔ self-adjoint operators
+
+**Robertson Uncertainty (~1,200 lines):**
+- Unbounded observables with dense domains
+- Commutator properly defined on intersection of domains
+- `σ_A · σ_B ≥ ½|⟨[A,B]⟩|` with all terms well-defined
+
+---
+
+## Project Structure
+
+```
+LogosLibrary/
+├── Units/                    # Physical units with type safety
+├── Classes/                  # Pedagogical material (QM, Relativity, etc.)
+├── DeepTheorems/
+│   ├── Quantum/
+│   │   ├── Uncertainty/      # Robertson (complete)
+│   │   └── Evolution/        # Stone (complete)
+│   ├── Gravity/              # GR formalization (in progress)
+│   └── Holography/           # AdS/CFT, entropy bounds (in progress)
+└── Applications/
+    └── Detectors/            # Claim validators
+```
 
 ---
 
 ## Quick Start
 
-### Prerequisites
-
-- [Lean 4](https://leanprover.github.io/) (installed via elan)
-- Git
-- ~10GB disk space for mathlib cache
-
-### Installation
-
-### Bash Script
 ```bash
-# Clone the repository
+# Clone
 git clone https://github.com/adambornemann-glitch/LogosLibrary
 cd LogosLibrary
 
-# Install elan (Lean version manager) if you don't have it
+# Install Lean 4 (if needed)
 curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh
-source ~/.profile  # or restart your terminal
 
-# Download precompiled mathlib (saves 1-2 hours!)
+# Get mathlib cache
 lake exe cache get
 
-# Build the library
+# Build
 lake build
 
-# Verify a specific section
-lake build Units
-lake build Classes
-lake build DeepTheorems
+# Verify specific theorem
+lake build DeepTheorems.Quantum.Evolution.Stone.Theorem
+lake build DeepTheorems.Quantum.Uncertainty.Robertson.Core
 ```
-
-**Expected build time**: 
-- First build with cache: ~5-10 minutes
-- Subsequent builds: ~30 seconds (only changed files)
-
----
-
-## Architecture
-
-Logos Library is organized into four sections:
-
-### **I. Units** - Foundation Layer
-Complete units library with triple-type architecture (Float/ℚ/ℝ) spanning 18+ physical domains. Everything must use or extend this.
-
-**Example**: SI base units, astronomy units, quantum information units
-
-### **II. Classes** - Pedagogical Engine  
-Formally verified courses from introductory to advanced. Complete with historical context, formal definitions, computational examples, and exercises.
-
-**Current Courses**: Discrete Math, Linear Algebra, College Physics, Chemistry 101, Quantum Mechanics (8+ lectures), Relativity
-
-### **III. Deep Theorems** - Graduate-Level Verification
-Rigorous proofs of major physics theorems with full mathematical machinery.
-
-**Completed**: Robertson's Uncertainty Principle (~1200 lines)  
-**In Progress**: Stone's Theorem (~4000 lines estimated), General Relativity, Holography
-
-### **IV. Detectors** - Epistemic Immune System
-Automated validators that check claims against physical law.
-
-**Operational**: Battery Technology Detector (thermodynamic + electrochemical + materials constraints)  
-**Planned**: Black hole thermodynamics, quantum computing claims, fusion energy
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed structure.
-
----
-
-## Project Status
-
-| Section | Status | Lines | Notes |
-|---------|--------|-------|-------|
-| Units | 🟢 Stable | ~20k | Foundation complete |
-| Classes | 🟡 Active | ~30k | QM & Relativity courses ongoing |
-| Deep Theorems | 🟡 Active | ~15k | Stone ✅, Spectral 🔄 |
-| Detectors | 🟡 Active | ~5k | Battery detector operational |
-
-**Current Focus**: Stone's Theorem (quantum evolution operators)
 
 ---
 
 ## Dependencies
 
-### Pinned Versions
-
-- **Lean 4**: `leanprover/lean4:v4.x.y` (see `lean-toolchain`)
-- **Mathlib4**: commit `3eca3de9` (September 8, 2025)
-
-We remain pinned to September 2025 mathlib for stability during deep theorem work. Do not run `lake update` without coordination.
-
-### Development Tools (inherited from mathlib)
-
-- ProofWidgets4 (v0.0.71) - Interactive proof visualization
-- Aesop - Proof automation
-- LeanSearchClient - Search mathlib from within Lean
-- Import Graph - Dependency visualization
+- **Lean 4**: See `lean-toolchain`
+- **Mathlib4**: Pinned for stability during development
 
 ---
 
-## Contributing
+## Standards
 
-This is a **private development repository**. All contributions must maintain proof standards.
-
-**For the team**:
-- See [CONTRIBUTING.md](CONTRIBUTING.md) for workflow
-- See [ROADMAP.md](ROADMAP.md) for public release criteria
-- See [DeepTheorems/README.md](DeepTheorems/README.md) for blueprint conventions
-
-**Standards**:
-- Every physical claim must be formally verified
-- No `sorry` in main branch except in active WIP sections
-- Units enforced by type system
-- All proofs must compile
+- All physical claims formally verified
+- No `sorry` in completed work
+- Unbounded operators handled with proper domain tracking
+- Documentation includes mathematical context and proof strategies
 
 ---
 
-## Repository Structure
+## Roadmap
 
-```
-logos-library/
-├── Units/              # Section I - Foundation
-├── Classes/            # Section II - Pedagogy  
-├── DeepTheorems/       # Section III - Major proofs
-│   ├── Quantum/
-│   │   ├── Uncertainty/Robertson/  (✅ Complete)
-│   │   └── Evolution/Stone/        (🔄 In Progress)
-│   ├── Gravity/
-│   ├── Holography/
-│   └── OR/             # Objective Reduction
-├── Detectors/          # Section IV - Validators
-└── Tests/
-```
-
----
-
-## Testing
-
-```bash
-# Run all tests
-lake test
-
-# Verify specific theorem
-lake build DeepTheorems.Quantum.Uncertainty.Robertson.Core
-
-# Check compilation of section
-lake build Units
-```
-
----
-
-## The Core Principle
-
-**In the Logos Library, only what is provably true may make contact.**
-
-Our yardsticks for truth:
-1. Thermodynamics (no energy violations)
-2. General Relativity (geometry is real)  
-3. Lean 4 (proof or it didn't happen)
-4. Quantum Mechanics (respect uncertainty, entanglement, measurement)
-
-If exotic solutions require disagreement with these - it's probably trash.
-
----
-
-## Documentation
-
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed system design
-- [CONTRIBUTING.md](CONTRIBUTING.md) - Development workflow
-- [ROADMAP.md](ROADMAP.md) - Path to public release
-- [DeepTheorems/README.md](DeepTheorems/README.md) - Blueprint conventions
-- [LICENSE](LICENSE) - MIT License
+| Phase | Target |
+|-------|--------|
+| ✅ Complete | Robertson, Stone, Resolvent theory |
+| 🔄 Current | Spectral theory for unbounded operators |
+| Planned | Functional calculus, Dirac equation |
+| Future | Tomita-Takesaki, algebraic QFT foundations |
 
 ---
 
 ## Contact
 
-**Status**: Private development  
-**Team**: AdamBornemann@tenkai-q.com 
-**Questions**: Open an issue
+**Author:** Adam Bornemann  
+**Email:** AdamBornemann@tenkai-q.com
+
+---
+
+## License
+
+MIT
 
 ---
 
 ## Acknowledgments
 
-Built on the shoulders of:
-- Lean 4 and the Lean community
-- Mathlib contributors
-- The formal verification community
+Built with Lean 4 and Mathlib. 
 
----
-
-*"The Library is the seed crystal for formally verified scientific knowledge that scales through AI collaboration."*
-
-
+The approach to Stone's theorem follows the historical 1932 development, which turns out to be dependency-optimal for building spectral theory on top.
