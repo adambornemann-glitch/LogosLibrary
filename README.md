@@ -12,7 +12,7 @@
 
 Logos Library is a formal verification project spanning physics, mathematics, and chemistry. Every claim is backed by proof in Lean 4's type system - no hand-waving, no "it's obvious," no informal arguments.
 
-**Current Status**: Private development. ~100,000 lines of verified code across units, pedagogy, deep theorems, and epistemic detectors.
+**Current Status**: Private development. ~70,000 lines of verified code across units, pedagogy, deep theorems, and epistemic detectors.
 
 **The Vision**: 50M+ lines of formally verified scientific knowledge serving as both AI training corpus and epistemic immune system for humans.
 
