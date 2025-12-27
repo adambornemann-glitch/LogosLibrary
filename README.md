@@ -31,8 +31,8 @@ Logos Library is a formal verification project spanning physics, mathematics, an
 ### Bash Script
 ```bash
 # Clone the repository
-git clone https://github.com/adambornemann-glitch/Logos-Library
-cd logos-library
+git clone https://github.com/adambornemann-glitch/LogosLibrary
+cd LogosLibrary
 
 # Install elan (Lean version manager) if you don't have it
 curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh
