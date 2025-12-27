@@ -92,7 +92,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed structure.
 |---------|--------|-------|-------|
 | Units | 🟢 Stable | ~20k | Foundation complete |
 | Classes | 🟡 Active | ~30k | QM & Relativity courses ongoing |
-| Deep Theorems | 🟡 Active | ~15k | Robertson ✅, Stone 🔄 |
+| Deep Theorems | 🟡 Active | ~15k | Stone ✅ | Spectral 🔄 |
 | Detectors | 🟡 Active | ~5k | Battery detector operational |
 
 **Current Focus**: Stone's Theorem (quantum evolution operators)
