@@ -1,7 +1,7 @@
 /-
 Author: Adam Bornemann
 Created: 10/10/2025
-Updated: 11/27/2025
+Updated: 12/26/2025
 
 ================================================================================
 STONE'S THEOREM: CORE STRUCTURES AND DEFINITIONS
@@ -22,493 +22,15 @@ References:
   - Our own Robertson.Core for the unbounded operator pattern
 -/
 
-import Mathlib.Analysis.InnerProductSpace.l2Space
-import Mathlib.Analysis.InnerProductSpace.Adjoint
-import Mathlib.Analysis.Normed.Operator.Basic
-import Mathlib.Analysis.Calculus.Deriv.Basic
-import Mathlib.MeasureTheory.Integral.Bochner.Basic
-import Mathlib.MeasureTheory.Integral.Bochner.L1
-import Mathlib.MeasureTheory.Integral.Bochner.VitaliCaratheodory
-import Mathlib.Topology.Algebra.Group.Basic
-import Mathlib.Data.Complex.Basic
-import Mathlib.Tactic
--- Import Robertson's proven unbounded operator machinery
-import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Core
+-- Import Completed Bochner file which has the Generator machinery as well
+import LogosLibrary.DeepTheorems.Quantum.Evolution.Bochner
 
 namespace StonesTheorem.Resolvent
 
-open InnerProductSpace MeasureTheory Complex Filter Topology
+open InnerProductSpace MeasureTheory Complex Filter Topology  StonesTheorem.Bochner Stone.Generators
 open scoped BigOperators Topology
 set_option linter.unusedSectionVars false
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
-
-/-!
-================================================================================
-SECTION 1: ONE-PARAMETER UNITARY GROUPS
-================================================================================
-
-A strongly continuous one-parameter unitary group is a family {U(t)}_{t∈ℝ}
-satisfying:
-  1. U(0) = I
-  2. U(s+t) = U(s)U(t)
-  3. U(t)* = U(-t)
-  4. t ↦ U(t)ψ is continuous for each ψ
-
-This is the "dynamics" side of Stone's theorem.
--/
-
-/--
-Strongly continuous one-parameter unitary group.
-
-Physical interpretation: Time evolution in quantum mechanics
-Mathematical content: The "U(t) = exp(itH)" side of Stone's theorem
-
-NOTE: We do NOT require differentiability - only strong continuity.
-Stone's theorem will prove the generator exists from this alone!
--/
-structure OneParameterUnitaryGroup where
-  /-- The family of operators U(t) for each t ∈ ℝ -/
-  U : ℝ → (H →L[ℂ] H)
-
-  /-- U(t) preserves inner products (unitarity) -/
-  unitary : ∀ (t : ℝ) (ψ φ : H), ⟪U t ψ, U t φ⟫_ℂ = ⟪ψ, φ⟫_ℂ
-
-  /-- Group property: U(s+t) = U(s)U(t) -/
-  group_law : ∀ s t : ℝ, U (s + t) = (U s).comp (U t)
-
-  /-- Identity: U(0) = I -/
-  identity : U 0 = ContinuousLinearMap.id ℂ H
-
-  /-- Strong continuity: t ↦ U(t)ψ is continuous for each ψ -/
-  strong_continuous : ∀ ψ : H, Continuous (fun t : ℝ => U t ψ)
-
-/-!
-### Derived Properties of One-Parameter Groups
--/
-
-namespace OneParameterUnitaryGroup
-
-/--
-U(-t) = U(t)* (inverse equals adjoint for unitary operators).
-
-**Mathematical Content:**
-For any strongly continuous one-parameter unitary group, the operator at time -t
-is exactly the adjoint (Hermitian conjugate) of the operator at time t:
-  U(-t) = U(t)*
-
-**Proof Strategy:**
-1. Use the group law: U(t)U(-t) = U(t + (-t)) = U(0) = I
-   This shows U(-t) is the inverse of U(t)
-2. Use unitarity: ⟨U(t)ψ, U(t)φ⟩ = ⟨ψ, φ⟩
-3. Combine these to show: ⟨U(-t)ψ, φ⟩ = ⟨ψ, U(t)φ⟩
-   which is the defining property of the adjoint
-
-The key calculation:
-  ⟨U(-t)ψ, φ⟩ = ⟨U(t)(U(-t)ψ), U(t)φ⟩  [by unitarity]
-               = ⟨ψ, U(t)φ⟩              [since U(t)U(-t) = I]
-
-**Why This Matters:**
-- Shows unitary operators are normal: U(t)U(t)* = U(t)*U(t)
-- Essential for proving generators are symmetric: if Aψ = lim (U(t)ψ - ψ)/(it),
-  then ⟨Aψ, φ⟩ = ⟨ψ, Aφ⟩
-- Confirms physical reversibility: time evolution backward is the adjoint of
-  time evolution forward
-
-**Physical Interpretation:**
-In quantum mechanics, U(t) evolves states forward in time. Its adjoint U(t)*
-evolves states backward in time. This theorem proves these are related by
-time reversal: U(-t) = U(t)*, showing the fundamental reversibility of
-unitary quantum dynamics.
-
-**Relation to Other Properties:**
-Combined with the group law, this gives:
-- U(t)* = U(-t) = [U(t)]⁻¹, so unitary operators are self-adjoint in the
-  inverse sense
-- U(t)*U(t) = U(-t)U(t) = U(0) = I, confirming U(t) is an isometry
--/
-theorem inverse_eq_adjoint (U_grp : OneParameterUnitaryGroup (H := H)) (t : ℝ) :
-    U_grp.U (-t) = (U_grp.U t).adjoint := by
-  ext ψ
-  apply ext_inner_right ℂ
-  intro φ
-
-  -- Want: ⟨U(-t)ψ, φ⟩ = ⟨ψ, U(t)φ⟩
-  -- Use: U(t)U(-t) = I, so U(t)(U(-t)ψ) = ψ
-  -- And unitarity
-
-  have h_inv : U_grp.U t (U_grp.U (-t) ψ) = ψ := by
-    have h1 : t + (-t) = 0 := by ring
-    have h2 : U_grp.U (t + (-t)) = (U_grp.U t).comp (U_grp.U (-t)) :=
-      U_grp.group_law t (-t)
-    rw [h1] at h2
-    have h3 : (U_grp.U t).comp (U_grp.U (-t)) = U_grp.U 0 := h2.symm
-    have h4 : U_grp.U 0 = ContinuousLinearMap.id ℂ H := U_grp.identity
-    rw [h4] at h3
-    have : (U_grp.U t) ((U_grp.U (-t)) ψ) = ((U_grp.U t).comp (U_grp.U (-t))) ψ := rfl
-    rw [this, h3]
-    rfl
-
-  calc ⟪U_grp.U (-t) ψ, φ⟫_ℂ
-      = ⟪U_grp.U t (U_grp.U (-t) ψ), U_grp.U t φ⟫_ℂ := by
-          rw [← U_grp.unitary t (U_grp.U (-t) ψ) φ]
-      _ = ⟪ψ, U_grp.U t φ⟫_ℂ := by rw [h_inv]
-      _ = ⟪(U_grp.U t).adjoint ψ, φ⟫_ℂ := by
-          -- This is the definition of adjoint!
-          rw [ContinuousLinearMap.adjoint_inner_left]
-
-
-
-/--
-U(t) is norm-preserving (isometry).
-
-**Mathematical Content:**
-For any t ∈ ℝ and ψ ∈ H, the unitary operator U(t) preserves norms:
-  ‖U(t)ψ‖ = ‖ψ‖
-
-This is the defining property of an isometry.
-
-**Proof Strategy:**
-Direct consequence of unitarity:
-1. Unitarity gives: ⟨U(t)ψ, U(t)ψ⟩ = ⟨ψ, ψ⟩
-2. The norm is defined by: ‖x‖² = Re⟨x, x⟩
-3. Therefore: ‖U(t)ψ‖² = ‖ψ‖²
-4. Take square roots (both sides non-negative)
-
-**Why This Matters:**
-- Confirms U(t) is an isometry (distance-preserving)
-- Combined with surjectivity, proves U(t) is unitary
-- Essential for showing ‖U(t)‖ = 1 as an operator
-- Guarantees no "loss of information" under time evolution
-
-**Physical Interpretation:**
-In quantum mechanics, this is the normalization preservation principle:
-if ψ is a normalized state (‖ψ‖ = 1), then U(t)ψ remains normalized
-for all times t. This ensures probability is conserved during quantum
-evolution - the total probability remains 1 under unitary dynamics.
-
-**Relation to Other Properties:**
-- Implies U(t) is injective (if U(t)ψ = 0, then ‖ψ‖ = 0, so ψ = 0)
-- Combined with the group law, proves U(t) is surjective (U(-t) is inverse)
-- Together these show U(t) is a unitary operator in the operator-theoretic sense
--/
-theorem norm_preserving (U_grp : OneParameterUnitaryGroup (H := H)) (t : ℝ) (ψ : H) :
-    ‖U_grp.U t ψ‖ = ‖ψ‖ := by
-  have h := U_grp.unitary t ψ ψ
-  -- h : ⟪U_grp.U t ψ, U_grp.U t ψ⟫_ℂ = ⟪ψ, ψ⟫_ℂ
-
-  -- Norm is defined by: ‖x‖² = ⟨x, x⟩
-  have h1 : (⟪U_grp.U t ψ, U_grp.U t ψ⟫_ℂ).re = ‖U_grp.U t ψ‖ ^ 2 := by
-    have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (U_grp.U t ψ)
-    calc (⟪U_grp.U t ψ, U_grp.U t ψ⟫_ℂ).re
-        = ((‖U_grp.U t ψ‖ ^ 2 : ℂ)).re := by
-            have h_re := congr_arg Complex.re this
-            simp only at h_re
-            exact h_re
-      _ = ‖U_grp.U t ψ‖ ^ 2 := by norm_cast
-
-  have h2 : (⟪ψ, ψ⟫_ℂ).re = ‖ψ‖ ^ 2 := by
-    have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) ψ
-    calc (⟪ψ, ψ⟫_ℂ).re
-        = ((‖ψ‖ ^ 2 : ℂ)).re := by
-            have h_re := congr_arg Complex.re this
-            simp only at h_re
-            exact h_re
-      _ = ‖ψ‖ ^ 2 := by norm_cast
-
-  -- From h: ⟨Uψ, Uψ⟩ = ⟨ψ, ψ⟩, we get ‖Uψ‖² = ‖ψ‖²
-  have h_sq : ‖U_grp.U t ψ‖ ^ 2 = ‖ψ‖ ^ 2 := by
-    calc ‖U_grp.U t ψ‖ ^ 2
-        = (⟪U_grp.U t ψ, U_grp.U t ψ⟫_ℂ).re := h1.symm
-      _ = (⟪ψ, ψ⟫_ℂ).re := by rw [h]
-      _ = ‖ψ‖ ^ 2 := h2
-
-  -- Take square roots
-  have : ‖U_grp.U t ψ‖ = ‖ψ‖ ∨ ‖U_grp.U t ψ‖ = -‖ψ‖ := by
-    exact sq_eq_sq_iff_eq_or_eq_neg.mp h_sq
-  cases this with
-  | inl h => exact h
-  | inr h =>
-      -- ‖U(t)ψ‖ = -‖ψ‖, but both are non-negative, so both = 0
-      have h1 : 0 ≤ ‖U_grp.U t ψ‖ := norm_nonneg _
-      have h2 : 0 ≤ ‖ψ‖ := norm_nonneg _
-      linarith
-
-
-/--
-U(t) has operator norm equal to 1.
-
-**Mathematical Content:**
-For any t ∈ ℝ, the operator norm of U(t) is exactly 1:
-  ‖U(t)‖ = sup{‖U(t)ψ‖ : ‖ψ‖ ≤ 1} = 1
-
-**Proof Strategy:**
-Two inequalities:
-1. **Upper bound (‖U(t)‖ ≤ 1):**
-   For any ψ: ‖U(t)ψ‖ = ‖ψ‖ ≤ ‖ψ‖, so ‖U(t)‖ ≤ 1
-
-2. **Lower bound (‖U(t)‖ ≥ 1):**
-   Use the factorization U(0) = U(t)U(-t) and submultiplicativity:
-   - 1 = ‖I‖ = ‖U(0)‖ = ‖U(t)U(-t)‖ ≤ ‖U(t)‖·‖U(-t)‖
-   - Both ‖U(t)‖ ≤ 1 and ‖U(-t)‖ ≤ 1
-   - Therefore ‖U(t)‖·‖U(-t)‖ ≥ 1 forces ‖U(t)‖ = 1
-
-**Why This Matters:**
-- Confirms U(t) is a unitary operator in the operator norm sense
-- Shows the group of unitary operators sits on the "unit sphere" of operators
-- Essential for bounding errors in numerical integration of Schrödinger equation
-- Proves the propagator is optimally conditioned (condition number = 1)
-
-**Physical Interpretation:**
-In quantum mechanics, ‖U(t)‖ = 1 means time evolution is "perfectly stable":
-no amplification or decay of states under unitary dynamics. The worst-case
-amplification factor is exactly 1 - quantum evolution is optimally well-behaved
-from a numerical analysis perspective.
-
-**Relation to Other Properties:**
-- Combines `norm_preserving` (pointwise: ‖U(t)ψ‖ = ‖ψ‖) with submultiplicativity
-- The identity ‖U(t)‖·‖U(-t)‖ ≥ ‖U(t)U(-t)‖ = 1 is tight: equality holds
-- Shows unitary operators form a bounded subset of B(H) with radius 1
-- Essential for proving the generator A is densely defined (bounded operators
-  couldn't have densely defined unbounded inverses)
-
-**Note:** Requires `[Nontrivial H]` to ensure ‖I‖ = 1. In the trivial space
-H = {0}, all operators have norm 0.
--/
-theorem norm_one [Nontrivial H] (U_grp : OneParameterUnitaryGroup (H := H)) (t : ℝ) :
-    ‖U_grp.U t‖ = 1 := by
-  have h_le : ‖U_grp.U t‖ ≤ 1 := by
-    apply ContinuousLinearMap.opNorm_le_bound
-    · norm_num
-    · intro ψ
-      calc ‖U_grp.U t ψ‖
-          = ‖ψ‖ := norm_preserving U_grp t ψ
-        _ = 1 * ‖ψ‖ := by ring
-      rfl
-
-  have h_ge : 1 ≤ ‖U_grp.U t‖ := by
-    calc 1 = ‖ContinuousLinearMap.id ℂ H‖ := ContinuousLinearMap.norm_id.symm
-      _ = ‖U_grp.U 0‖ := by rw [← U_grp.identity]
-      _ = ‖U_grp.U (t + (-t))‖ := by ring_nf
-      _ = ‖(U_grp.U t).comp (U_grp.U (-t))‖ := by rw [← U_grp.group_law]
-      _ ≤ ‖U_grp.U t‖ * ‖U_grp.U (-t)‖ := ContinuousLinearMap.opNorm_comp_le _ _
-      _ ≤ ‖U_grp.U t‖ * 1 := by
-          have : ‖U_grp.U (-t)‖ ≤ 1 := by
-            apply ContinuousLinearMap.opNorm_le_bound
-            · norm_num
-            · intro ψ
-              calc ‖U_grp.U (-t) ψ‖ = ‖ψ‖ := norm_preserving U_grp (-t) ψ
-                _ = 1 * ‖ψ‖ := by ring
-              rfl
-          exact mul_le_mul_of_nonneg_left this (norm_nonneg _)
-      _ = ‖U_grp.U t‖ := by ring
-
-  exact le_antisymm h_le h_ge
-
-end OneParameterUnitaryGroup
-
-/-!
-================================================================================
-SECTION 2: GENERATORS (UNBOUNDED OPERATORS)
-================================================================================
-
-The generator A of a group U(t) is defined by:
-  Aψ = -i lim_{t→0} (U(t)ψ - ψ)/t
-
-This is an UNBOUNDED operator, so we use Robertson's proven pattern:
-  - Linear operator on all of H (type-wise)
-  - Dense domain where it's actually defined
-  - Self-adjointness via inner product condition
--/
-
-/--
-Generator of a one-parameter unitary group.
-
-Uses the Robertson.Core.UnboundedObservable pattern for domain tracking.
-
-Key challenge: Proving this is self-adjoint, not just symmetric!
-Self-adjointness requires proving Range(A ± iI) = H (the hard part).
--/
-structure Generator (U_grp : OneParameterUnitaryGroup (H := H)) where
-  /-- The operator itself (formally defined on all of H) -/
-  op : H →ₗ[ℂ] H
-
-  /-- Dense domain where the limit defining the generator exists -/
-  domain : Submodule ℂ H
-
-  /-- The domain is dense (crucial for Stone's theorem) -/
-  dense_domain : Dense (domain : Set H)
-
-  /-- Generator formula: Aψ = -i lim_{t→0} (U(t)ψ - ψ)/t
-
-  The limit is taken in the punctured neighborhood of 0.
-  We express: Aψ = lim_{t→0, t≠0} (U(t)ψ - ψ)/(it)
-  -/
-  generator_formula : ∀ (ψ : H) (_ /-hψ-/ : ψ ∈ domain),
-    Tendsto (fun t : ℝ => ((I : ℂ) * (t : ℂ))⁻¹ • (U_grp.U t ψ - ψ))
-          (𝓝[≠] 0)
-          (𝓝 (op ψ))
-
-  /-- Domain is invariant under time evolution -/
-  domain_invariant : ∀ (t : ℝ) (ψ : H), ψ ∈ domain → U_grp.U t ψ ∈ domain
-
-  /-- Generator is symmetric (self-adjointness proven separately) -/
-  symmetric : ∀ (ψ φ : H), ψ ∈ domain → φ ∈ domain →
-    ⟪op ψ, φ⟫_ℂ = ⟪ψ, op φ⟫_ℂ
-
-/-!
-### Key Construction Lemmas for Generators
-
-These prove that the domain has the required properties.
--/
-
-namespace Generator
-
-/-
-Elements of the form ∫₀^h U(t)ψ dt are in the domain.
-This is the key construction proving domain densit
--/
-
-/-!
-================================================================================
-SECTION 3: SELF-ADJOINTNESS CRITERIA
-================================================================================
-
-Self-adjoint ≠ Symmetric!
-
-For unbounded operators:
-  - Symmetric: ⟨Aψ,φ⟩ = ⟨ψ,Aφ⟩ for ψ,φ ∈ D(A)
-  - Self-adjoint: A = A* (including domain equality!)
-
-The key criterion for self-adjointness:
-  A symmetric + Range(A ± iI) = H  ⟹  A self-adjoint
--/
-
-/--
-A generator is self-adjoint if its range under (A ± iI) covers H.
-
-This is the HARD part of Stone's theorem! We'll prove this using
-the integral: ψ = ∫₀^∞ e^{-t} U(t)φ dt
--/
-def IsSelfAdjoint {U_grp : OneParameterUnitaryGroup (H := H)}
-    (gen : Generator U_grp) : Prop :=
-  (∀ φ : H, ∃ (ψ : H) (_ /-hψ-/ : ψ ∈ gen.domain),
-    gen.op ψ + (I : ℂ) • ψ = φ) ∧
-  (∀ φ : H, ∃ (ψ : H) (_ /-hψ-/ : ψ ∈ gen.domain),
-    gen.op ψ - (I : ℂ) • ψ = φ)
-
-
-/-- **Construction of Generator from Unitary Group**
-
-Given a strongly continuous one-parameter unitary group U(t), we construct
-its self-adjoint generator A via:
-
-  D(A) = {ψ ∈ H | lim_{t→0} (U(t)ψ - ψ)/(it) exists}
-  Aψ = lim_{t→0} (U(t)ψ - ψ)/(it)
-
-The proof that this is self-adjoint (i.e., Range(A ± iI) = H) uses the
-integral formulas:
-  ψ₊ = i ∫₀^∞ e^{-t} U(t)φ dt   satisfies (A + iI)ψ₊ = φ
-  ψ₋ = -i ∫₀^∞ e^{-t} U(-t)φ dt satisfies (A - iI)ψ₋ = φ
-
-These integrals converge because ‖U(t)‖ = 1 (unitarity) and e^{-t} decays.
--/
-noncomputable def Generator.ofUnitaryGroup
-    (U_grp : OneParameterUnitaryGroup (H := H)) :
-    Generator U_grp := by
-  sorry
-
-theorem Generator.ofUnitaryGroup_isSelfAdjoint
-    (U_grp : OneParameterUnitaryGroup (H := H)) :
-    (Generator.ofUnitaryGroup U_grp).IsSelfAdjoint := by
-  sorry
-
-/-!
-### Helper Lemmas for Generator Uniqueness
--/
-
-/-- The domain of a generator is exactly the set of vectors where the limit exists.
-This characterization shows that the domain is uniquely determined by the unitary group. -/
-lemma generator_domain_char (U_grp : OneParameterUnitaryGroup (H := H))
-    (gen : Generator U_grp) (ψ : H) :
-    ψ ∈ gen.domain ↔
-    ∃ (η : H), Tendsto (fun t : ℝ => ((I : ℂ) * (t : ℂ))⁻¹ • (U_grp.U t ψ - ψ))
-                       (𝓝[≠] 0) (𝓝 η) := by
-  constructor
-  · intro hψ
-    exact ⟨gen.op ψ, gen.generator_formula ψ hψ⟩
-  · intro ⟨η, hη⟩
-    -- The domain should contain all vectors where the limit exists
-    -- This requires that the generator was constructed to be maximal
-    sorry
-
-/-- For self-adjoint generators, the domain is maximal: it contains all vectors
-where the limit defining the generator exists. -/
-lemma selfAdjoint_domain_maximal (U_grp : OneParameterUnitaryGroup (H := H))
-    (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint) (ψ : H)
-    (η : H) (hη : Tendsto (fun t : ℝ => ((I : ℂ) * (t : ℂ))⁻¹ • (U_grp.U t ψ - ψ))
-                          (𝓝[≠] 0) (𝓝 η)) :
-    ψ ∈ gen.domain := by
-  -- Self-adjoint operators are maximally symmetric.
-  -- If the limit exists, ψ must be in the domain.
-  -- Proof sketch:
-  -- 1. Define the "maximal domain" D_max = {ψ | limit exists}
-  -- 2. Show D_max is a subspace containing gen.domain
-  -- 3. The restriction of the limit-operator to D_max is symmetric
-  -- 4. Self-adjointness of gen means gen has no proper symmetric extensions
-  -- 5. Therefore gen.domain = D_max
-  sorry
-
-/-- Self-adjoint generators of the same unitary group have the same domain. -/
-lemma selfAdjoint_generators_domain_eq (U_grp : OneParameterUnitaryGroup (H := H))
-    (gen₁ gen₂ : Generator U_grp)
-    (hsa₁ : gen₁.IsSelfAdjoint) (hsa₂ : gen₂.IsSelfAdjoint) :
-    gen₁.domain = gen₂.domain := by
-  ext ψ
-  constructor
-  · intro hψ₁
-    -- ψ ∈ gen₁.domain means the limit exists (with value gen₁.op ψ)
-    have h_lim := gen₁.generator_formula ψ hψ₁
-    -- By maximality of gen₂.domain, since limit exists, ψ ∈ gen₂.domain
-    exact selfAdjoint_domain_maximal U_grp gen₂ hsa₂ ψ (gen₁.op ψ) h_lim
-  · intro hψ₂
-    have h_lim := gen₂.generator_formula ψ hψ₂
-    exact selfAdjoint_domain_maximal U_grp gen₁ hsa₁ ψ (gen₂.op ψ) h_lim
-
-/-- Generators that agree on their common domain are equal as linear maps on the domain. -/
-lemma generator_op_eq_on_domain (U_grp : OneParameterUnitaryGroup (H := H))
-    (gen₁ gen₂ : Generator U_grp) (ψ : H)
-    (hψ₁ : ψ ∈ gen₁.domain) (hψ₂ : ψ ∈ gen₂.domain) :
-    gen₁.op ψ = gen₂.op ψ := by
-  -- Both are the unique limit of the same expression
-  have h₁ := gen₁.generator_formula ψ hψ₁
-  have h₂ := gen₂.generator_formula ψ hψ₂
-  exact tendsto_nhds_unique h₁ h₂
-
-/-- For generators with the same domain, if they agree on the domain, they agree everywhere.
-This uses the fact that the generator is determined by its action on the dense domain. -/
-lemma generator_op_ext_of_eq_on_domain (U_grp : OneParameterUnitaryGroup (H := H))
-    (gen₁ gen₂ : Generator U_grp)
-    (h_dom : gen₁.domain = gen₂.domain)
-    (h_eq : ∀ ψ ∈ gen₁.domain, gen₁.op ψ = gen₂.op ψ) :
-    gen₁.op = gen₂.op := by
-  -- The op is a linear map H →ₗ[ℂ] H
-  -- For vectors outside the domain, the behavior is determined by the
-  -- requirement that op is linear and equals the limit on domain
-  --
-  -- Key insight: The generator_formula completely determines op on domain.
-  -- Outside domain, both gen₁.op and gen₂.op must be consistent linear
-  -- extensions, but since they're constructed from the same unitary group
-  -- via the same limiting process, they must agree.
-  ext ψ
-  by_cases hψ : ψ ∈ gen₁.domain
-  · exact h_eq ψ hψ
-  · -- Outside domain case
-    -- The linear map op : H →ₗ[ℂ] H is not uniquely determined outside domain
-    -- by the generator formula alone. However, for self-adjoint generators,
-    -- the standard construction extends by 0 or uses the graph closure.
-    -- Since both generators are constructed from the same group, the
-    -- extension must be the same.
-    sorry
 
 
 /-!
@@ -518,11 +40,6 @@ For self-adjoint A and z ∉ ℝ, the resolvent R_z = (A - zI)^{-1} exists
 as a BOUNDED operator on H.
 
 This is magic: unbounded operator → family of bounded operators!
--/
-/-
-================================================================================
-SECTION 4: Resolvent
-================================================================================
 -/
 
 /--
@@ -556,15 +73,10 @@ The `.2` in `hsa.2` selects the second component of the conjunction in
 `IsSelfAdjoint`, which gives Range(A - iI) = H. The `.1` would give Range(A + iI) = H.
 -/
 lemma resolvent_at_i_spec {U_grp : OneParameterUnitaryGroup (H := H)}
-    (gen : Generator U_grp) (hsa : IsSelfAdjoint gen) (φ : H) :
-    Classical.choose (hsa.2 φ) ∈ gen.domain ∧
-    gen.op (Classical.choose (hsa.2 φ)) - I • (Classical.choose (hsa.2 φ)) = φ := by
-  obtain ⟨h_mem, h_eq⟩ := Classical.choose_spec (hsa.2 φ)
-  exact ⟨h_mem, h_eq⟩
-
-
-
-
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (φ : H) :
+    ∃ (ψ : gen.domain), gen.op ψ - I • (ψ : H) = φ := by
+  obtain ⟨ψ, hψ, h_eq⟩ := hsa.2 φ
+  exact ⟨⟨ψ, hψ⟩, h_eq⟩
 
 /--
 Uniqueness of solutions to (A - iI)ψ = φ.
@@ -592,64 +104,72 @@ A quantum system with Hamiltonian H cannot have complex energy eigenvalues
 (energy must be real). This is equivalent to H being self-adjoint.
 -/
 lemma resolvent_at_i_unique {U_grp : OneParameterUnitaryGroup (H := H)}
-    (gen : Generator U_grp) (_ /-hsa-/ : IsSelfAdjoint gen)
+    (gen : Generator U_grp) (_ : Generator.IsSelfAdjoint gen)
     (φ ψ₁ ψ₂ : H)
     (hψ₁ : ψ₁ ∈ gen.domain) (hψ₂ : ψ₂ ∈ gen.domain)
-    (h₁ : gen.op ψ₁ - I • ψ₁ = φ) (h₂ : gen.op ψ₂ - I • ψ₂ = φ) :
+    (h₁ : gen.op (⟨ψ₁, hψ₁⟩ : gen.domain) - I • ψ₁ = φ)
+    (h₂ : gen.op (⟨ψ₂, hψ₂⟩ : gen.domain) - I • ψ₂ = φ) :
     ψ₁ = ψ₂ := by
 
-  -- Subtract the equations
-  have h_diff : gen.op ψ₁ - I • ψ₁ - (gen.op ψ₂ - I • ψ₂) = 0 := by
+  have h_diff : gen.op (⟨ψ₁, hψ₁⟩ : gen.domain) - I • ψ₁ - (gen.op (⟨ψ₂, hψ₂⟩ : gen.domain) - I • ψ₂) = 0 := by
     rw [h₁, h₂]
     simp
 
   -- First, show ψ₁ - ψ₂ ∈ domain (Submodule is closed under subtraction)
   have h_sub_domain : ψ₁ - ψ₂ ∈ gen.domain := gen.domain.sub_mem hψ₁ hψ₂
 
+-- ψ₁ - ψ₂ is in the domain
+  have h_sub_domain : ψ₁ - ψ₂ ∈ gen.domain := gen.domain.sub_mem hψ₁ hψ₂
+
   -- Rewrite as (A - iI)(ψ₁ - ψ₂) = 0
-  have h_factor : gen.op (ψ₁ - ψ₂) - I • (ψ₁ - ψ₂) = 0 := by
-    have op_sub := gen.op.map_sub ψ₁ ψ₂
-    calc gen.op (ψ₁ - ψ₂) - I • (ψ₁ - ψ₂)
-        = (gen.op ψ₁ - gen.op ψ₂) - I • (ψ₁ - ψ₂) := by rw [op_sub]
-      _ = (gen.op ψ₁ - gen.op ψ₂) - (I • ψ₁ - I • ψ₂) := by rw [smul_sub]
-      _ = (gen.op ψ₁ - I • ψ₁) - (gen.op ψ₂ - I • ψ₂) := by abel
+  have h_factor : gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain) - I • (ψ₁ - ψ₂) = 0 := by
+    have op_sub := gen.op.map_sub (⟨ψ₁, hψ₁⟩ : gen.domain) (⟨ψ₂, hψ₂⟩ : gen.domain)
+    simp only at op_sub
+    calc gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain) - I • (ψ₁ - ψ₂)
+        = (gen.op (⟨ψ₁, hψ₁⟩ : gen.domain) - gen.op (⟨ψ₂, hψ₂⟩ : gen.domain)) - I • (ψ₁ - ψ₂) := by exact congrFun (congrArg HSub.hSub op_sub) (I • (ψ₁ - ψ₂))
+      _ = (gen.op (⟨ψ₁, hψ₁⟩ : gen.domain) - gen.op (⟨ψ₂, hψ₂⟩ : gen.domain)) - (I • ψ₁ - I • ψ₂) := by rw [smul_sub]
+      _ = (gen.op (⟨ψ₁, hψ₁⟩ : gen.domain) - I • ψ₁) - (gen.op (⟨ψ₂, hψ₂⟩ : gen.domain) - I • ψ₂) := by abel
       _ = 0 := h_diff
 
   -- So A(ψ₁ - ψ₂) = i(ψ₁ - ψ₂)
-  have h_eigen : gen.op (ψ₁ - ψ₂) = I • (ψ₁ - ψ₂) := by
+  have h_eigen : gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain) = I • (ψ₁ - ψ₂) := by
     exact sub_eq_zero.mp h_factor
 
   -- Take inner product with (ψ₁ - ψ₂)
-  have h_inner : ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ = (starRingEnd ℂ) I * ‖ψ₁ - ψ₂‖ ^ 2 := by
+  have h_inner : ⟪gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain), ψ₁ - ψ₂⟫_ℂ = (starRingEnd ℂ) I * ‖ψ₁ - ψ₂‖ ^ 2 := by
     rw [h_eigen, inner_smul_left, inner_self_eq_norm_sq_to_K]
     rfl
+
   -- Simplify: conj(I) = -I
-  have h_inner' : ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ = -I * ‖ψ₁ - ψ₂‖ ^ 2 := by
+  have h_inner' : ⟪gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain), ψ₁ - ψ₂⟫_ℂ = -I * ‖ψ₁ - ψ₂‖ ^ 2 := by
     rw [h_inner]
     simp only [Complex.conj_I]
 
   -- But A is symmetric, so ⟨A(ψ₁ - ψ₂), ψ₁ - ψ₂⟩ is real
-  have h_sym : ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ = ⟪ψ₁ - ψ₂, gen.op (ψ₁ - ψ₂)⟫_ℂ := by
-    exact gen.symmetric (ψ₁ - ψ₂) (ψ₁ - ψ₂) h_sub_domain h_sub_domain
+  have h_sym : ⟪gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain), ψ₁ - ψ₂⟫_ℂ = ⟪ψ₁ - ψ₂, gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain)⟫_ℂ := by
+    have := gen.symmetric (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain) (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain)
+    simp only at this
+    expose_names
+    exact this
 
   -- So ⟨A(ψ₁ - ψ₂), ψ₁ - ψ₂⟩ is real (equals its own conjugate)
-  have h_real : (⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ).im = 0 := by
-    have eq_conj : ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ = (starRingEnd ℂ) ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ := by
-      calc ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ
-          = ⟪ψ₁ - ψ₂, gen.op (ψ₁ - ψ₂)⟫_ℂ := h_sym
-        _ = (starRingEnd ℂ) ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ :=
-            (inner_conj_symm (ψ₁ - ψ₂) (gen.op (ψ₁ - ψ₂))).symm
+  have h_real : (⟪gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain), ψ₁ - ψ₂⟫_ℂ).im = 0 := by
+    have eq_conj : ⟪gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain), ψ₁ - ψ₂⟫_ℂ = (starRingEnd ℂ) ⟪gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain), ψ₁ - ψ₂⟫_ℂ := by
+      calc ⟪gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain), ψ₁ - ψ₂⟫_ℂ
+          = ⟪ψ₁ - ψ₂, gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain)⟫_ℂ := h_sym
+        _ = (starRingEnd ℂ) ⟪gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain), ψ₁ - ψ₂⟫_ℂ :=
+            (inner_conj_symm (ψ₁ - ψ₂) (gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain))).symm
     -- z = conj(z) means Im(z) = -Im(z), so Im(z) = 0
     have h_parts := Complex.ext_iff.mp eq_conj
     simp only [Complex.conj_im] at h_parts
     linarith [h_parts.2]
 
   -- But we also have it equals -I * ‖ψ₁ - ψ₂‖², which has imaginary part -‖ψ₁ - ψ₂‖²
-  have h_imag : (⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ).im = -(‖ψ₁ - ψ₂‖ ^ 2) := by
+  have h_imag : (⟪gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain), ψ₁ - ψ₂⟫_ℂ).im = -(‖ψ₁ - ψ₂‖ ^ 2) := by
     rw [h_inner']
     rw [mul_comm, Complex.mul_im]
     simp only [Complex.neg_re, Complex.neg_im,
-              Complex.I_re, Complex.I_im, mul_zero,neg_zero]
+              Complex.I_re, Complex.I_im, mul_zero, neg_zero]
     -- Now: (↑‖ψ₁ - ψ₂‖ ^ 2).re * -1 + 0 = -‖ψ₁ - ψ₂‖ ^ 2
     norm_cast
     ring_nf
@@ -658,7 +178,7 @@ lemma resolvent_at_i_unique {U_grp : OneParameterUnitaryGroup (H := H)}
   -- Combining: ‖ψ₁ - ψ₂‖² = 0
   have : ‖ψ₁ - ψ₂‖ ^ 2 = 0 := by
     have h_eq : -(‖ψ₁ - ψ₂‖ ^ 2) = (0 : ℝ) := by
-      calc -(‖ψ₁ - ψ₂‖ ^ 2) = (⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ).im := h_imag.symm
+      calc -(‖ψ₁ - ψ₂‖ ^ 2) = (⟪gen.op (⟨ψ₁ - ψ₂, h_sub_domain⟩ : gen.domain), ψ₁ - ψ₂⟫_ℂ).im := h_imag.symm
         _ = 0 := h_real
     linarith
 
@@ -668,244 +188,253 @@ lemma resolvent_at_i_unique {U_grp : OneParameterUnitaryGroup (H := H)}
   exact sub_eq_zero.mp (norm_eq_zero.mp this)
 
 
+/-
+FIXED resolvent_at_i section
+
+Key fix: The IsSelfAdjoint definition uses nested existentials:
+  ∃ (ψ : H) (hψ : ψ ∈ gen.domain), gen.op ⟨ψ, hψ⟩ - I • ψ = φ
+
+This requires TWO applications of Classical.choose to fully unpack.
+The original code incorrectly used .1/.2 on existentials.
+-/
+
+-- Assume all the imports and namespace setup from your file
+-- namespace StonesTheorem.Resolvent
+
+/-!
+### Helper Lemmas for Unpacking Nested Existentials
+
+These lemmas extract the witness and proofs from IsSelfAdjoint
+in a way that's compatible with the resolvent_at_i definition.
+-/
+
+/-- Extract the domain membership proof for the resolvent solution.
+
+    Given hsa.2 φ : ∃ (ψ : H) (hψ : ψ ∈ gen.domain), gen.op ⟨ψ, hψ⟩ - I • ψ = φ
+
+    We need to apply Classical.choose twice:
+    - First choose gives us ψ : H
+    - Second choose gives us hψ : ψ ∈ gen.domain
+-/
+lemma resolvent_solution_mem {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (φ : H) :
+    Classical.choose (hsa.2 φ) ∈ gen.domain :=
+  Classical.choose (Classical.choose_spec (hsa.2 φ))
+
+/-- Extract the defining equation for the resolvent solution.
+
+    This states that the chosen ψ actually satisfies (A - iI)ψ = φ.
+
+    Crucially, this uses resolvent_solution_mem for the domain proof,
+    ensuring definitional equality with the term in Classical.choose_spec.
+-/
+lemma resolvent_solution_eq {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (φ : H) :
+    gen.op ⟨Classical.choose (hsa.2 φ), resolvent_solution_mem gen hsa φ⟩ -
+    I • Classical.choose (hsa.2 φ) = φ :=
+  Classical.choose_spec (Classical.choose_spec (hsa.2 φ))
+
+/-!
+### The Resolvent Operator (Fixed Version)
+-/
 
 /--
 The resolvent operator R_i = (A - iI)⁻¹ at z = i.
 
-**Mathematical Content:**
-For a self-adjoint generator A, the resolvent at i is the bounded linear operator
+For a self-adjoint generator A, this is the bounded linear operator
 that inverts (A - iI). For each φ ∈ H, it returns the unique ψ ∈ domain(A)
-satisfying:
-  (A - iI)ψ = φ
-
-**Existence:** The self-adjointness condition `IsSelfAdjoint` guarantees that
-Range(A - iI) = H, so every φ has a solution.
-
-**Uniqueness:** If A is symmetric and (A - iI)ψ = 0, then Aψ = iψ, making i
-an eigenvalue. But taking ⟨Aψ, ψ⟩ gives a real number (by symmetry) equal to
-i‖ψ‖² (imaginary), forcing ψ = 0. Hence (A - iI) is injective.
-
-**Boundedness:** The key identity
-  ‖(A - iI)ψ‖² = ‖Aψ‖² + ‖ψ‖²
-(which holds because Re⟨Aψ, iψ⟩ = 0 for symmetric A) proves ‖(A - iI)ψ‖ ≥ ‖ψ‖,
-giving the Lipschitz bound ‖R_i‖ ≤ 1.
-
-**Significance:**
-- First step in proving the spectral theorem via functional calculus
-- Base case for constructing R_z for all z ∉ ℝ via Neumann series
-- The existence of bounded resolvents off the real line is THE defining property
-  distinguishing self-adjoint from merely symmetric operators
-
-**Physical Interpretation:**
-In quantum mechanics, (E - H)⁻¹ is the resolvent of the Hamiltonian H. Its poles
-on the real axis are the energy eigenvalues. The resolvent at i represents the
-response of the system to a complex energy probe.
-
-**Implementation Note:**
-Uses `Classical.choose` to extract solutions from the existential in `IsSelfAdjoint`.
-Linearity and continuity are proven via the uniqueness of solutions to (A - iI)ψ = φ.
+satisfying (A - iI)ψ = φ.
 -/
 noncomputable def resolvent_at_i {U_grp : OneParameterUnitaryGroup (H := H)}
-    (gen : Generator U_grp) (hsa : IsSelfAdjoint gen) : H →L[ℂ] H where
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) : H →L[ℂ] H where
+
   toFun φ := Classical.choose (hsa.2 φ)
 
-  map_add' := by
-    intro φ₁ φ₂
-    -- Strategy: Both R(φ₁) + R(φ₂) and R(φ₁ + φ₂) satisfy (A - iI)·(?) = φ₁ + φ₂
-    -- By uniqueness, they're equal
+  map_add' := fun φ₁ φ₂ => by
+    -- Goal: R(φ₁ + φ₂) = R(φ₁) + R(φ₂)
+    -- Strategy: Both sides satisfy (A - iI)·(?) = φ₁ + φ₂, use uniqueness
 
-    -- Extract what we know about R(φ₁) and R(φ₂)
-    have h₁ := resolvent_at_i_spec gen hsa φ₁
-    have h₂ := resolvent_at_i_spec gen hsa φ₂
-    have h_sum := resolvent_at_i_spec gen hsa (φ₁ + φ₂)
+    -- Abbreviations for readability
+    let R₁ := Classical.choose (hsa.2 φ₁)
+    let R₂ := Classical.choose (hsa.2 φ₂)
+    let R_sum := Classical.choose (hsa.2 (φ₁ + φ₂))
 
-    -- Show R(φ₁) + R(φ₂) is in domain
-    have h_add_domain : Classical.choose (hsa.2 φ₁) + Classical.choose (hsa.2 φ₂) ∈ gen.domain :=
-      gen.domain.add_mem h₁.1 h₂.1
+    -- Domain membership for individual solutions
+    have h₁_mem : R₁ ∈ gen.domain := resolvent_solution_mem gen hsa φ₁
+    have h₂_mem : R₂ ∈ gen.domain := resolvent_solution_mem gen hsa φ₂
+    have h_sum_mem : R_sum ∈ gen.domain := resolvent_solution_mem gen hsa (φ₁ + φ₂)
 
-    -- Show (A - iI)(R(φ₁) + R(φ₂)) = φ₁ + φ₂
-    have h_add_eq : gen.op (Classical.choose (hsa.2 φ₁) + Classical.choose (hsa.2 φ₂)) -
-                    I • (Classical.choose (hsa.2 φ₁) + Classical.choose (hsa.2 φ₂)) = φ₁ + φ₂ := by
-      have op_add := gen.op.map_add (Classical.choose (hsa.2 φ₁)) (Classical.choose (hsa.2 φ₂))
-      calc gen.op (Classical.choose (hsa.2 φ₁) + Classical.choose (hsa.2 φ₂)) -
-           I • (Classical.choose (hsa.2 φ₁) + Classical.choose (hsa.2 φ₂))
-          = (gen.op (Classical.choose (hsa.2 φ₁)) + gen.op (Classical.choose (hsa.2 φ₂))) -
-            I • (Classical.choose (hsa.2 φ₁) + Classical.choose (hsa.2 φ₂)) := by rw [op_add]
-        _ = (gen.op (Classical.choose (hsa.2 φ₁)) + gen.op (Classical.choose (hsa.2 φ₂))) -
-            (I • Classical.choose (hsa.2 φ₁) + I • Classical.choose (hsa.2 φ₂)) := by rw [smul_add]
-        _ = (gen.op (Classical.choose (hsa.2 φ₁)) - I • Classical.choose (hsa.2 φ₁)) +
-            (gen.op (Classical.choose (hsa.2 φ₂)) - I • Classical.choose (hsa.2 φ₂)) := by abel
-        _ = φ₁ + φ₂ := by rw [h₁.2, h₂.2]
+    -- The defining equations
+    have h₁_eq : gen.op ⟨R₁, h₁_mem⟩ - I • R₁ = φ₁ := resolvent_solution_eq gen hsa φ₁
+    have h₂_eq : gen.op ⟨R₂, h₂_mem⟩ - I • R₂ = φ₂ := resolvent_solution_eq gen hsa φ₂
+    have h_sum_eq : gen.op ⟨R_sum, h_sum_mem⟩ - I • R_sum = φ₁ + φ₂ :=
+      resolvent_solution_eq gen hsa (φ₁ + φ₂)
 
-    -- Apply uniqueness
-    exact (resolvent_at_i_unique gen hsa (φ₁ + φ₂)
-      (Classical.choose (hsa.2 φ₁) + Classical.choose (hsa.2 φ₂))
-      (Classical.choose (hsa.2 (φ₁ + φ₂)))
-      h_add_domain h_sum.1 h_add_eq h_sum.2).symm
+    -- The sum R₁ + R₂ is in the domain
+    have h_add_mem : R₁ + R₂ ∈ gen.domain := gen.domain.add_mem h₁_mem h₂_mem
 
-  map_smul' := by
-    intro c φ
-    -- Similar strategy: both c•R(φ) and R(c•φ) satisfy (A - iI)·(?) = c•φ
-
-    have h := resolvent_at_i_spec gen hsa φ
-    have h_scaled := resolvent_at_i_spec gen hsa (c • φ)
-
-    -- Show c•R(φ) is in domain
-    have h_smul_domain : c • Classical.choose (hsa.2 φ) ∈ gen.domain :=
-      gen.domain.smul_mem c h.1
-
-    -- Show (A - iI)(c•R(φ)) = c•φ
-    have h_smul_eq : gen.op (c • Classical.choose (hsa.2 φ)) -
-                     I • (c • Classical.choose (hsa.2 φ)) = c • φ := by
-      have op_smul := gen.op.map_smul c (Classical.choose (hsa.2 φ))
-      calc gen.op (c • Classical.choose (hsa.2 φ)) - I • (c • Classical.choose (hsa.2 φ))
-          = c • gen.op (Classical.choose (hsa.2 φ)) - I • (c • Classical.choose (hsa.2 φ)) := by rw [op_smul]
-        _ = c • gen.op (Classical.choose (hsa.2 φ)) - c • (I • Classical.choose (hsa.2 φ)) := by rw [smul_comm]
-        _ = c • (gen.op (Classical.choose (hsa.2 φ)) - I • Classical.choose (hsa.2 φ)) := by rw [smul_sub]
-        _ = c • φ := by rw [h.2]
+    -- Show (A - iI)(R₁ + R₂) = φ₁ + φ₂
+    have h_add_eq : gen.op ⟨R₁ + R₂, h_add_mem⟩ - I • (R₁ + R₂) = φ₁ + φ₂ := by
+      -- Use linearity of gen.op
+      have op_add := gen.op.map_add ⟨R₁, h₁_mem⟩ ⟨R₂, h₂_mem⟩
+      -- The subtype addition: need to show the op values match
+      have op_eq : gen.op ⟨R₁ + R₂, h_add_mem⟩ = gen.op ⟨R₁, h₁_mem⟩ + gen.op ⟨R₂, h₂_mem⟩ := by
+        -- This should follow from linearity, but we need subtype ext
+        convert op_add using 1
+      calc gen.op ⟨R₁ + R₂, h_add_mem⟩ - I • (R₁ + R₂)
+          = (gen.op ⟨R₁, h₁_mem⟩ + gen.op ⟨R₂, h₂_mem⟩) - I • (R₁ + R₂) := by rw [op_eq]
+        _ = (gen.op ⟨R₁, h₁_mem⟩ + gen.op ⟨R₂, h₂_mem⟩) - (I • R₁ + I • R₂) := by rw [smul_add]
+        _ = (gen.op ⟨R₁, h₁_mem⟩ - I • R₁) + (gen.op ⟨R₂, h₂_mem⟩ - I • R₂) := by abel
+        _ = φ₁ + φ₂ := by rw [h₁_eq, h₂_eq]
 
     -- Apply uniqueness
-    exact (resolvent_at_i_unique gen hsa (c • φ)
-      (c • Classical.choose (hsa.2 φ))
-      (Classical.choose (hsa.2 (c • φ)))
-      h_smul_domain h_scaled.1 h_smul_eq h_scaled.2).symm
+    exact (resolvent_at_i_unique gen hsa (φ₁ + φ₂) (R₁ + R₂) R_sum
+      h_add_mem h_sum_mem h_add_eq h_sum_eq).symm
+
+  map_smul' := fun c φ => by
+    -- Goal: R(c • φ) = c • R(φ)
+
+    let R_φ := Classical.choose (hsa.2 φ)
+    let R_scaled := Classical.choose (hsa.2 (c • φ))
+
+    -- Domain membership
+    have h_mem : R_φ ∈ gen.domain := resolvent_solution_mem gen hsa φ
+    have h_scaled_mem : R_scaled ∈ gen.domain := resolvent_solution_mem gen hsa (c • φ)
+
+    -- Defining equations
+    have h_eq : gen.op ⟨R_φ, h_mem⟩ - I • R_φ = φ := resolvent_solution_eq gen hsa φ
+    have h_scaled_eq : gen.op ⟨R_scaled, h_scaled_mem⟩ - I • R_scaled = c • φ :=
+      resolvent_solution_eq gen hsa (c • φ)
+
+    -- c • R(φ) is in domain
+    have h_smul_mem : c • R_φ ∈ gen.domain := gen.domain.smul_mem c h_mem
+
+    -- Show (A - iI)(c • R(φ)) = c • φ
+    have h_smul_eq : gen.op ⟨c • R_φ, h_smul_mem⟩ - I • (c • R_φ) = c • φ := by
+      have op_smul := gen.op.map_smul c ⟨R_φ, h_mem⟩
+      have op_eq : gen.op ⟨c • R_φ, h_smul_mem⟩ = c • gen.op ⟨R_φ, h_mem⟩ := by
+        convert op_smul using 1
+      calc gen.op ⟨c • R_φ, h_smul_mem⟩ - I • (c • R_φ)
+          = c • gen.op ⟨R_φ, h_mem⟩ - I • (c • R_φ) := by rw [op_eq]
+        _ = c • gen.op ⟨R_φ, h_mem⟩ - c • (I • R_φ) := by rw [smul_comm]
+        _ = c • (gen.op ⟨R_φ, h_mem⟩ - I • R_φ) := by rw [smul_sub]
+        _ = c • φ := by rw [h_eq]
+
+    -- Apply uniqueness
+    exact (resolvent_at_i_unique gen hsa (c • φ) (c • R_φ) R_scaled
+      h_smul_mem h_scaled_mem h_smul_eq h_scaled_eq).symm
 
   cont := by
+    -- Prove continuity via Lipschitz bound ‖R(φ)‖ ≤ ‖φ‖
     have lip : LipschitzWith 1 (fun φ => Classical.choose (hsa.2 φ)) := by
       intro φ₁ φ₂
 
       let ψ₁ := Classical.choose (hsa.2 φ₁)
       let ψ₂ := Classical.choose (hsa.2 φ₂)
 
-      have h₁ := resolvent_at_i_spec gen hsa φ₁
-      have h₂ := resolvent_at_i_spec gen hsa φ₂
+      have h₁_mem : ψ₁ ∈ gen.domain := resolvent_solution_mem gen hsa φ₁
+      have h₂_mem : ψ₂ ∈ gen.domain := resolvent_solution_mem gen hsa φ₂
+      have h₁_eq := resolvent_solution_eq gen hsa φ₁
+      have h₂_eq := resolvent_solution_eq gen hsa φ₂
 
       -- (A - iI)(ψ₁ - ψ₂) = φ₁ - φ₂
-      have h_diff : gen.op (ψ₁ - ψ₂) - I • (ψ₁ - ψ₂) = φ₁ - φ₂ := by
-        calc gen.op (ψ₁ - ψ₂) - I • (ψ₁ - ψ₂)
-            = (gen.op ψ₁ - gen.op ψ₂) - I • (ψ₁ - ψ₂) := by rw [gen.op.map_sub]
-          _ = (gen.op ψ₁ - gen.op ψ₂) - (I • ψ₁ - I • ψ₂) := by rw [smul_sub]
-          _ = (gen.op ψ₁ - I • ψ₁) - (gen.op ψ₂ - I • ψ₂) := by abel
-          _ = φ₁ - φ₂ := by rw [h₁.2, h₂.2]
+      have h_sub_mem : ψ₁ - ψ₂ ∈ gen.domain := gen.domain.sub_mem h₁_mem h₂_mem
 
-      -- ‖ψ₁ - ψ₂‖ ≤ ‖φ₁ - φ₂‖
-      -- ‖ψ₁ - ψ₂‖ ≤ ‖φ₁ - φ₂‖
+      have h_diff : gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩ - I • (ψ₁ - ψ₂) = φ₁ - φ₂ := by
+        have op_sub := gen.op.map_sub ⟨ψ₁, h₁_mem⟩ ⟨ψ₂, h₂_mem⟩
+        have op_eq : gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩ =
+                     gen.op ⟨ψ₁, h₁_mem⟩ - gen.op ⟨ψ₂, h₂_mem⟩ := by
+          convert op_sub using 1
+        calc gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩ - I • (ψ₁ - ψ₂)
+            = (gen.op ⟨ψ₁, h₁_mem⟩ - gen.op ⟨ψ₂, h₂_mem⟩) - I • (ψ₁ - ψ₂) := by rw [op_eq]
+          _ = (gen.op ⟨ψ₁, h₁_mem⟩ - gen.op ⟨ψ₂, h₂_mem⟩) - (I • ψ₁ - I • ψ₂) := by rw [smul_sub]
+          _ = (gen.op ⟨ψ₁, h₁_mem⟩ - I • ψ₁) - (gen.op ⟨ψ₂, h₂_mem⟩ - I • ψ₂) := by abel
+          _ = φ₁ - φ₂ := by rw [h₁_eq, h₂_eq]
+
+      -- Key estimate: ‖ψ₁ - ψ₂‖ ≤ ‖φ₁ - φ₂‖
       have bound : ‖ψ₁ - ψ₂‖ ≤ ‖φ₁ - φ₂‖ := by
         let Δψ := ψ₁ - ψ₂
 
-        -- Key: ‖(A - iI)Δψ‖² = ‖A(Δψ)‖² + ‖Δψ‖²
-        have key_expand : ‖gen.op Δψ - I • Δψ‖ ^ 2 = ‖gen.op Δψ‖ ^ 2 + ‖Δψ‖ ^ 2 := by
-          have h_sub_domain : Δψ ∈ gen.domain := gen.domain.sub_mem h₁.1 h₂.1
-
+        -- Key identity: ‖(A - iI)Δψ‖² = ‖A(Δψ)‖² + ‖Δψ‖²
+        have key_expand : ‖gen.op ⟨Δψ, h_sub_mem⟩ - I • Δψ‖ ^ 2 =
+                          ‖gen.op ⟨Δψ, h_sub_mem⟩‖ ^ 2 + ‖Δψ‖ ^ 2 := by
           -- Expand ‖x - y‖² = ‖x‖² + ‖y‖² - 2 Re⟨x, y⟩
-          have expand : ‖gen.op Δψ - I • Δψ‖ ^ 2 =
-              ‖gen.op Δψ‖ ^ 2 + ‖I • Δψ‖ ^ 2 - 2 * (⟪gen.op Δψ, I • Δψ⟫_ℂ).re := by
-            -- Convert LHS to inner product
-            have h1 : ‖gen.op Δψ - I • Δψ‖ ^ 2 = (⟪gen.op Δψ - I • Δψ, gen.op Δψ - I • Δψ⟫_ℂ).re := by
-              have h_inner : (⟪gen.op Δψ - I • Δψ, gen.op Δψ - I • Δψ⟫_ℂ).re = ‖gen.op Δψ - I • Δψ‖ ^ 2 := by
-                have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (gen.op Δψ - I • Δψ)
-                -- this gives: ⟪x, x⟫_ℂ = ↑‖x‖^2
-
-                -- Take .re of both sides
-                have h_re_both : (⟪gen.op Δψ - I • Δψ, gen.op Δψ - I • Δψ⟫_ℂ).re = ((‖gen.op Δψ - I • Δψ‖ ^ 2 : ℂ)).re := by
-                  rw [this]
-                  norm_cast
-
-                -- Now use that (↑r).re = r
-                have h_re : ((‖gen.op Δψ - I • Δψ‖ ^ 2 : ℂ)).re = ‖gen.op Δψ - I • Δψ‖ ^ 2 := by
-                  norm_cast
-
-                rw [h_re_both, h_re]
-
-              rw [← h_inner]
-
-            rw [h1, inner_sub_left, inner_sub_right, inner_sub_right]
-            simp only [Complex.sub_re]
-
-            -- Convert RHS norms to inner products
-            have h2 : ‖gen.op Δψ‖ ^ 2 = (⟪gen.op Δψ, gen.op Δψ⟫_ℂ).re := by
-              have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (gen.op Δψ)
-              rw [this]
-              norm_cast
-
-
+          have expand : ‖gen.op ⟨Δψ, h_sub_mem⟩ - I • Δψ‖ ^ 2 =
+              ‖gen.op ⟨Δψ, h_sub_mem⟩‖ ^ 2 + ‖I • Δψ‖ ^ 2 -
+              2 * (⟪gen.op ⟨Δψ, h_sub_mem⟩, I • Δψ⟫_ℂ).re := by
+            have h1 : ‖gen.op ⟨Δψ, h_sub_mem⟩ - I • Δψ‖ ^ 2 =
+                      (⟪gen.op ⟨Δψ, h_sub_mem⟩ - I • Δψ, gen.op ⟨Δψ, h_sub_mem⟩ - I • Δψ⟫_ℂ).re := by
+              have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (gen.op ⟨Δψ, h_sub_mem⟩ - I • Δψ)
+              rw [this]; norm_cast
+            have h2 : ‖gen.op ⟨Δψ, h_sub_mem⟩‖ ^ 2 = (⟪gen.op ⟨Δψ, h_sub_mem⟩, gen.op ⟨Δψ, h_sub_mem⟩⟫_ℂ).re := by
+              have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (gen.op ⟨Δψ, h_sub_mem⟩)
+              rw [this]; norm_cast
             have h3 : ‖I • Δψ‖ ^ 2 = (⟪I • Δψ, I • Δψ⟫_ℂ).re := by
               have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (I • Δψ)
-              rw [this]
-              norm_cast
-
-            rw [h2, h3]
-
-            -- Cross terms
-            have h_cross : (⟪gen.op Δψ, I • Δψ⟫_ℂ).re + (⟪I • Δψ, gen.op Δψ⟫_ℂ).re =
-                          2 * (⟪gen.op Δψ, I • Δψ⟫_ℂ).re := by
-              have := inner_conj_symm (𝕜 := ℂ) (gen.op Δψ) (I • Δψ)
-              have h_eq : (⟪I • Δψ, gen.op Δψ⟫_ℂ).re = (⟪gen.op Δψ, I • Δψ⟫_ℂ).re := by
-                calc (⟪I • Δψ, gen.op Δψ⟫_ℂ).re
-                    = ((starRingEnd ℂ) ⟪gen.op Δψ, I • Δψ⟫_ℂ).re := by norm_num
-                  _ = (⟪gen.op Δψ, I • Δψ⟫_ℂ).re := by simp only [Complex.conj_re]
-              rw [h_eq]
-              ring
-
-            rw [h_cross.symm]
+              rw [this]; norm_cast
+            have h_cross : (⟪gen.op ⟨Δψ, h_sub_mem⟩, I • Δψ⟫_ℂ).re +
+                           (⟪I • Δψ, gen.op ⟨Δψ, h_sub_mem⟩⟫_ℂ).re =
+                           2 * (⟪gen.op ⟨Δψ, h_sub_mem⟩, I • Δψ⟫_ℂ).re := by
+              have h_eq : (⟪I • Δψ, gen.op ⟨Δψ, h_sub_mem⟩⟫_ℂ).re =
+                          (⟪gen.op ⟨Δψ, h_sub_mem⟩, I • Δψ⟫_ℂ).re := by
+                calc (⟪I • Δψ, gen.op ⟨Δψ, h_sub_mem⟩⟫_ℂ).re
+                    = ((starRingEnd ℂ) ⟪gen.op ⟨Δψ, h_sub_mem⟩, I • Δψ⟫_ℂ).re := by
+                        rw [inner_conj_symm]
+                  _ = (⟪gen.op ⟨Δψ, h_sub_mem⟩, I • Δψ⟫_ℂ).re := by simp only [Complex.conj_re]
+              rw [h_eq]; ring
+            rw [h1, inner_sub_left, inner_sub_right, inner_sub_right]
+            simp only [Complex.sub_re]
+            rw [h2, h3, ← h_cross]
             ring
 
-          -- Show ‖iΔψ‖ = ‖Δψ‖
+          -- ‖iΔψ‖ = ‖Δψ‖
           have norm_I_smul : ‖I • Δψ‖ = ‖Δψ‖ := by
-            rw [norm_smul]
-            simp
+            rw [norm_smul]; simp
 
-          -- Show Re⟨A(Δψ), iΔψ⟩ = 0
-          have cross_zero : (⟪gen.op Δψ, I • Δψ⟫_ℂ).re = 0 := by
-            have h_sub_domain : Δψ ∈ gen.domain := gen.domain.sub_mem h₁.1 h₂.1
-
+          -- Re⟨A(Δψ), iΔψ⟩ = 0 (because A is symmetric)
+          have cross_zero : (⟪gen.op ⟨Δψ, h_sub_mem⟩, I • Δψ⟫_ℂ).re = 0 := by
             rw [inner_smul_right]
-            -- ⟨Aψ, iψ⟩ = i⟨Aψ, ψ⟩
-            have h1 : I * ⟪gen.op Δψ, Δψ⟫_ℂ = I * (⟪gen.op Δψ, Δψ⟫_ℂ).re +
-                      I * Complex.I * (⟪gen.op Δψ, Δψ⟫_ℂ).im := by
-              conv_lhs => rw [← Complex.re_add_im (⟪gen.op Δψ, Δψ⟫_ℂ)]
-              ring
-
-            -- A is symmetric, so ⟨Aψ, ψ⟩ is real
-            have h_real : (⟪gen.op Δψ, Δψ⟫_ℂ).im = 0 := by
-              have h_sym := gen.symmetric Δψ Δψ h_sub_domain h_sub_domain
-              have h_conj : ⟪gen.op Δψ, Δψ⟫_ℂ = (starRingEnd ℂ) ⟪gen.op Δψ, Δψ⟫_ℂ := by
-                rw [h_sym]
-                calc ⟪Δψ, gen.op Δψ⟫_ℂ
-                  = ⟪gen.op Δψ, Δψ⟫_ℂ := (gen.symmetric Δψ Δψ h_sub_domain h_sub_domain).symm
-                _ = (starRingEnd ℂ) ⟪Δψ, gen.op Δψ⟫_ℂ := (inner_conj_symm (𝕜 := ℂ) (gen.op Δψ) Δψ).symm
+            have h_real : (⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ).im = 0 := by
+              have h_sym := gen.symmetric ⟨Δψ, h_sub_mem⟩ ⟨Δψ, h_sub_mem⟩
+              have h_conj : ⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ =
+                            (starRingEnd ℂ) ⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ := by
+                calc ⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ
+                    = ⟪Δψ, gen.op ⟨Δψ, h_sub_mem⟩⟫_ℂ := h_sym
+                  _ = (starRingEnd ℂ) ⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ := by
+                      rw [inner_conj_symm]
               have := Complex.ext_iff.mp h_conj
               simp only [Complex.conj_im] at this
               linarith [this.2]
-
-            rw [h1, h_real]
-            -- Now: (i * re).re = 0
+            -- i * (real number) has re = 0
+            have h1 : I * ⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ =
+                      I * (⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ).re := by
+              conv_lhs => rw [← Complex.re_add_im ⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ]
+              rw [h_real]; simp
+            rw [h1, mul_comm]
             simp
 
           rw [expand, norm_I_smul, cross_zero]
           ring
 
         -- Therefore ‖(A - iI)Δψ‖² ≥ ‖Δψ‖²
-        have le_sq : ‖Δψ‖ ^ 2 ≤ ‖gen.op Δψ - I • Δψ‖ ^ 2 := by
+        have le_sq : ‖Δψ‖ ^ 2 ≤ ‖gen.op ⟨Δψ, h_sub_mem⟩ - I • Δψ‖ ^ 2 := by
           rw [key_expand]
-          have : 0 ≤ ‖gen.op Δψ‖ ^ 2 := sq_nonneg _
+          have : 0 ≤ ‖gen.op ⟨Δψ, h_sub_mem⟩‖ ^ 2 := sq_nonneg _
           linarith
 
         -- Take square roots
-        have le_norm : ‖Δψ‖ ≤ ‖gen.op Δψ - I • Δψ‖ := by
+        have le_norm : ‖Δψ‖ ≤ ‖gen.op ⟨Δψ, h_sub_mem⟩ - I • Δψ‖ := by
           have h_nonneg_left : 0 ≤ ‖Δψ‖ := norm_nonneg _
-          have h_nonneg_right : 0 ≤ ‖gen.op Δψ - I • Δψ‖ := norm_nonneg _
-          have h_sq : ‖Δψ‖ ^ 2 ≤ ‖gen.op Δψ - I • Δψ‖ ^ 2 := le_sq
+          have h_nonneg_right : 0 ≤ ‖gen.op ⟨Δψ, h_sub_mem⟩ - I • Δψ‖ := norm_nonneg _
           by_contra h_not
           push_neg at h_not
-          -- If ‖Δψ‖ > ‖gen.op Δψ - I • Δψ‖, then ‖Δψ‖² > ‖gen.op Δψ - I • Δψ‖²
-          have : ‖gen.op Δψ - I • Δψ‖ ^ 2 < ‖Δψ‖ ^ 2 := by
-            nlinarith [sq_nonneg (‖Δψ‖ - ‖gen.op Δψ - I • Δψ‖)]
+          have : ‖gen.op ⟨Δψ, h_sub_mem⟩ - I • Δψ‖ ^ 2 < ‖Δψ‖ ^ 2 := by
+            nlinarith [sq_nonneg (‖Δψ‖ - ‖gen.op ⟨Δψ, h_sub_mem⟩ - I • Δψ‖)]
           linarith
 
-        -- Substitute back
+        -- Substitute back: ‖(A - iI)Δψ‖ = ‖φ₁ - φ₂‖
         calc ‖ψ₁ - ψ₂‖ = ‖Δψ‖ := rfl
-          _ ≤ ‖gen.op Δψ - I • Δψ‖ := le_norm
+          _ ≤ ‖gen.op ⟨Δψ, h_sub_mem⟩ - I • Δψ‖ := le_norm
           _ = ‖φ₁ - φ₂‖ := by rw [h_diff]
 
       -- Convert to edist
@@ -916,11 +445,7 @@ noncomputable def resolvent_at_i {U_grp : OneParameterUnitaryGroup (H := H)}
     exact lip.continuous
 
 
-
-
-
-
-/--
+/-
 The resolvent operator R_{-i} = (A + iI)⁻¹ at z = -i.
 
 **Mathematical Content:**
@@ -947,236 +472,252 @@ Having both R_i and R_{-i} proves that A has resolvent in both upper and lower
 half-planes. This bilateral surjectivity is characteristic of self-adjoint operators
 (symmetric operators may fail on one or both sides).
 -/
+
+/-- Extract domain membership for the (A + iI) resolvent solution -/
+lemma resolvent_solution_mem_plus {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (φ : H) :
+    Classical.choose (hsa.1 φ) ∈ gen.domain :=
+  Classical.choose (Classical.choose_spec (hsa.1 φ))
+
+/-- Extract the defining equation for the (A + iI) resolvent solution -/
+lemma resolvent_solution_eq_plus {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (φ : H) :
+    gen.op ⟨Classical.choose (hsa.1 φ), resolvent_solution_mem_plus gen hsa φ⟩ +
+    I • Classical.choose (hsa.1 φ) = φ :=
+  Classical.choose_spec (Classical.choose_spec (hsa.1 φ))
+
+/-- Uniqueness for (A + iI): if (A + iI)ψ₁ = (A + iI)ψ₂, then ψ₁ = ψ₂ -/
+lemma resolvent_at_neg_i_unique {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (_ : Generator.IsSelfAdjoint gen)
+    (φ ψ₁ ψ₂ : H)
+    (hψ₁ : ψ₁ ∈ gen.domain) (hψ₂ : ψ₂ ∈ gen.domain)
+    (h₁ : gen.op ⟨ψ₁, hψ₁⟩ + I • ψ₁ = φ)
+    (h₂ : gen.op ⟨ψ₂, hψ₂⟩ + I • ψ₂ = φ) :
+    ψ₁ = ψ₂ := by
+  -- (A + iI)(ψ₁ - ψ₂) = 0
+  have h_sub_mem : ψ₁ - ψ₂ ∈ gen.domain := gen.domain.sub_mem hψ₁ hψ₂
+
+  have h_diff : gen.op ⟨ψ₁, hψ₁⟩ + I • ψ₁ - (gen.op ⟨ψ₂, hψ₂⟩ + I • ψ₂) = 0 := by
+    rw [h₁, h₂]; simp
+
+  have h_factor : gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩ + I • (ψ₁ - ψ₂) = 0 := by
+    have op_sub := gen.op.map_sub ⟨ψ₁, hψ₁⟩ ⟨ψ₂, hψ₂⟩
+    have op_eq : gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩ = gen.op ⟨ψ₁, hψ₁⟩ - gen.op ⟨ψ₂, hψ₂⟩ := by
+      convert op_sub using 1
+    calc gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩ + I • (ψ₁ - ψ₂)
+        = (gen.op ⟨ψ₁, hψ₁⟩ - gen.op ⟨ψ₂, hψ₂⟩) + I • (ψ₁ - ψ₂) := by rw [op_eq]
+      _ = (gen.op ⟨ψ₁, hψ₁⟩ - gen.op ⟨ψ₂, hψ₂⟩) + (I • ψ₁ - I • ψ₂) := by rw [smul_sub]
+      _ = (gen.op ⟨ψ₁, hψ₁⟩ + I • ψ₁) - (gen.op ⟨ψ₂, hψ₂⟩ + I • ψ₂) := by abel
+      _ = 0 := h_diff
+
+  -- So A(ψ₁ - ψ₂) = -i(ψ₁ - ψ₂)
+  have h_eigen : gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩ = -I • (ψ₁ - ψ₂) := by
+    have := add_eq_zero_iff_eq_neg.mp h_factor
+    rw [← neg_smul] at this
+    exact this
+
+  -- Inner product argument
+  have h_inner : ⟪gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩, ψ₁ - ψ₂⟫_ℂ = (starRingEnd ℂ) (-I) * ‖ψ₁ - ψ₂‖ ^ 2 := by
+    rw [h_eigen, inner_smul_left, inner_self_eq_norm_sq_to_K]
+    exact rfl
+
+  have h_inner' : ⟪gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩, ψ₁ - ψ₂⟫_ℂ = I * ‖ψ₁ - ψ₂‖ ^ 2 := by
+    rw [h_inner]; simp only [map_neg, Complex.conj_I, neg_neg]
+
+  -- But A is symmetric, so the inner product is real
+  have h_sym : ⟪gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩, ψ₁ - ψ₂⟫_ℂ = ⟪ψ₁ - ψ₂, gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩⟫_ℂ :=
+    gen.symmetric ⟨ψ₁ - ψ₂, h_sub_mem⟩ ⟨ψ₁ - ψ₂, h_sub_mem⟩
+
+  have h_real : (⟪gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩, ψ₁ - ψ₂⟫_ℂ).im = 0 := by
+    have eq_conj : ⟪gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩, ψ₁ - ψ₂⟫_ℂ =
+                   (starRingEnd ℂ) ⟪gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩, ψ₁ - ψ₂⟫_ℂ := by
+      calc ⟪gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩, ψ₁ - ψ₂⟫_ℂ
+          = ⟪ψ₁ - ψ₂, gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩⟫_ℂ := h_sym
+        _ = (starRingEnd ℂ) ⟪gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩, ψ₁ - ψ₂⟫_ℂ :=
+            (inner_conj_symm (ψ₁ - ψ₂) (gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩)).symm
+    have h_parts := Complex.ext_iff.mp eq_conj
+    simp only [Complex.conj_im] at h_parts
+    linarith [h_parts.2]
+
+  -- i * ‖ψ₁ - ψ₂‖² has imaginary part ‖ψ₁ - ψ₂‖²
+  have h_imag : (⟪gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩, ψ₁ - ψ₂⟫_ℂ).im = ‖ψ₁ - ψ₂‖ ^ 2 := by
+    rw [h_inner', mul_comm, Complex.mul_im]
+    simp only [Complex.I_re, Complex.I_im, mul_zero]
+    norm_cast; ring_nf
+
+  -- Contradiction: Im = 0 but also Im = ‖ψ₁ - ψ₂‖²
+  have : ‖ψ₁ - ψ₂‖ ^ 2 = 0 := by
+    calc ‖ψ₁ - ψ₂‖ ^ 2 = (⟪gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩, ψ₁ - ψ₂⟫_ℂ).im := h_imag.symm
+      _ = 0 := h_real
+
+  have : ‖ψ₁ - ψ₂‖ = 0 := sq_eq_zero_iff.mp this
+  exact sub_eq_zero.mp (norm_eq_zero.mp this)
+
+
+
+/--
+The resolvent operator R_{-i} = (A + iI)⁻¹ at z = -i.
+-/
 noncomputable def resolvent_at_neg_i {U_grp : OneParameterUnitaryGroup (H := H)}
-    (gen : Generator U_grp) (hsa : IsSelfAdjoint gen) : H →L[ℂ] H where
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) : H →L[ℂ] H where
+
   toFun φ := Classical.choose (hsa.1 φ)
 
-  map_add' := by
-    intro φ₁ φ₂
-    -- Same proof structure as resolvent_at_i, but with (A + iI) instead of (A - iI)
-    have h₁ := Classical.choose_spec (hsa.1 φ₁)
-    have h₂ := Classical.choose_spec (hsa.1 φ₂)
-    have h_sum := Classical.choose_spec (hsa.1 (φ₁ + φ₂))
+  map_add' := fun φ₁ φ₂ => by
+    let R₁ := Classical.choose (hsa.1 φ₁)
+    let R₂ := Classical.choose (hsa.1 φ₂)
+    let R_sum := Classical.choose (hsa.1 (φ₁ + φ₂))
 
-    have h_add_domain : Classical.choose (hsa.1 φ₁) + Classical.choose (hsa.1 φ₂) ∈ gen.domain :=
-      gen.domain.add_mem h₁.1 h₂.1
+    have h₁_mem : R₁ ∈ gen.domain := resolvent_solution_mem_plus gen hsa φ₁
+    have h₂_mem : R₂ ∈ gen.domain := resolvent_solution_mem_plus gen hsa φ₂
+    have h_sum_mem : R_sum ∈ gen.domain := resolvent_solution_mem_plus gen hsa (φ₁ + φ₂)
 
-    have h_add_eq : gen.op (Classical.choose (hsa.1 φ₁) + Classical.choose (hsa.1 φ₂)) +
-                    I • (Classical.choose (hsa.1 φ₁) + Classical.choose (hsa.1 φ₂)) = φ₁ + φ₂ := by
-      have op_add := gen.op.map_add (Classical.choose (hsa.1 φ₁)) (Classical.choose (hsa.1 φ₂))
-      calc gen.op (Classical.choose (hsa.1 φ₁) + Classical.choose (hsa.1 φ₂)) +
-           I • (Classical.choose (hsa.1 φ₁) + Classical.choose (hsa.1 φ₂))
-          = (gen.op (Classical.choose (hsa.1 φ₁)) + gen.op (Classical.choose (hsa.1 φ₂))) +
-            I • (Classical.choose (hsa.1 φ₁) + Classical.choose (hsa.1 φ₂)) := by rw [op_add]
-        _ = (gen.op (Classical.choose (hsa.1 φ₁)) + gen.op (Classical.choose (hsa.1 φ₂))) +
-            (I • Classical.choose (hsa.1 φ₁) + I • Classical.choose (hsa.1 φ₂)) := by rw [smul_add]
-        _ = (gen.op (Classical.choose (hsa.1 φ₁)) + I • Classical.choose (hsa.1 φ₁)) +
-            (gen.op (Classical.choose (hsa.1 φ₂)) + I • Classical.choose (hsa.1 φ₂)) := by abel
-        _ = φ₁ + φ₂ := by rw [h₁.2, h₂.2]
+    have h₁_eq : gen.op ⟨R₁, h₁_mem⟩ + I • R₁ = φ₁ := resolvent_solution_eq_plus gen hsa φ₁
+    have h₂_eq : gen.op ⟨R₂, h₂_mem⟩ + I • R₂ = φ₂ := resolvent_solution_eq_plus gen hsa φ₂
+    have h_sum_eq : gen.op ⟨R_sum, h_sum_mem⟩ + I • R_sum = φ₁ + φ₂ :=
+      resolvent_solution_eq_plus gen hsa (φ₁ + φ₂)
 
-    -- Uniqueness proof (same structure, using (A + iI) instead of (A - iI))
-    have unique : ∀ ψ₁ ψ₂, ψ₁ ∈ gen.domain → ψ₂ ∈ gen.domain →
-                  gen.op ψ₁ + I • ψ₁ = φ₁ + φ₂ → gen.op ψ₂ + I • ψ₂ = φ₁ + φ₂ → ψ₁ = ψ₂ := by
-      intro ψ₁ ψ₂ hψ₁ hψ₂ heq₁ heq₂
-      have h_diff : gen.op ψ₁ + I • ψ₁ - (gen.op ψ₂ + I • ψ₂) = 0 := by
-        rw [heq₁, heq₂]; simp
-      have h_sub_domain : ψ₁ - ψ₂ ∈ gen.domain := gen.domain.sub_mem hψ₁ hψ₂
-      have h_factor : gen.op (ψ₁ - ψ₂) + I • (ψ₁ - ψ₂) = 0 := by
-        have op_sub := gen.op.map_sub ψ₁ ψ₂
-        calc gen.op (ψ₁ - ψ₂) + I • (ψ₁ - ψ₂)
-            = (gen.op ψ₁ - gen.op ψ₂) + I • (ψ₁ - ψ₂) := by rw [op_sub]
-          _ = (gen.op ψ₁ - gen.op ψ₂) + (I • ψ₁ - I • ψ₂) := by rw [smul_sub]
-          _ = (gen.op ψ₁ + I • ψ₁) - (gen.op ψ₂ + I • ψ₂) := by abel
-          _ = 0 := h_diff
-      have h_eigen : gen.op (ψ₁ - ψ₂) = -I • (ψ₁ - ψ₂) := by
-        have := add_eq_zero_iff_eq_neg.mp h_factor
-        rw [← neg_smul] at this
-        exact this
-      have h_inner : ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ = (starRingEnd ℂ) (-I) * ‖ψ₁ - ψ₂‖ ^ 2 := by
-        rw [h_eigen, inner_smul_left, inner_self_eq_norm_sq_to_K]; rfl
-      have h_inner' : ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ = I * ‖ψ₁ - ψ₂‖ ^ 2 := by
-        rw [h_inner]; simp only [Complex.conj_neg_I]
-      have h_sym : ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ = ⟪ψ₁ - ψ₂, gen.op (ψ₁ - ψ₂)⟫_ℂ := by
-        exact gen.symmetric (ψ₁ - ψ₂) (ψ₁ - ψ₂) h_sub_domain h_sub_domain
-      have h_real : (⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ).im = 0 := by
-        have eq_conj : ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ = (starRingEnd ℂ) ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ := by
-          calc ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ
-              = ⟪ψ₁ - ψ₂, gen.op (ψ₁ - ψ₂)⟫_ℂ := h_sym
-            _ = (starRingEnd ℂ) ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ :=
-                (inner_conj_symm (𝕜 := ℂ) (ψ₁ - ψ₂) (gen.op (ψ₁ - ψ₂))).symm
-        have h_parts := Complex.ext_iff.mp eq_conj
-        simp only [Complex.conj_im] at h_parts
-        linarith [h_parts.2]
-      have h_imag : (⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ).im = ‖ψ₁ - ψ₂‖ ^ 2 := by
-        rw [h_inner', mul_comm, Complex.mul_im]
-        simp only [Complex.I_re, Complex.I_im, mul_zero]
-        norm_cast; ring_nf
-      have : ‖ψ₁ - ψ₂‖ ^ 2 = 0 := by
-        have h_eq : ‖ψ₁ - ψ₂‖ ^ 2 = (0 : ℝ) := by
-          calc ‖ψ₁ - ψ₂‖ ^ 2 = (⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ).im := h_imag.symm
-            _ = 0 := h_real
-        exact h_eq
-      have : ‖ψ₁ - ψ₂‖ = 0 := sq_eq_zero_iff.mp this
-      exact sub_eq_zero.mp (norm_eq_zero.mp this)
+    have h_add_mem : R₁ + R₂ ∈ gen.domain := gen.domain.add_mem h₁_mem h₂_mem
 
-    exact (unique _ _ h_add_domain h_sum.1 h_add_eq h_sum.2).symm
+    have h_add_eq : gen.op ⟨R₁ + R₂, h_add_mem⟩ + I • (R₁ + R₂) = φ₁ + φ₂ := by
+      have op_add := gen.op.map_add ⟨R₁, h₁_mem⟩ ⟨R₂, h₂_mem⟩
+      have op_eq : gen.op ⟨R₁ + R₂, h_add_mem⟩ = gen.op ⟨R₁, h₁_mem⟩ + gen.op ⟨R₂, h₂_mem⟩ := by
+        convert op_add using 1
+      calc gen.op ⟨R₁ + R₂, h_add_mem⟩ + I • (R₁ + R₂)
+          = (gen.op ⟨R₁, h₁_mem⟩ + gen.op ⟨R₂, h₂_mem⟩) + I • (R₁ + R₂) := by rw [op_eq]
+        _ = (gen.op ⟨R₁, h₁_mem⟩ + gen.op ⟨R₂, h₂_mem⟩) + (I • R₁ + I • R₂) := by rw [smul_add]
+        _ = (gen.op ⟨R₁, h₁_mem⟩ + I • R₁) + (gen.op ⟨R₂, h₂_mem⟩ + I • R₂) := by abel
+        _ = φ₁ + φ₂ := by rw [h₁_eq, h₂_eq]
 
-  map_smul' := by
-    intro c φ
-    have h := Classical.choose_spec (hsa.1 φ)
-    have h_scaled := Classical.choose_spec (hsa.1 (c • φ))
+    exact (resolvent_at_neg_i_unique gen hsa (φ₁ + φ₂) (R₁ + R₂) R_sum
+      h_add_mem h_sum_mem h_add_eq h_sum_eq).symm
 
-    have h_smul_domain : c • Classical.choose (hsa.1 φ) ∈ gen.domain :=
-      gen.domain.smul_mem c h.1
+  map_smul' := fun c φ => by
+    let R_φ := Classical.choose (hsa.1 φ)
+    let R_scaled := Classical.choose (hsa.1 (c • φ))
 
-    have h_smul_eq : gen.op (c • Classical.choose (hsa.1 φ)) +
-                     I • (c • Classical.choose (hsa.1 φ)) = c • φ := by
-      have op_smul := gen.op.map_smul c (Classical.choose (hsa.1 φ))
-      calc gen.op (c • Classical.choose (hsa.1 φ)) + I • (c • Classical.choose (hsa.1 φ))
-          = c • gen.op (Classical.choose (hsa.1 φ)) + I • (c • Classical.choose (hsa.1 φ)) := by rw [op_smul]
-        _ = c • gen.op (Classical.choose (hsa.1 φ)) + c • (I • Classical.choose (hsa.1 φ)) := by rw [smul_comm]
-        _ = c • (gen.op (Classical.choose (hsa.1 φ)) + I • Classical.choose (hsa.1 φ)) := by rw [smul_add]
-        _ = c • φ := by rw [h.2]
+    have h_mem : R_φ ∈ gen.domain := resolvent_solution_mem_plus gen hsa φ
+    have h_scaled_mem : R_scaled ∈ gen.domain := resolvent_solution_mem_plus gen hsa (c • φ)
 
-    have unique : ∀ ψ₁ ψ₂, ψ₁ ∈ gen.domain → ψ₂ ∈ gen.domain →
-                  gen.op ψ₁ + I • ψ₁ = c • φ → gen.op ψ₂ + I • ψ₂ = c • φ → ψ₁ = ψ₂ := by
-      intro ψ₁ ψ₂ hψ₁ hψ₂ heq₁ heq₂
-      have h_diff : gen.op ψ₁ + I • ψ₁ - (gen.op ψ₂ + I • ψ₂) = 0 := by
-        rw [heq₁, heq₂]; simp
-      have h_sub_domain : ψ₁ - ψ₂ ∈ gen.domain := gen.domain.sub_mem hψ₁ hψ₂
-      have h_factor : gen.op (ψ₁ - ψ₂) + I • (ψ₁ - ψ₂) = 0 := by
-        have op_sub := gen.op.map_sub ψ₁ ψ₂
-        calc gen.op (ψ₁ - ψ₂) + I • (ψ₁ - ψ₂)
-            = (gen.op ψ₁ - gen.op ψ₂) + I • (ψ₁ - ψ₂) := by rw [op_sub]
-          _ = (gen.op ψ₁ - gen.op ψ₂) + (I • ψ₁ - I • ψ₂) := by rw [smul_sub]
-          _ = (gen.op ψ₁ + I • ψ₁) - (gen.op ψ₂ + I • ψ₂) := by abel
-          _ = 0 := h_diff
-      have h_eigen : gen.op (ψ₁ - ψ₂) = -I • (ψ₁ - ψ₂) := by
-        calc gen.op (ψ₁ - ψ₂)
-            = -(I • (ψ₁ - ψ₂)) := add_eq_zero_iff_eq_neg.mp h_factor
-          _ = -I • (ψ₁ - ψ₂) := (neg_smul I (ψ₁ - ψ₂)).symm
-      have h_inner : ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ = (starRingEnd ℂ) (-I) * ‖ψ₁ - ψ₂‖ ^ 2 := by
-        rw [h_eigen, inner_smul_left, inner_self_eq_norm_sq_to_K]; rfl
-      have h_inner' : ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ = I * ‖ψ₁ - ψ₂‖ ^ 2 := by
-        rw [h_inner]; simp
-      have h_sym : ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ = ⟪ψ₁ - ψ₂, gen.op (ψ₁ - ψ₂)⟫_ℂ := by
-        exact gen.symmetric (ψ₁ - ψ₂) (ψ₁ - ψ₂) h_sub_domain h_sub_domain
-      have h_real : (⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ).im = 0 := by
-        have eq_conj : ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ = (starRingEnd ℂ) ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ := by
-          calc ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ
-              = ⟪ψ₁ - ψ₂, gen.op (ψ₁ - ψ₂)⟫_ℂ := h_sym
-            _ = (starRingEnd ℂ) ⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ :=
-                (inner_conj_symm (𝕜 := ℂ) (ψ₁ - ψ₂) (gen.op (ψ₁ - ψ₂))).symm
-        have h_parts := Complex.ext_iff.mp eq_conj
-        simp only [Complex.conj_im] at h_parts
-        linarith [h_parts.2]
-      have h_imag : (⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ).im = ‖ψ₁ - ψ₂‖ ^ 2 := by
-        rw [h_inner', mul_comm, Complex.mul_im]
-        simp only [Complex.I_re, Complex.I_im, mul_zero]
-        norm_cast; ring_nf
-      have : ‖ψ₁ - ψ₂‖ ^ 2 = 0 := by
-        calc ‖ψ₁ - ψ₂‖ ^ 2 = (⟪gen.op (ψ₁ - ψ₂), ψ₁ - ψ₂⟫_ℂ).im := h_imag.symm
-          _ = 0 := h_real
-      have : ‖ψ₁ - ψ₂‖ = 0 := sq_eq_zero_iff.mp this
-      exact sub_eq_zero.mp (norm_eq_zero.mp this)
+    have h_eq : gen.op ⟨R_φ, h_mem⟩ + I • R_φ = φ := resolvent_solution_eq_plus gen hsa φ
+    have h_scaled_eq : gen.op ⟨R_scaled, h_scaled_mem⟩ + I • R_scaled = c • φ :=
+      resolvent_solution_eq_plus gen hsa (c • φ)
 
-    exact (unique _ _ h_smul_domain h_scaled.1 h_smul_eq h_scaled.2).symm
+    have h_smul_mem : c • R_φ ∈ gen.domain := gen.domain.smul_mem c h_mem
+
+    have h_smul_eq : gen.op ⟨c • R_φ, h_smul_mem⟩ + I • (c • R_φ) = c • φ := by
+      have op_smul := gen.op.map_smul c ⟨R_φ, h_mem⟩
+      have op_eq : gen.op ⟨c • R_φ, h_smul_mem⟩ = c • gen.op ⟨R_φ, h_mem⟩ := by
+        convert op_smul using 1
+      calc gen.op ⟨c • R_φ, h_smul_mem⟩ + I • (c • R_φ)
+          = c • gen.op ⟨R_φ, h_mem⟩ + I • (c • R_φ) := by rw [op_eq]
+        _ = c • gen.op ⟨R_φ, h_mem⟩ + c • (I • R_φ) := by rw [smul_comm]
+        _ = c • (gen.op ⟨R_φ, h_mem⟩ + I • R_φ) := by rw [smul_add]
+        _ = c • φ := by rw [h_eq]
+
+    exact (resolvent_at_neg_i_unique gen hsa (c • φ) (c • R_φ) R_scaled
+      h_smul_mem h_scaled_mem h_smul_eq h_scaled_eq).symm
 
   cont := by
     have lip : LipschitzWith 1 (fun φ => Classical.choose (hsa.1 φ)) := by
       intro φ₁ φ₂
+
       let ψ₁ := Classical.choose (hsa.1 φ₁)
       let ψ₂ := Classical.choose (hsa.1 φ₂)
-      have h₁ := Classical.choose_spec (hsa.1 φ₁)
-      have h₂ := Classical.choose_spec (hsa.1 φ₂)
 
-      have h_diff : gen.op (ψ₁ - ψ₂) + I • (ψ₁ - ψ₂) = φ₁ - φ₂ := by
-        calc gen.op (ψ₁ - ψ₂) + I • (ψ₁ - ψ₂)
-            = (gen.op ψ₁ - gen.op ψ₂) + I • (ψ₁ - ψ₂) := by rw [gen.op.map_sub]
-          _ = (gen.op ψ₁ - gen.op ψ₂) + (I • ψ₁ - I • ψ₂) := by rw [smul_sub]
-          _ = (gen.op ψ₁ + I • ψ₁) - (gen.op ψ₂ + I • ψ₂) := by abel
-          _ = φ₁ - φ₂ := by rw [h₁.2, h₂.2]
+      have h₁_mem : ψ₁ ∈ gen.domain := resolvent_solution_mem_plus gen hsa φ₁
+      have h₂_mem : ψ₂ ∈ gen.domain := resolvent_solution_mem_plus gen hsa φ₂
+      have h₁_eq := resolvent_solution_eq_plus gen hsa φ₁
+      have h₂_eq := resolvent_solution_eq_plus gen hsa φ₂
+
+      have h_sub_mem : ψ₁ - ψ₂ ∈ gen.domain := gen.domain.sub_mem h₁_mem h₂_mem
+
+      have h_diff : gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩ + I • (ψ₁ - ψ₂) = φ₁ - φ₂ := by
+        have op_sub := gen.op.map_sub ⟨ψ₁, h₁_mem⟩ ⟨ψ₂, h₂_mem⟩
+        have op_eq : gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩ = gen.op ⟨ψ₁, h₁_mem⟩ - gen.op ⟨ψ₂, h₂_mem⟩ := by
+          convert op_sub using 1
+        calc gen.op ⟨ψ₁ - ψ₂, h_sub_mem⟩ + I • (ψ₁ - ψ₂)
+            = (gen.op ⟨ψ₁, h₁_mem⟩ - gen.op ⟨ψ₂, h₂_mem⟩) + I • (ψ₁ - ψ₂) := by rw [op_eq]
+          _ = (gen.op ⟨ψ₁, h₁_mem⟩ - gen.op ⟨ψ₂, h₂_mem⟩) + (I • ψ₁ - I • ψ₂) := by rw [smul_sub]
+          _ = (gen.op ⟨ψ₁, h₁_mem⟩ + I • ψ₁) - (gen.op ⟨ψ₂, h₂_mem⟩ + I • ψ₂) := by abel
+          _ = φ₁ - φ₂ := by rw [h₁_eq, h₂_eq]
 
       have bound : ‖ψ₁ - ψ₂‖ ≤ ‖φ₁ - φ₂‖ := by
         let Δψ := ψ₁ - ψ₂
-        have key_expand : ‖gen.op Δψ + I • Δψ‖ ^ 2 = ‖gen.op Δψ‖ ^ 2 + ‖Δψ‖ ^ 2 := by
-          have h_sub_domain : Δψ ∈ gen.domain := gen.domain.sub_mem h₁.1 h₂.1
 
-          have expand : ‖gen.op Δψ + I • Δψ‖ ^ 2 =
-                        ‖gen.op Δψ‖ ^ 2 + ‖I • Δψ‖ ^ 2 + 2 * (⟪gen.op Δψ, I • Δψ⟫_ℂ).re := by
-            have h_inner : (⟪gen.op Δψ + I • Δψ, gen.op Δψ + I • Δψ⟫_ℂ).re = ‖gen.op Δψ + I • Δψ‖ ^ 2 := by
-              have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (gen.op Δψ + I • Δψ)
-              have h_re_both : (⟪gen.op Δψ + I • Δψ, gen.op Δψ + I • Δψ⟫_ℂ).re = ((‖gen.op Δψ + I • Δψ‖ ^ 2 : ℂ)).re := by
-                rw [this]
-                rfl
-              have h_re : ((‖gen.op Δψ + I • Δψ‖ ^ 2 : ℂ)).re = ‖gen.op Δψ + I • Δψ‖ ^ 2 := by norm_cast
-              rw [h_re_both, h_re]
-            rw [← h_inner]
-            rw [inner_add_left, inner_add_right, inner_add_right]
-            have h1 : ‖gen.op Δψ‖ ^ 2 = (⟪gen.op Δψ, gen.op Δψ⟫_ℂ).re := by
-              have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (gen.op Δψ)
-              calc ‖gen.op Δψ‖ ^ 2
-                  = ((‖gen.op Δψ‖ ^ 2 : ℂ)).re := by norm_cast
-                _ = (⟪gen.op Δψ, gen.op Δψ⟫_ℂ).re := by
-                    have h_re := congr_arg Complex.re this
-                    simp only at h_re
-                    exact h_re.symm
-            have h2 : ‖I • Δψ‖ ^ 2 = (⟪I • Δψ, I • Δψ⟫_ℂ).re := by
+        -- Key identity: ‖(A + iI)Δψ‖² = ‖A(Δψ)‖² + ‖Δψ‖²
+        have key_expand : ‖gen.op ⟨Δψ, h_sub_mem⟩ + I • Δψ‖ ^ 2 =
+                          ‖gen.op ⟨Δψ, h_sub_mem⟩‖ ^ 2 + ‖Δψ‖ ^ 2 := by
+          have expand : ‖gen.op ⟨Δψ, h_sub_mem⟩ + I • Δψ‖ ^ 2 =
+              ‖gen.op ⟨Δψ, h_sub_mem⟩‖ ^ 2 + ‖I • Δψ‖ ^ 2 +
+              2 * (⟪gen.op ⟨Δψ, h_sub_mem⟩, I • Δψ⟫_ℂ).re := by
+            have h1 : ‖gen.op ⟨Δψ, h_sub_mem⟩ + I • Δψ‖ ^ 2 =
+                      (⟪gen.op ⟨Δψ, h_sub_mem⟩ + I • Δψ, gen.op ⟨Δψ, h_sub_mem⟩ + I • Δψ⟫_ℂ).re := by
+              have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (gen.op ⟨Δψ, h_sub_mem⟩ + I • Δψ)
+              rw [this]; norm_cast
+            have h2 : ‖gen.op ⟨Δψ, h_sub_mem⟩‖ ^ 2 =
+                      (⟪gen.op ⟨Δψ, h_sub_mem⟩, gen.op ⟨Δψ, h_sub_mem⟩⟫_ℂ).re := by
+              have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (gen.op ⟨Δψ, h_sub_mem⟩)
+              rw [this]; norm_cast
+            have h3 : ‖I • Δψ‖ ^ 2 = (⟪I • Δψ, I • Δψ⟫_ℂ).re := by
               have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (I • Δψ)
-              calc ‖I • Δψ‖ ^ 2
-                  = ((‖I • Δψ‖ ^ 2 : ℂ)).re := by norm_cast
-                _ = (⟪I • Δψ, I • Δψ⟫_ℂ).re := by
-                    have h_re := congr_arg Complex.re this
-                    simp only at h_re
-                    exact h_re.symm
-            simp only [Complex.add_re]
-            rw [← h1, ← h2]
-            have h_cross : (⟪gen.op Δψ, I • Δψ⟫_ℂ).re + (⟪I • Δψ, gen.op Δψ⟫_ℂ).re =
-                           2 * (⟪gen.op Δψ, I • Δψ⟫_ℂ).re := by
-              have := inner_conj_symm (𝕜 := ℂ) (gen.op Δψ) (I • Δψ)
-              have h_eq : (⟪I • Δψ, gen.op Δψ⟫_ℂ).re = (⟪gen.op Δψ, I • Δψ⟫_ℂ).re := by
-                calc (⟪I • Δψ, gen.op Δψ⟫_ℂ).re
-                    = ((starRingEnd ℂ) ⟪gen.op Δψ, I • Δψ⟫_ℂ).re := by norm_num
-                  _ = (⟪gen.op Δψ, I • Δψ⟫_ℂ).re := by simp only [Complex.conj_re]
+              rw [this]; norm_cast
+            have h_cross : (⟪gen.op ⟨Δψ, h_sub_mem⟩, I • Δψ⟫_ℂ).re +
+                           (⟪I • Δψ, gen.op ⟨Δψ, h_sub_mem⟩⟫_ℂ).re =
+                           2 * (⟪gen.op ⟨Δψ, h_sub_mem⟩, I • Δψ⟫_ℂ).re := by
+              have h_eq : (⟪I • Δψ, gen.op ⟨Δψ, h_sub_mem⟩⟫_ℂ).re =
+                          (⟪gen.op ⟨Δψ, h_sub_mem⟩, I • Δψ⟫_ℂ).re := by
+                calc (⟪I • Δψ, gen.op ⟨Δψ, h_sub_mem⟩⟫_ℂ).re
+                    = ((starRingEnd ℂ) ⟪gen.op ⟨Δψ, h_sub_mem⟩, I • Δψ⟫_ℂ).re := by
+                        rw [inner_conj_symm]
+                  _ = (⟪gen.op ⟨Δψ, h_sub_mem⟩, I • Δψ⟫_ℂ).re := by simp only [Complex.conj_re]
               rw [h_eq]; ring
-            rw [h_cross.symm]; ring
+            rw [h1, inner_add_left, inner_add_right, inner_add_right]
+            simp only [Complex.add_re]
+            rw [h2, h3, ← h_cross]
+            ring
 
           have norm_I_smul : ‖I • Δψ‖ = ‖Δψ‖ := by rw [norm_smul]; simp
 
-          have cross_zero : (⟪gen.op Δψ, I • Δψ⟫_ℂ).re = 0 := by
+          have cross_zero : (⟪gen.op ⟨Δψ, h_sub_mem⟩, I • Δψ⟫_ℂ).re = 0 := by
             rw [inner_smul_right]
-            have h1 : I * ⟪gen.op Δψ, Δψ⟫_ℂ = I * (⟪gen.op Δψ, Δψ⟫_ℂ).re +
-                      I * Complex.I * (⟪gen.op Δψ, Δψ⟫_ℂ).im := by
-              conv_lhs => rw [← Complex.re_add_im (⟪gen.op Δψ, Δψ⟫_ℂ)]
-              ring_nf
-            have h_real : (⟪gen.op Δψ, Δψ⟫_ℂ).im = 0 := by
-              have h_sym := gen.symmetric Δψ Δψ h_sub_domain h_sub_domain
-              have h_conj : ⟪gen.op Δψ, Δψ⟫_ℂ = (starRingEnd ℂ) ⟪gen.op Δψ, Δψ⟫_ℂ := by
-                calc ⟪gen.op Δψ, Δψ⟫_ℂ
-                    = ⟪Δψ, gen.op Δψ⟫_ℂ := h_sym
-                  _ = (starRingEnd ℂ) ⟪gen.op Δψ, Δψ⟫_ℂ := (inner_conj_symm (𝕜 := ℂ) Δψ (gen.op Δψ)).symm
-              have h_parts := Complex.ext_iff.mp h_conj
-              simp only [Complex.conj_im] at h_parts
-              linarith [h_parts.2]
-            rw [h1, h_real]; simp
+            have h_real : (⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ).im = 0 := by
+              have h_sym := gen.symmetric ⟨Δψ, h_sub_mem⟩ ⟨Δψ, h_sub_mem⟩
+              have h_conj : ⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ =
+                            (starRingEnd ℂ) ⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ := by
+                calc ⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ
+                    = ⟪Δψ, gen.op ⟨Δψ, h_sub_mem⟩⟫_ℂ := h_sym
+                  _ = (starRingEnd ℂ) ⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ := by
+                      rw [inner_conj_symm]
+              have := Complex.ext_iff.mp h_conj
+              simp only [Complex.conj_im] at this
+              linarith [this.2]
+            have h1 : I * ⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ =
+                      I * (⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ).re := by
+              conv_lhs => rw [← Complex.re_add_im ⟪gen.op ⟨Δψ, h_sub_mem⟩, Δψ⟫_ℂ]
+              rw [h_real]; simp
+            rw [h1, mul_comm]
+            simp
 
-          rw [expand, norm_I_smul, cross_zero]; ring
+          rw [expand, norm_I_smul, cross_zero]
+          ring
 
-        have le_sq : ‖Δψ‖ ^ 2 ≤ ‖gen.op Δψ + I • Δψ‖ ^ 2 := by
-          rw [key_expand]; have : 0 ≤ ‖gen.op Δψ‖ ^ 2 := sq_nonneg _; linarith
+        have le_sq : ‖Δψ‖ ^ 2 ≤ ‖gen.op ⟨Δψ, h_sub_mem⟩ + I • Δψ‖ ^ 2 := by
+          rw [key_expand]
+          have : 0 ≤ ‖gen.op ⟨Δψ, h_sub_mem⟩‖ ^ 2 := sq_nonneg _
+          linarith
 
-        have le_norm : ‖Δψ‖ ≤ ‖gen.op Δψ + I • Δψ‖ := by
+        have le_norm : ‖Δψ‖ ≤ ‖gen.op ⟨Δψ, h_sub_mem⟩ + I • Δψ‖ := by
+          have h_nonneg_left : 0 ≤ ‖Δψ‖ := norm_nonneg _
+          have h_nonneg_right : 0 ≤ ‖gen.op ⟨Δψ, h_sub_mem⟩ + I • Δψ‖ := norm_nonneg _
           by_contra h_not
           push_neg at h_not
-          -- If ‖gen.op Δψ + I • Δψ‖ < ‖Δψ‖, square both sides
-          have h_sq_lt : ‖gen.op Δψ + I • Δψ‖ ^ 2 < ‖Δψ‖ ^ 2 := by
-            have h1 : 0 ≤ ‖gen.op Δψ + I • Δψ‖ := norm_nonneg _
-            have h2 : 0 ≤ ‖Δψ‖ := norm_nonneg _
-            nlinarith [sq_nonneg (‖Δψ‖ - ‖gen.op Δψ + I • Δψ‖), h_not, h1, h2]
+          have : ‖gen.op ⟨Δψ, h_sub_mem⟩ + I • Δψ‖ ^ 2 < ‖Δψ‖ ^ 2 := by
+            nlinarith [sq_nonneg (‖Δψ‖ - ‖gen.op ⟨Δψ, h_sub_mem⟩ + I • Δψ‖)]
           linarith
 
         calc ‖ψ₁ - ψ₂‖ = ‖Δψ‖ := rfl
-          _ ≤ ‖gen.op Δψ + I • Δψ‖ := le_norm
+          _ ≤ ‖gen.op ⟨Δψ, h_sub_mem⟩ + I • Δψ‖ := le_norm
           _ = ‖φ₁ - φ₂‖ := by rw [h_diff]
 
       rw [edist_dist, edist_dist, dist_eq_norm, dist_eq_norm]
@@ -1225,82 +766,77 @@ The conjugate resolvent `resolvent_at_neg_i` inverts (A + iI) and satisfies
 the identical bound ‖R_{-i}‖ ≤ 1 by the same argument (using -i instead of i).
 -/
 lemma resolvent_at_i_bound {U_grp : OneParameterUnitaryGroup (H := H)}
-    (gen : Generator U_grp) (hsa : IsSelfAdjoint gen) :
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) :
     ‖resolvent_at_i gen hsa‖ ≤ 1 := by
-  -- Prove: for all φ, ‖R_i(φ)‖ ≤ ‖φ‖
   have h_bound : ∀ φ : H, ‖resolvent_at_i gen hsa φ‖ ≤ ‖φ‖ := by
     intro φ
-    set ψ := resolvent_at_i gen hsa φ
-    have h_spec := resolvent_at_i_spec gen hsa φ
-    have h_eq : gen.op ψ - I • ψ = φ := h_spec.2
+
+    -- ψ = R_i(φ) = Classical.choose (hsa.2 φ)
+    let ψ := resolvent_at_i gen hsa φ
+    have h_mem : ψ ∈ gen.domain := resolvent_solution_mem gen hsa φ
+    have h_eq : gen.op ⟨ψ, h_mem⟩ - I • ψ = φ := resolvent_solution_eq gen hsa φ
 
     -- Key: ‖(A - iI)ψ‖² = ‖Aψ‖² + ‖ψ‖²
-    let Δψ := ψ
-    have key_expand : ‖gen.op Δψ - I • Δψ‖ ^ 2 = ‖gen.op Δψ‖ ^ 2 + ‖Δψ‖ ^ 2 := by
-      have h_domain : Δψ ∈ gen.domain := h_spec.1
-      have expand : ‖gen.op Δψ - I • Δψ‖ ^ 2 =
-          ‖gen.op Δψ‖ ^ 2 + ‖I • Δψ‖ ^ 2 - 2 * (⟪gen.op Δψ, I • Δψ⟫_ℂ).re := by
-        have h_inner : (⟪gen.op Δψ - I • Δψ, gen.op Δψ - I • Δψ⟫_ℂ).re =
-            ‖gen.op Δψ - I • Δψ‖ ^ 2 := by
-          have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (gen.op Δψ - I • Δψ)
-          have h_re_both : (⟪gen.op Δψ - I • Δψ, gen.op Δψ - I • Δψ⟫_ℂ).re =
-              ((‖gen.op Δψ - I • Δψ‖ ^ 2 : ℂ)).re := by rw [this]; rfl
-          have h_re : ((‖gen.op Δψ - I • Δψ‖ ^ 2 : ℂ)).re = ‖gen.op Δψ - I • Δψ‖ ^ 2 := by
-            norm_cast
-          rw [h_re_both, h_re]
+    have key_expand : ‖gen.op ⟨ψ, h_mem⟩ - I • ψ‖ ^ 2 = ‖gen.op ⟨ψ, h_mem⟩‖ ^ 2 + ‖ψ‖ ^ 2 := by
+      have expand : ‖gen.op ⟨ψ, h_mem⟩ - I • ψ‖ ^ 2 =
+          ‖gen.op ⟨ψ, h_mem⟩‖ ^ 2 + ‖I • ψ‖ ^ 2 - 2 * (⟪gen.op ⟨ψ, h_mem⟩, I • ψ⟫_ℂ).re := by
+        have h_inner : (⟪gen.op ⟨ψ, h_mem⟩ - I • ψ, gen.op ⟨ψ, h_mem⟩ - I • ψ⟫_ℂ).re =
+            ‖gen.op ⟨ψ, h_mem⟩ - I • ψ‖ ^ 2 := by
+          have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (gen.op ⟨ψ, h_mem⟩ - I • ψ)
+          rw [this]; norm_cast
         rw [← h_inner, inner_sub_left, inner_sub_right, inner_sub_right]
         simp only [Complex.sub_re]
-        have h2 : ‖gen.op Δψ‖ ^ 2 = (⟪gen.op Δψ, gen.op Δψ⟫_ℂ).re := by
-          have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (gen.op Δψ)
+        have h2 : ‖gen.op ⟨ψ, h_mem⟩‖ ^ 2 = (⟪gen.op ⟨ψ, h_mem⟩, gen.op ⟨ψ, h_mem⟩⟫_ℂ).re := by
+          have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (gen.op ⟨ψ, h_mem⟩)
           rw [this]; norm_cast
-        have h3 : ‖I • Δψ‖ ^ 2 = (⟪I • Δψ, I • Δψ⟫_ℂ).re := by
-          have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (I • Δψ)
+        have h3 : ‖I • ψ‖ ^ 2 = (⟪I • ψ, I • ψ⟫_ℂ).re := by
+          have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (I • ψ)
           rw [this]; norm_cast
         rw [h2, h3]
-        have h_cross : (⟪gen.op Δψ, I • Δψ⟫_ℂ).re + (⟪I • Δψ, gen.op Δψ⟫_ℂ).re =
-                      2 * (⟪gen.op Δψ, I • Δψ⟫_ℂ).re := by
-          have h_eq : (⟪I • Δψ, gen.op Δψ⟫_ℂ).re = (⟪gen.op Δψ, I • Δψ⟫_ℂ).re := by
-            calc (⟪I • Δψ, gen.op Δψ⟫_ℂ).re
-                = ((starRingEnd ℂ) ⟪gen.op Δψ, I • Δψ⟫_ℂ).re := by norm_num
-              _ = (⟪gen.op Δψ, I • Δψ⟫_ℂ).re := by simp only [Complex.conj_re]
+        have h_cross : (⟪gen.op ⟨ψ, h_mem⟩, I • ψ⟫_ℂ).re + (⟪I • ψ, gen.op ⟨ψ, h_mem⟩⟫_ℂ).re =
+                      2 * (⟪gen.op ⟨ψ, h_mem⟩, I • ψ⟫_ℂ).re := by
+          have h_eq : (⟪I • ψ, gen.op ⟨ψ, h_mem⟩⟫_ℂ).re = (⟪gen.op ⟨ψ, h_mem⟩, I • ψ⟫_ℂ).re := by
+            calc (⟪I • ψ, gen.op ⟨ψ, h_mem⟩⟫_ℂ).re
+                = ((starRingEnd ℂ) ⟪gen.op ⟨ψ, h_mem⟩, I • ψ⟫_ℂ).re := by rw [inner_conj_symm]
+              _ = (⟪gen.op ⟨ψ, h_mem⟩, I • ψ⟫_ℂ).re := by simp only [Complex.conj_re]
           rw [h_eq]; ring
         rw [h_cross.symm]; ring
-      have norm_I_smul : ‖I • Δψ‖ = ‖Δψ‖ := by rw [norm_smul]; simp
-      have cross_zero : (⟪gen.op Δψ, I • Δψ⟫_ℂ).re = 0 := by
+
+      have norm_I_smul : ‖I • ψ‖ = ‖ψ‖ := by rw [norm_smul]; simp
+
+      have cross_zero : (⟪gen.op ⟨ψ, h_mem⟩, I • ψ⟫_ℂ).re = 0 := by
         rw [inner_smul_right]
-        have h1 : I * ⟪gen.op Δψ, Δψ⟫_ℂ = I * (⟪gen.op Δψ, Δψ⟫_ℂ).re +
-                  I * Complex.I * (⟪gen.op Δψ, Δψ⟫_ℂ).im := by
-          conv_lhs => rw [← Complex.re_add_im (⟪gen.op Δψ, Δψ⟫_ℂ)]
-          ring_nf
-        have h_real : (⟪gen.op Δψ, Δψ⟫_ℂ).im = 0 := by
-          have h_sym := gen.symmetric Δψ Δψ h_domain h_domain
-          have h_conj : ⟪gen.op Δψ, Δψ⟫_ℂ = (starRingEnd ℂ) ⟪gen.op Δψ, Δψ⟫_ℂ := by
-            calc ⟪gen.op Δψ, Δψ⟫_ℂ
-                = ⟪Δψ, gen.op Δψ⟫_ℂ := gen.symmetric Δψ Δψ h_domain h_domain
-              _ = (starRingEnd ℂ) ⟪gen.op Δψ, Δψ⟫_ℂ :=
-                  (inner_conj_symm (𝕜 := ℂ) Δψ (gen.op Δψ)).symm
+        have h_real : (⟪gen.op ⟨ψ, h_mem⟩, ψ⟫_ℂ).im = 0 := by
+          have h_sym := gen.symmetric ⟨ψ, h_mem⟩ ⟨ψ, h_mem⟩
+          have h_conj : ⟪gen.op ⟨ψ, h_mem⟩, ψ⟫_ℂ = (starRingEnd ℂ) ⟪gen.op ⟨ψ, h_mem⟩, ψ⟫_ℂ := by
+            calc ⟪gen.op ⟨ψ, h_mem⟩, ψ⟫_ℂ
+                = ⟪ψ, gen.op ⟨ψ, h_mem⟩⟫_ℂ := h_sym
+              _ = (starRingEnd ℂ) ⟪gen.op ⟨ψ, h_mem⟩, ψ⟫_ℂ := by rw [inner_conj_symm]
           have := Complex.ext_iff.mp h_conj
           simp only [Complex.conj_im] at this
           linarith [this.2]
-        rw [h1, h_real]; simp
+        have h1 : I * ⟪gen.op ⟨ψ, h_mem⟩, ψ⟫_ℂ = I * (⟪gen.op ⟨ψ, h_mem⟩, ψ⟫_ℂ).re := by
+          conv_lhs => rw [← Complex.re_add_im ⟪gen.op ⟨ψ, h_mem⟩, ψ⟫_ℂ]
+          rw [h_real]; simp
+        rw [h1, mul_comm]; simp
+
       rw [expand, norm_I_smul, cross_zero]; ring
 
-    have le_sq : ‖Δψ‖ ^ 2 ≤ ‖gen.op Δψ - I • Δψ‖ ^ 2 := by
-      rw [key_expand]; have : 0 ≤ ‖gen.op Δψ‖ ^ 2 := sq_nonneg _; linarith
+    have le_sq : ‖ψ‖ ^ 2 ≤ ‖gen.op ⟨ψ, h_mem⟩ - I • ψ‖ ^ 2 := by
+      rw [key_expand]; have : 0 ≤ ‖gen.op ⟨ψ, h_mem⟩‖ ^ 2 := sq_nonneg _; linarith
 
-    have le_norm : ‖Δψ‖ ≤ ‖gen.op Δψ - I • Δψ‖ := by
+    have le_norm : ‖ψ‖ ≤ ‖gen.op ⟨ψ, h_mem⟩ - I • ψ‖ := by
       by_contra h_not; push_neg at h_not
-      have : ‖gen.op Δψ - I • Δψ‖ ^ 2 < ‖Δψ‖ ^ 2 := by
-        have h1 : 0 ≤ ‖gen.op Δψ - I • Δψ‖ := norm_nonneg _
-        have h2 : 0 ≤ ‖Δψ‖ := norm_nonneg _
-        nlinarith [sq_nonneg (‖Δψ‖ - ‖gen.op Δψ - I • Δψ‖)]
+      have : ‖gen.op ⟨ψ, h_mem⟩ - I • ψ‖ ^ 2 < ‖ψ‖ ^ 2 := by
+        have h1 : 0 ≤ ‖gen.op ⟨ψ, h_mem⟩ - I • ψ‖ := norm_nonneg _
+        have h2 : 0 ≤ ‖ψ‖ := norm_nonneg _
+        nlinarith [sq_nonneg (‖ψ‖ - ‖gen.op ⟨ψ, h_mem⟩ - I • ψ‖)]
       linarith
 
-    calc ‖ψ‖ = ‖Δψ‖ := rfl
-      _ ≤ ‖gen.op Δψ - I • Δψ‖ := le_norm
+    calc ‖ψ‖
+        ≤ ‖gen.op ⟨ψ, h_mem⟩ - I • ψ‖ := le_norm
       _ = ‖φ‖ := by rw [h_eq]
 
-  -- Now use this to bound the operator norm
   apply ContinuousLinearMap.opNorm_le_bound
   · norm_num
   · intro φ
@@ -1343,73 +879,55 @@ onto the spectrum.
 -/
 lemma lower_bound_estimate {U_grp : OneParameterUnitaryGroup (H := H)}
     (gen : Generator U_grp)
-    (z : ℂ) (_ /-hz-/ : z.im ≠ 0)
+    (z : ℂ) (_ : z.im ≠ 0)
     (ψ : H) (hψ : ψ ∈ gen.domain) :
-    ‖gen.op ψ - z • ψ‖ ≥ |z.im| * ‖ψ‖ := by
+    ‖gen.op ⟨ψ, hψ⟩ - z • ψ‖ ≥ |z.im| * ‖ψ‖ := by
   -- Decompose z = x + iy
   set x := z.re
   set y := z.im
 
   -- Rewrite (A - zI)ψ = (A - xI)ψ - iy·ψ
-  have h_decomp : gen.op ψ - z • ψ = (gen.op ψ - x • ψ) - (y * I) • ψ := by
-    have hz_eq : z = x + y * I := by
-      simp [x, y]
-    calc gen.op ψ - z • ψ
-        = gen.op ψ - (x + y * I) • ψ := by rw [hz_eq]
-      _ = gen.op ψ - (x • ψ + (y * I) • ψ) := by rw [add_smul];rfl
-      _ = (gen.op ψ - x • ψ) - (y * I) • ψ := by abel
+  have h_decomp : gen.op ⟨ψ, hψ⟩ - z • ψ = (gen.op ⟨ψ, hψ⟩ - x • ψ) - (y * I) • ψ := by
+    have hz_eq : z = x + y * I := by simp [x, y]
+    calc gen.op ⟨ψ, hψ⟩ - z • ψ
+        = gen.op ⟨ψ, hψ⟩ - (x + y * I) • ψ := by rw [hz_eq]
+      _ = gen.op ⟨ψ, hψ⟩ - (x • ψ + (y * I) • ψ) := by rw [add_smul]; exact rfl
+      _ = (gen.op ⟨ψ, hψ⟩ - x • ψ) - (y * I) • ψ := by abel
 
   rw [h_decomp]
 
   -- Expand ‖(A - xI)ψ - iy·ψ‖²
-  have h_expand : ‖(gen.op ψ - x • ψ) - (y * I) • ψ‖^2 =
-                ‖gen.op ψ - x • ψ‖^2 + ‖(y * I) • ψ‖^2 +
-                2 * (⟪gen.op ψ - x • ψ, -((y * I) • ψ)⟫_ℂ).re := by
-  -- Direct expansion using ‖a - b‖² formula
+  have h_expand : ‖(gen.op ⟨ψ, hψ⟩ - x • ψ) - (y * I) • ψ‖^2 =
+                ‖gen.op ⟨ψ, hψ⟩ - x • ψ‖^2 + ‖(y * I) • ψ‖^2 +
+                2 * (⟪gen.op ⟨ψ, hψ⟩ - x • ψ, -((y * I) • ψ)⟫_ℂ).re := by
     have h_formula : ∀ (a b : H), ‖a - b‖^2 = ‖a‖^2 + ‖b‖^2 - 2 * (⟪a, b⟫_ℂ).re := by
       intro a b
       have h_inner : (⟪a - b, a - b⟫_ℂ).re = ‖a - b‖ ^ 2 := by
         have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (a - b)
-        calc (⟪a - b, a - b⟫_ℂ).re
-            = ((‖a - b‖ ^ 2 : ℂ)).re := by
-                have h_re := congr_arg Complex.re this
-                simp only at h_re
-                exact h_re
-          _ = ‖a - b‖ ^ 2 := by norm_cast
+        rw [this]; norm_cast
       rw [← h_inner, inner_sub_left, inner_sub_right, inner_sub_right]
       simp only [Complex.sub_re]
       have h1 : (⟪a, a⟫_ℂ).re = ‖a‖^2 := by
         have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) a
-        calc (⟪a, a⟫_ℂ).re
-            = ((‖a‖ ^ 2 : ℂ)).re := by
-                have h_re := congr_arg Complex.re this
-                simp only at h_re
-                exact h_re
-          _ = ‖a‖^2 := by norm_cast
+        rw [this]; norm_cast
       have h2 : (⟪b, b⟫_ℂ).re = ‖b‖^2 := by
         have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) b
-        calc (⟪b, b⟫_ℂ).re
-            = ((‖b‖ ^ 2 : ℂ)).re := by
-                have h_re := congr_arg Complex.re this
-                simp only at h_re
-                exact h_re
-          _ = ‖b‖^2 := by norm_cast
+        rw [this]; norm_cast
       rw [h1, h2]
       have h_cross : (⟪a, b⟫_ℂ).re + (⟪b, a⟫_ℂ).re = 2 * (⟪a, b⟫_ℂ).re := by
-        have := inner_conj_symm (𝕜 := ℂ) a b
         have : (⟪b, a⟫_ℂ).re = (⟪a, b⟫_ℂ).re := by
           calc (⟪b, a⟫_ℂ).re
-              = ((starRingEnd ℂ) ⟪a, b⟫_ℂ).re := by norm_num
+              = ((starRingEnd ℂ) ⟪a, b⟫_ℂ).re := by rw [inner_conj_symm]
             _ = (⟪a, b⟫_ℂ).re := by simp only [Complex.conj_re]
         rw [this]; ring
       rw [h_cross.symm]; ring
 
-    -- Apply to our specific case
-    calc ‖(gen.op ψ - x • ψ) - (y * I) • ψ‖^2
-        = ‖gen.op ψ - x • ψ‖^2 + ‖(y * I) • ψ‖^2 - 2 * (⟪gen.op ψ - x • ψ, (y * I) • ψ⟫_ℂ).re :=
-            h_formula (gen.op ψ - x • ψ) ((y * I) • ψ)
-      _ = ‖gen.op ψ - x • ψ‖^2 + ‖(y * I) • ψ‖^2 + 2 * (⟪gen.op ψ - x • ψ, -((y * I) • ψ)⟫_ℂ).re := by
-          have : (⟪gen.op ψ - x • ψ, -((y * I) • ψ)⟫_ℂ).re = -(⟪gen.op ψ - x • ψ, (y * I) • ψ⟫_ℂ).re := by
+    calc ‖(gen.op ⟨ψ, hψ⟩ - x • ψ) - (y * I) • ψ‖^2
+        = ‖gen.op ⟨ψ, hψ⟩ - x • ψ‖^2 + ‖(y * I) • ψ‖^2 - 2 * (⟪gen.op ⟨ψ, hψ⟩ - x • ψ, (y * I) • ψ⟫_ℂ).re :=
+            h_formula (gen.op ⟨ψ, hψ⟩ - x • ψ) ((y * I) • ψ)
+      _ = ‖gen.op ⟨ψ, hψ⟩ - x • ψ‖^2 + ‖(y * I) • ψ‖^2 + 2 * (⟪gen.op ⟨ψ, hψ⟩ - x • ψ, -((y * I) • ψ)⟫_ℂ).re := by
+          have : (⟪gen.op ⟨ψ, hψ⟩ - x • ψ, -((y * I) • ψ)⟫_ℂ).re =
+                 -(⟪gen.op ⟨ψ, hψ⟩ - x • ψ, (y * I) • ψ⟫_ℂ).re := by
             rw [inner_neg_right]; simp only [Complex.neg_re]
           rw [this]; ring
 
@@ -1420,77 +938,60 @@ lemma lower_bound_estimate {U_grp : OneParameterUnitaryGroup (H := H)}
       _ = |y| * ‖ψ‖ := by simp
 
   -- The cross term vanishes
-  have h_cross_zero : (⟪gen.op ψ - x • ψ, -((y * I) • ψ)⟫_ℂ).re = 0 := by
+  have h_cross_zero : (⟪gen.op ⟨ψ, hψ⟩ - x • ψ, -((y * I) • ψ)⟫_ℂ).re = 0 := by
     rw [inner_neg_right, inner_smul_right]
-    -- Now we have: (-(y * I * ⟪gen.op ψ - x • ψ, ψ⟫_ℂ)).re = 0
 
     -- First show ⟨(A-xI)ψ, ψ⟩ is real
-    have h_real : (⟪gen.op ψ - x • ψ, ψ⟫_ℂ).im = 0 := by
+    have h_real : (⟪gen.op ⟨ψ, hψ⟩ - x • ψ, ψ⟫_ℂ).im = 0 := by
       rw [inner_sub_left]
-      have h_Areal : (⟪gen.op ψ, ψ⟫_ℂ).im = 0 := by
-        have h_sym := gen.symmetric ψ ψ hψ hψ
-        have h_conj : ⟪gen.op ψ, ψ⟫_ℂ = (starRingEnd ℂ) ⟪gen.op ψ, ψ⟫_ℂ := by
-          calc ⟪gen.op ψ, ψ⟫_ℂ
-              = ⟪ψ, gen.op ψ⟫_ℂ := h_sym
-            _ = (starRingEnd ℂ) ⟪gen.op ψ, ψ⟫_ℂ :=
-                (inner_conj_symm (𝕜 := ℂ) ψ (gen.op ψ)).symm
+      have h_Areal : (⟪gen.op ⟨ψ, hψ⟩, ψ⟫_ℂ).im = 0 := by
+        -- FIX: pass subtypes, not H elements with proofs
+        have h_sym := gen.symmetric ⟨ψ, hψ⟩ ⟨ψ, hψ⟩
+        have h_conj : ⟪gen.op ⟨ψ, hψ⟩, ψ⟫_ℂ = (starRingEnd ℂ) ⟪gen.op ⟨ψ, hψ⟩, ψ⟫_ℂ := by
+          calc ⟪gen.op ⟨ψ, hψ⟩, ψ⟫_ℂ
+              = ⟪ψ, gen.op ⟨ψ, hψ⟩⟫_ℂ := h_sym
+            _ = (starRingEnd ℂ) ⟪gen.op ⟨ψ, hψ⟩, ψ⟫_ℂ :=
+                (inner_conj_symm ψ (gen.op ⟨ψ, hψ⟩)).symm
         have h_parts := Complex.ext_iff.mp h_conj
         simp only [Complex.conj_im] at h_parts
         linarith [h_parts.2]
 
       have h_xreal : (⟪x • ψ, ψ⟫_ℂ).im = 0 := by
-        -- x is real, so x • ψ = (x : ℂ) • ψ
-        have : (x : ℂ) • ψ = x • ψ := rfl
-        rw [← this, inner_smul_left]
-        -- Now: ((x : ℂ) * ⟨ψ, ψ⟩).im = 0
+        have h_eq : x • ψ = (x : ℂ) • ψ := (RCLike.real_smul_eq_coe_smul x ψ).symm
+        rw [h_eq, inner_smul_left]
         have h_inner_real : (⟪ψ, ψ⟫_ℂ).im = 0 := by
           have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) ψ
-          rw [this]
-          norm_cast
+          rw [this]; norm_cast
         simp [h_inner_real]
 
       simp [h_Areal, h_xreal]
 
-    -- So ⟨(A-xI)ψ, ψ⟩ is real, write it as its real part
-    have h_as_real : ⟪gen.op ψ - x • ψ, ψ⟫_ℂ = ((⟪gen.op ψ - x • ψ, ψ⟫_ℂ).re : ℂ) := by
-      conv_lhs => rw [← Complex.re_add_im (⟪gen.op ψ - x • ψ, ψ⟫_ℂ), h_real]
+    have h_as_real : ⟪gen.op ⟨ψ, hψ⟩ - x • ψ, ψ⟫_ℂ = ((⟪gen.op ⟨ψ, hψ⟩ - x • ψ, ψ⟫_ℂ).re : ℂ) := by
+      conv_lhs => rw [← Complex.re_add_im (⟪gen.op ⟨ψ, hψ⟩ - x • ψ, ψ⟫_ℂ), h_real]
       simp
 
     rw [h_as_real]
-    -- Now: Re(-(y*I)·r) where r ∈ ℝ
     simp only [Complex.neg_re, Complex.mul_re, Complex.mul_im,
               Complex.ofReal_re, Complex.ofReal_im]
     ring_nf
-
-    rw [h_as_real]
-    -- Now: Re(-(y*i)·r) where r ∈ ℝ
-    simp only [Complex.ofReal_re]
-    abel_nf; simp
-
-
+    simp only [I_re, mul_zero, zero_mul, neg_zero]
 
   -- Now: ‖(A-zI)ψ‖² = ‖(A-xI)ψ‖² + |y|²‖ψ‖² ≥ |y|²‖ψ‖²
-  have h_ge : ‖gen.op ψ - x • ψ‖^2 + (|y| * ‖ψ‖)^2 ≥ (|y| * ‖ψ‖)^2 := by
-    have : 0 ≤ ‖gen.op ψ - x • ψ‖^2 := sq_nonneg _
-    linarith
-
-  -- Now prove the squared inequality first
-  have h_sq : ‖(gen.op ψ - x • ψ) - (y * I) • ψ‖^2 ≥ (|y| * ‖ψ‖)^2 := by
+  have h_sq : ‖(gen.op ⟨ψ, hψ⟩ - x • ψ) - (y * I) • ψ‖^2 ≥ (|y| * ‖ψ‖)^2 := by
     rw [h_expand, h_norm_scale, h_cross_zero]
     simp only [mul_zero, add_zero]
-    -- Now: ‖(A-xI)ψ‖² + |y|²‖ψ‖² ≥ |y|²‖ψ‖²
-    have : 0 ≤ ‖gen.op ψ - x • ψ‖^2 := sq_nonneg _
+    have : 0 ≤ ‖gen.op ⟨ψ, hψ⟩ - x • ψ‖^2 := sq_nonneg _
     linarith
 
-  -- Take square root to get the final result
+  -- Take square root
   by_contra h_not
   push_neg at h_not
-  have h1 : 0 ≤ ‖(gen.op ψ - x • ψ) - (y * I) • ψ‖ := norm_nonneg _
+  have h1 : 0 ≤ ‖(gen.op ⟨ψ, hψ⟩ - x • ψ) - (y * I) • ψ‖ := norm_nonneg _
   have h2 : 0 ≤ |y| * ‖ψ‖ := by
     apply mul_nonneg
     · exact abs_nonneg _
     · exact norm_nonneg _
-  nlinarith [sq_nonneg (|y| * ‖ψ‖ - ‖(gen.op ψ - x • ψ) - (y * I) • ψ‖), h_sq, h_not, h1, h2]
+  nlinarith [sq_nonneg (|y| * ‖ψ‖ - ‖(gen.op ⟨ψ, hψ⟩ - x • ψ) - (y * I) • ψ‖), h_sq, h_not, h1, h2]
 
 
 /-!
@@ -1699,13 +1200,11 @@ lemma isUnit_one_sub (T : E →L[ℂ] E) (hT : ‖T‖ < 1) :
   · exact neumannSeries_mul_right T hT
 
 
-
 /-- For z near i, we can construct R_z from R_i via Neumann series -/
 lemma resolvent_near_i {U_grp : OneParameterUnitaryGroup (H := H)}
-    (gen : Generator U_grp) (hsa : IsSelfAdjoint gen)
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen)
     (z : ℂ) (hz : z.im > 0) (h_close : ‖z - I‖ < 1) :
-    ∀ φ : H, ∃! (ψ : {x : H // x ∈ gen.domain}),
-      gen.op ψ.val - z • ψ.val = φ := by
+    ∀ φ : H, ∃! (ψ : gen.domain), gen.op ψ - z • (ψ : H) = φ := by
   intro φ
 
   -- Setup
@@ -1724,8 +1223,7 @@ lemma resolvent_near_i {U_grp : OneParameterUnitaryGroup (H := H)}
       _ < 1 := h_close
 
   -- Part 1: Existence via Neumann series
-  have h_exists : ∃ (ψ : {x : H // x ∈ gen.domain}),
-      gen.op ψ.val - z • ψ.val = φ := by
+  have h_exists : ∃ (ψ : gen.domain), gen.op ψ - z • (ψ : H) = φ := by
     -- Strategy: (A - zI) = (A - iI) - (z - i)I
     -- So for ψ in domain: (A - zI)ψ = (A - iI)ψ - (z - i)ψ
     -- Rearranging: (A - zI)ψ = φ iff (A - iI)ψ = φ + (z - i)ψ
@@ -1737,31 +1235,18 @@ lemma resolvent_near_i {U_grp : OneParameterUnitaryGroup (H := H)}
     let T := lambda_val • R
     let S := neumannSeries T h_op_bound
 
-    -- Candidate solution: ψ₀ = S(R(φ))
-    let ψ₀ := S (R φ)
-
-    -- Need to show ψ₀ ∈ domain
-    -- R(φ) ∈ domain by definition of resolvent_at_i
-    have h_Rφ_spec := resolvent_at_i_spec gen hsa φ
-    have h_Rφ_domain : R φ ∈ gen.domain := h_Rφ_spec.1
-
-    -- The tricky part: S(R(φ)) may not be in domain!
-    -- We need a different approach: solve (I - (z-i)R_i)η = φ first,
-    -- then ψ = R_i(η) is in domain
-
+    -- Solve (I - (z-i)R_i)η = φ first, then ψ = R_i(η) is in domain
     let η := S φ
-    let ψ := R η
+    let ψ_val := R η  -- This is Classical.choose (hsa.2 η) : H
 
-    have h_ψ_spec := resolvent_at_i_spec gen hsa η
-    have h_ψ_domain : ψ ∈ gen.domain := h_ψ_spec.1
+    have h_ψ_mem : ψ_val ∈ gen.domain := resolvent_solution_mem gen hsa η
+    have h_ψ_eq : gen.op ⟨ψ_val, h_ψ_mem⟩ - I • ψ_val = η := resolvent_solution_eq gen hsa η
 
-    use ⟨ψ, h_ψ_domain⟩
+    use ⟨ψ_val, h_ψ_mem⟩
 
     -- Need: (A - zI)ψ = φ
     -- We have: (A - iI)ψ = η (from resolvent definition)
     -- And: (I - (z-i)R)η = φ (from Neumann series)
-
-    have h_resolvent_eq : gen.op ψ - I • ψ = η := h_ψ_spec.2
 
     -- (I - T)S = I, so (I - T)(Sφ) = φ, i.e., η - T(η) = φ
     have h_neumann_eq : η - T η = φ := by
@@ -1773,10 +1258,10 @@ lemma resolvent_near_i {U_grp : OneParameterUnitaryGroup (H := H)}
         _ = φ := rfl
 
     -- Now compute (A - zI)ψ
-    calc gen.op ψ - z • ψ
-        = gen.op ψ - (I + lambda_val) • ψ := by simp [lambda_val]
-      _ = gen.op ψ - I • ψ - lambda_val • ψ := by rw [add_smul]; abel
-      _ = η - lambda_val • ψ := by rw [h_resolvent_eq]
+    calc gen.op ⟨ψ_val, h_ψ_mem⟩ - z • ψ_val
+        = gen.op ⟨ψ_val, h_ψ_mem⟩ - (I + lambda_val) • ψ_val := by simp [lambda_val]
+      _ = gen.op ⟨ψ_val, h_ψ_mem⟩ - I • ψ_val - lambda_val • ψ_val := by rw [add_smul]; abel
+      _ = η - lambda_val • ψ_val := by rw [h_ψ_eq]
       _ = η - lambda_val • (R η) := rfl
       _ = η - (lambda_val • R) η := by rfl
       _ = η - T η := rfl
@@ -1788,23 +1273,24 @@ lemma resolvent_near_i {U_grp : OneParameterUnitaryGroup (H := H)}
   intro ψ' hψ'
 
   -- Show ψ = ψ' by showing their difference is zero
-  have h_diff : gen.op (ψ.val - ψ'.val) - z • (ψ.val - ψ'.val) = 0 := by
-    calc gen.op (ψ.val - ψ'.val) - z • (ψ.val - ψ'.val)
-        = (gen.op ψ.val - gen.op ψ'.val) - z • (ψ.val - ψ'.val) := by
-            rw [gen.op.map_sub]
-      _ = (gen.op ψ.val - gen.op ψ'.val) - (z • ψ.val - z • ψ'.val) := by
-            rw [smul_sub]
-      _ = (gen.op ψ.val - z • ψ.val) - (gen.op ψ'.val - z • ψ'.val) := by abel
+  have h_sub_mem : (ψ : H) - (ψ' : H) ∈ gen.domain :=
+    gen.domain.sub_mem ψ.property ψ'.property
+
+  have h_diff : gen.op ⟨(ψ : H) - (ψ' : H), h_sub_mem⟩ - z • ((ψ : H) - (ψ' : H)) = 0 := by
+    have op_sub := gen.op.map_sub ψ ψ'
+    have op_eq : gen.op ⟨(ψ : H) - (ψ' : H), h_sub_mem⟩ = gen.op ψ - gen.op ψ' := by
+      convert op_sub using 1
+    calc gen.op ⟨(ψ : H) - (ψ' : H), h_sub_mem⟩ - z • ((ψ : H) - (ψ' : H))
+        = (gen.op ψ - gen.op ψ') - z • ((ψ : H) - (ψ' : H)) := by rw [op_eq]
+      _ = (gen.op ψ - gen.op ψ') - (z • (ψ : H) - z • (ψ' : H)) := by rw [smul_sub]
+      _ = (gen.op ψ - z • (ψ : H)) - (gen.op ψ' - z • (ψ' : H)) := by abel
       _ = φ - φ := by rw [hψ, hψ']
       _ = 0 := sub_self φ
 
   -- Apply lower_bound_estimate: since Im(z) > 0, we have ‖(A-zI)(ψ-ψ')‖ ≥ |Im(z)|·‖ψ-ψ'‖
   have h_im_ne : z.im ≠ 0 := ne_of_gt hz
 
-  have h_sub_domain : ψ.val - ψ'.val ∈ gen.domain :=
-    gen.domain.sub_mem ψ.property ψ'.property
-
-  have h_bound := lower_bound_estimate gen z h_im_ne (ψ.val - ψ'.val) h_sub_domain
+  have h_bound := lower_bound_estimate gen z h_im_ne ((ψ : H) - (ψ' : H)) h_sub_mem
 
   -- From h_diff: LHS = 0, so |Im(z)|·‖ψ-ψ'‖ ≤ 0
   rw [h_diff] at h_bound
@@ -1813,122 +1299,108 @@ lemma resolvent_near_i {U_grp : OneParameterUnitaryGroup (H := H)}
   -- Since |Im(z)| > 0, we get ‖ψ-ψ'‖ = 0
   have h_im_pos : 0 < |z.im| := abs_pos.mpr h_im_ne
 
-  have h_norm_zero : ‖ψ.val - ψ'.val‖ = 0 := by
+  have h_norm_zero : ‖(ψ : H) - (ψ' : H)‖ = 0 := by
     by_contra h_ne
-    have h_pos : 0 < ‖ψ.val - ψ'.val‖ := by
-      cases' (norm_nonneg (ψ.val - ψ'.val)).lt_or_eq with h h
+    have h_pos : 0 < ‖(ψ : H) - (ψ' : H)‖ := by
+      cases' (norm_nonneg ((ψ : H) - (ψ' : H))).lt_or_eq with h h
       · exact h
       · exact absurd h.symm h_ne
-    have : 0 < |z.im| * ‖ψ.val - ψ'.val‖ := mul_pos h_im_pos h_pos
+    have : 0 < |z.im| * ‖(ψ : H) - (ψ' : H)‖ := mul_pos h_im_pos h_pos
     linarith
 
   -- Therefore ψ = ψ'
-  have h_eq : ψ.val = ψ'.val := sub_eq_zero.mp (norm_eq_zero.mp h_norm_zero)
-  ext
-  exact h_eq.symm
+  have h_eq : (ψ : H) = (ψ' : H) := sub_eq_zero.mp (norm_eq_zero.mp h_norm_zero)
+  exact Subtype.ext h_eq.symm
 
+/-
+The resolvent operator R_i = (A - iI)⁻¹ is bounded with norm ≤ 1.
 
+**Mathematical Content:**
+For a self-adjoint generator A, the resolvent at i satisfies the uniform bound:
+  ∀ φ ∈ H: ‖R_i(φ)‖ ≤ ‖φ‖
 
-/--
-The resolvent exists for all z with Im(z) ≠ 0.
+This proves ‖R_i‖ ≤ 1 as a bounded operator on H.
 
-**The Big Theorem:** For self-adjoint A and any z ∉ ℝ, the equation
-  (A - zI)ψ = φ
-has a unique solution ψ ∈ domain(A) for every φ ∈ H.
+**Proof Strategy:**
+The key identity for any ψ in the domain of A is:
+  ‖(A - iI)ψ‖² = ‖Aψ‖² + ‖ψ‖²
 
-**Proof Strategy (Three Parts):**
+This follows from expanding the norm and using that the cross term vanishes:
+  Re⟨Aψ, iψ⟩ = Re(i·⟨Aψ, ψ⟩) = 0
 
-1. **Injectivity:** From `lower_bound_estimate`:
-   If (A - zI)ψ = 0, then 0 = ‖(A - zI)ψ‖ ≥ |Im(z)|‖ψ‖
-   Since |Im(z)| > 0, we get ‖ψ‖ = 0, so ψ = 0.
+since ⟨Aψ, ψ⟩ ∈ ℝ by symmetry of A.
 
-2. **Closed Range:** Also from `lower_bound_estimate`:
-   If (A - zI)ψₙ is Cauchy, then ψₙ is Cauchy because
-   ‖ψₙ - ψₘ‖ ≤ (1/|Im(z)|)‖(A - zI)(ψₙ - ψₘ)‖
+From the identity: ‖(A - iI)ψ‖² ≥ ‖ψ‖², so ‖(A - iI)ψ‖ ≥ ‖ψ‖.
 
-3. **Dense Range (The Hard Part):**
-   Suppose φ ⊥ Range(A - zI). Then for all ψ ∈ domain(A):
-   - 0 = ⟨(A - zI)ψ, φ⟩ = ⟨Aψ, φ⟩ - z⟨ψ, φ⟩
-   - By symmetry of A: ⟨Aψ, φ⟩ = ⟨ψ, Aφ⟩
-   - So: ⟨ψ, Aφ⟩ = z⟨ψ, φ⟩
-   - But also: ⟨Aψ, φ⟩ = z⟨ψ, φ⟩
-   - By symmetry again: ⟨ψ, Aφ⟩ = ⟨Aψ, φ⟩ = z⟨ψ, φ⟩
-   - Taking conjugate: ⟨Aφ, ψ⟩ = z̄⟨φ, ψ⟩ = z̄⟨ψ, φ⟩
-   - But ⟨Aφ, ψ⟩ = ⟨ψ, Aφ⟩ = z⟨ψ, φ⟩
-   - Therefore: z⟨ψ, φ⟩ = z̄⟨ψ, φ⟩
-   - Since z ≠ z̄ (as Im(z) ≠ 0), we get ⟨ψ, φ⟩ = 0 for all ψ ∈ domain
-   - Since domain is dense, φ = 0!
+For φ = (A - iI)ψ, we have ψ = R_i(φ), giving:
+  ‖R_i(φ)‖ = ‖ψ‖ ≤ ‖(A - iI)ψ‖ = ‖φ‖
 
 **Why This Matters:**
-This is the fundamental theorem distinguishing self-adjoint from merely symmetric
-operators. Only self-adjoint operators have invertible resolvents off ℝ.
+- The bound ‖R_i‖ ≤ 1 is sharp (equality holds for certain states)
+- This is a special case of the general bound ‖R_z‖ ≤ 1/|Im(z)|
+- The bounded resolvent is THE defining characteristic separating self-adjoint
+  from merely symmetric operators
+- Essential for proving the spectral theorem via functional calculus
 
-**Physical Meaning:**
-Complex energies don't exist for quantum systems with self-adjoint Hamiltonians.
-The resolvent (E - H)⁻¹ exists for all non-real E, proving energy must be real.
+**Physical Interpretation:**
+In quantum mechanics with Hamiltonian H, the resolvent (E - H)⁻¹ represents
+the system's response to energy probes. The bound says probing at complex
+energy i produces a bounded response - no resonances at non-real energies.
+
+**Comparison with R_{-i}:**
+The conjugate resolvent `resolvent_at_neg_i` inverts (A + iI) and satisfies
+the identical bound ‖R_{-i}‖ ≤ 1 by the same argument (using -i instead of i).
 -/
 theorem self_adjoint_range_all_z
     {U_grp : OneParameterUnitaryGroup (H := H)}
-    (gen : Generator U_grp) (hsa : IsSelfAdjoint gen)
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen)
     (z : ℂ) (hz : z.im ≠ 0) :
-    ∀ φ : H, ∃! (ψ : {x : H // x ∈ gen.domain}),
-      gen.op ψ.val - z • ψ.val = φ := by
+    ∀ φ : H, ∃! (ψ : gen.domain), gen.op ψ - z • (ψ : H) = φ := by
   intro φ
 
   -- Part 1: Existence via density argument
   -- Key lemma: orthogonal complement of Range(A - zI) is {0}
   have h_ker_zero : ∀ (χ : H),
-      (∀ (ψ : {x : H // x ∈ gen.domain}), ⟪gen.op ψ.val - z • ψ.val, χ⟫_ℂ = 0) → χ = 0 := by
+      (∀ (ψ : gen.domain), ⟪gen.op ψ - z • (ψ : H), χ⟫_ℂ = 0) → χ = 0 := by
     intro χ h_orth
 
     -- From orthogonality: ⟪Aψ, χ⟫ = z̄·⟪ψ, χ⟫ for all ψ ∈ domain
-    have h_eigen_cond : ∀ (ψ : H), ψ ∈ gen.domain → ⟪gen.op ψ, χ⟫_ℂ = (starRingEnd ℂ z) * ⟪ψ, χ⟫_ℂ := by
+    have h_eigen_cond : ∀ (ψ : H) (hψ : ψ ∈ gen.domain),
+        ⟪gen.op ⟨ψ, hψ⟩, χ⟫_ℂ = (starRingEnd ℂ) z * ⟪ψ, χ⟫_ℂ := by
       intro ψ hψ
       have h := h_orth ⟨ψ, hψ⟩
       simp only at h
-      calc ⟪gen.op ψ, χ⟫_ℂ
-          = ⟪gen.op ψ - z • ψ + z • ψ, χ⟫_ℂ := by simp
-        _ = ⟪gen.op ψ - z • ψ, χ⟫_ℂ + ⟪z • ψ, χ⟫_ℂ := by rw [inner_add_left]
+      calc ⟪gen.op ⟨ψ, hψ⟩, χ⟫_ℂ
+          = ⟪gen.op ⟨ψ, hψ⟩ - z • ψ + z • ψ, χ⟫_ℂ := by simp
+        _ = ⟪gen.op ⟨ψ, hψ⟩ - z • ψ, χ⟫_ℂ + ⟪z • ψ, χ⟫_ℂ := by rw [inner_add_left]
         _ = 0 + ⟪z • ψ, χ⟫_ℂ := by rw [h]
-        _ = (starRingEnd ℂ z) * ⟪ψ, χ⟫_ℂ := by rw [inner_smul_left]; ring
+        _ = (starRingEnd ℂ) z * ⟪ψ, χ⟫_ℂ := by rw [inner_smul_left]; ring
 
-    -- Use IsSelfAdjoint: find η with (A - iI)η = (z̄ - i)•χ
     set z_bar := (starRingEnd ℂ) z with hz_bar_def
 
     -- (A - iI) is surjective, so find η ∈ domain with (A - iI)η = (z̄ - i)•χ
     obtain ⟨η, hη_dom, hη_eq⟩ := hsa.2 ((z_bar - I) • χ)
-    -- hη_eq : gen.op η - I • η = (z̄ - i) • χ
 
     -- (A + iI) is surjective, so find ξ ∈ domain with (A + iI)ξ = (z̄ + i)•χ
     obtain ⟨ξ, hξ_dom, hξ_eq⟩ := hsa.1 ((z_bar + I) • χ)
-    -- hξ_eq : gen.op ξ + I • ξ = (z̄ + i) • χ
 
-    -- Key calculation 1: Compute ⟪χ, η⟫ using η's equation and eigen condition
     -- From hη_eq: Aη = (z̄ - i)•χ + i•η
-    have h_Aη : gen.op η = (z_bar - I) • χ + I • η := by
-      calc gen.op η
-          = (gen.op η - I • η) + I • η := by simp
+    have h_Aη : gen.op ⟨η, hη_dom⟩ = (z_bar - I) • χ + I • η := by
+      calc gen.op ⟨η, hη_dom⟩
+          = (gen.op ⟨η, hη_dom⟩ - I • η) + I • η := by simp
         _ = (z_bar - I) • χ + I • η := by rw [hη_eq]
 
-    -- Apply eigen condition to η
-    have h_eigen_η : ⟪gen.op η, χ⟫_ℂ = z_bar * ⟪η, χ⟫_ℂ := h_eigen_cond η hη_dom
+    have h_eigen_η : ⟪gen.op ⟨η, hη_dom⟩, χ⟫_ℂ = z_bar * ⟪η, χ⟫_ℂ := h_eigen_cond η hη_dom
 
-    -- Compute ⟪Aη, χ⟫ directly from h_Aη
-    have h_inner_Aη : ⟪gen.op η, χ⟫_ℂ = (starRingEnd ℂ (z_bar - I)) * ‖χ‖^2 + (starRingEnd ℂ I) * ⟪η, χ⟫_ℂ := by
-      calc ⟪gen.op η, χ⟫_ℂ
+    have h_inner_Aη : ⟪gen.op ⟨η, hη_dom⟩, χ⟫_ℂ =
+        (starRingEnd ℂ) (z_bar - I) * ‖χ‖^2 + (starRingEnd ℂ) I * ⟪η, χ⟫_ℂ := by
+      calc ⟪gen.op ⟨η, hη_dom⟩, χ⟫_ℂ
           = ⟪(z_bar - I) • χ + I • η, χ⟫_ℂ := by rw [h_Aη]
         _ = ⟪(z_bar - I) • χ, χ⟫_ℂ + ⟪I • η, χ⟫_ℂ := by rw [inner_add_left]
-        _ = (starRingEnd ℂ (z_bar - I)) * ⟪χ, χ⟫_ℂ + (starRingEnd ℂ I) * ⟪η, χ⟫_ℂ := by
+        _ = (starRingEnd ℂ) (z_bar - I) * ⟪χ, χ⟫_ℂ + (starRingEnd ℂ) I * ⟪η, χ⟫_ℂ := by
             rw [inner_smul_left, inner_smul_left]
-        _ = (starRingEnd ℂ (z_bar - I)) * ‖χ‖^2 + (starRingEnd ℂ I) * ⟪η, χ⟫_ℂ := by
-            rw [inner_self_eq_norm_sq_to_K]
-            simp
-
-    -- Combining the two expressions for ⟪Aη, χ⟫:
-    -- z̄ * ⟪η, χ⟫ = conj(z̄ - i) * ‖χ‖² + conj(i) * ⟪η, χ⟫
-    -- z̄ * ⟪η, χ⟫ = (z - (-i)) * ‖χ‖² + (-i) * ⟪η, χ⟫
-    -- z̄ * ⟪η, χ⟫ = (z + i) * ‖χ‖² - i * ⟪η, χ⟫
-    -- (z̄ + i) * ⟪η, χ⟫ = (z + i) * ‖χ‖²
+        _ = (starRingEnd ℂ) (z_bar - I) * ‖χ‖^2 + (starRingEnd ℂ) I * ⟪η, χ⟫_ℂ := by
+            rw [inner_self_eq_norm_sq_to_K]; simp
 
     have h_conj_zbar_minus_I : (starRingEnd ℂ) (z_bar - I) = z + I := by
       simp [hz_bar_def]
@@ -1939,35 +1411,32 @@ theorem self_adjoint_range_all_z
       have h1 := h_eigen_η
       have h2 := h_inner_Aη
       rw [h_conj_zbar_minus_I, h_conj_I] at h2
-      -- h1: z̄ * ⟪η, χ⟫ = ⟪Aη, χ⟫
-      -- h2: ⟪Aη, χ⟫ = (z + I) * ‖χ‖² + (-I) * ⟪η, χ⟫
       calc (z_bar + I) * ⟪η, χ⟫_ℂ
           = z_bar * ⟪η, χ⟫_ℂ + I * ⟪η, χ⟫_ℂ := by ring
-        _ = ⟪gen.op η, χ⟫_ℂ + I * ⟪η, χ⟫_ℂ := by rw [h1]
+        _ = ⟪gen.op ⟨η, hη_dom⟩, χ⟫_ℂ + I * ⟪η, χ⟫_ℂ := by rw [h1]
         _ = ((z + I) * ‖χ‖^2 + (-I) * ⟪η, χ⟫_ℂ) + I * ⟪η, χ⟫_ℂ := by rw [h2]
         _ = (z + I) * ‖χ‖^2 := by ring
 
-    -- Key calculation 2: Similar for ξ
-    have h_Aξ : gen.op ξ = (z_bar + I) • χ - I • ξ := by
-      calc gen.op ξ
-          = (gen.op ξ + I • ξ) - I • ξ := by simp
+    -- Similar for ξ
+    have h_Aξ : gen.op ⟨ξ, hξ_dom⟩ = (z_bar + I) • χ - I • ξ := by
+      calc gen.op ⟨ξ, hξ_dom⟩
+          = (gen.op ⟨ξ, hξ_dom⟩ + I • ξ) - I • ξ := by simp
         _ = (z_bar + I) • χ - I • ξ := by rw [hξ_eq]
 
-    have h_eigen_ξ : ⟪gen.op ξ, χ⟫_ℂ = z_bar * ⟪ξ, χ⟫_ℂ := h_eigen_cond ξ hξ_dom
+    have h_eigen_ξ : ⟪gen.op ⟨ξ, hξ_dom⟩, χ⟫_ℂ = z_bar * ⟪ξ, χ⟫_ℂ := h_eigen_cond ξ hξ_dom
 
-    have h_inner_Aξ : ⟪gen.op ξ, χ⟫_ℂ = (starRingEnd ℂ (z_bar + I)) * ‖χ‖^2 - (starRingEnd ℂ I) * ⟪ξ, χ⟫_ℂ := by
-      calc ⟪gen.op ξ, χ⟫_ℂ
+    have h_inner_Aξ : ⟪gen.op ⟨ξ, hξ_dom⟩, χ⟫_ℂ =
+        (starRingEnd ℂ) (z_bar + I) * ‖χ‖^2 - (starRingEnd ℂ) I * ⟪ξ, χ⟫_ℂ := by
+      calc ⟪gen.op ⟨ξ, hξ_dom⟩, χ⟫_ℂ
           = ⟪(z_bar + I) • χ - I • ξ, χ⟫_ℂ := by rw [h_Aξ]
         _ = ⟪(z_bar + I) • χ, χ⟫_ℂ - ⟪I • ξ, χ⟫_ℂ := by rw [inner_sub_left]
-        _ = (starRingEnd ℂ (z_bar + I)) * ⟪χ, χ⟫_ℂ - (starRingEnd ℂ I) * ⟪ξ, χ⟫_ℂ := by
+        _ = (starRingEnd ℂ) (z_bar + I) * ⟪χ, χ⟫_ℂ - (starRingEnd ℂ) I * ⟪ξ, χ⟫_ℂ := by
             rw [inner_smul_left, inner_smul_left]
-        _ = (starRingEnd ℂ (z_bar + I)) * ‖χ‖^2 - (starRingEnd ℂ I) * ⟪ξ, χ⟫_ℂ := by
-            rw [inner_self_eq_norm_sq_to_K]
-            simp
+        _ = (starRingEnd ℂ) (z_bar + I) * ‖χ‖^2 - (starRingEnd ℂ) I * ⟪ξ, χ⟫_ℂ := by
+            rw [inner_self_eq_norm_sq_to_K]; simp
 
     have h_conj_zbar_plus_I : (starRingEnd ℂ) (z_bar + I) = z - I := by
-      simp [hz_bar_def]
-      ring
+      simp [hz_bar_def]; ring
 
     have h_relation_ξ : (z_bar - I) * ⟪ξ, χ⟫_ℂ = (z - I) * ‖χ‖^2 := by
       have h1 := h_eigen_ξ
@@ -1975,70 +1444,52 @@ theorem self_adjoint_range_all_z
       rw [h_conj_zbar_plus_I, h_conj_I] at h2
       calc (z_bar - I) * ⟪ξ, χ⟫_ℂ
           = z_bar * ⟪ξ, χ⟫_ℂ - I * ⟪ξ, χ⟫_ℂ := by ring
-        _ = ⟪gen.op ξ, χ⟫_ℂ - I * ⟪ξ, χ⟫_ℂ := by rw [h1]
+        _ = ⟪gen.op ⟨ξ, hξ_dom⟩, χ⟫_ℂ - I * ⟪ξ, χ⟫_ℂ := by rw [h1]
         _ = ((z - I) * ‖χ‖^2 - (-I) * ⟪ξ, χ⟫_ℂ) - I * ⟪ξ, χ⟫_ℂ := by rw [h2]
         _ = (z - I) * ‖χ‖^2 := by ring
 
-    -- Key calculation 3: Use symmetry of A on η and ξ
-    -- ⟪Aη, ξ⟫ = ⟪η, Aξ⟫
-    have h_sym : ⟪gen.op η, ξ⟫_ℂ = ⟪η, gen.op ξ⟫_ℂ := gen.symmetric η ξ hη_dom hξ_dom
+    -- Key: use symmetry ⟪Aη, ξ⟫ = ⟪η, Aξ⟫
+    have h_sym : ⟪gen.op ⟨η, hη_dom⟩, ξ⟫_ℂ = ⟪η, gen.op ⟨ξ, hξ_dom⟩⟫_ℂ :=
+      gen.symmetric ⟨η, hη_dom⟩ ⟨ξ, hξ_dom⟩
 
-    -- LHS: ⟪Aη, ξ⟫ = ⟪(z̄-i)χ + iη, ξ⟫ = (z-(-i))⟪χ,ξ⟫ + (-i)⟪η,ξ⟫ = (z+i)⟪χ,ξ⟫ - i⟪η,ξ⟫
-    have h_LHS : ⟪gen.op η, ξ⟫_ℂ = (z + I) * ⟪χ, ξ⟫_ℂ - I * ⟪η, ξ⟫_ℂ := by
-      calc ⟪gen.op η, ξ⟫_ℂ
+    have h_LHS : ⟪gen.op ⟨η, hη_dom⟩, ξ⟫_ℂ = (z + I) * ⟪χ, ξ⟫_ℂ - I * ⟪η, ξ⟫_ℂ := by
+      calc ⟪gen.op ⟨η, hη_dom⟩, ξ⟫_ℂ
           = ⟪(z_bar - I) • χ + I • η, ξ⟫_ℂ := by rw [h_Aη]
         _ = ⟪(z_bar - I) • χ, ξ⟫_ℂ + ⟪I • η, ξ⟫_ℂ := by rw [inner_add_left]
-        _ = (starRingEnd ℂ (z_bar - I)) * ⟪χ, ξ⟫_ℂ + (starRingEnd ℂ I) * ⟪η, ξ⟫_ℂ := by
+        _ = (starRingEnd ℂ) (z_bar - I) * ⟪χ, ξ⟫_ℂ + (starRingEnd ℂ) I * ⟪η, ξ⟫_ℂ := by
             rw [inner_smul_left, inner_smul_left]
         _ = (z + I) * ⟪χ, ξ⟫_ℂ + (-I) * ⟪η, ξ⟫_ℂ := by rw [h_conj_zbar_minus_I, h_conj_I]
         _ = (z + I) * ⟪χ, ξ⟫_ℂ - I * ⟪η, ξ⟫_ℂ := by ring
 
-    -- RHS: ⟪η, Aξ⟫ = ⟪η, (z̄+i)χ - iξ⟫ = (z̄+i)⟪η,χ⟫ - i⟪η,ξ⟫
-    have h_RHS : ⟪η, gen.op ξ⟫_ℂ = (z_bar + I) * ⟪η, χ⟫_ℂ - I * ⟪η, ξ⟫_ℂ := by
-      calc ⟪η, gen.op ξ⟫_ℂ
+    have h_RHS : ⟪η, gen.op ⟨ξ, hξ_dom⟩⟫_ℂ = (z_bar + I) * ⟪η, χ⟫_ℂ - I * ⟪η, ξ⟫_ℂ := by
+      calc ⟪η, gen.op ⟨ξ, hξ_dom⟩⟫_ℂ
           = ⟪η, (z_bar + I) • χ - I • ξ⟫_ℂ := by rw [h_Aξ]
         _ = ⟪η, (z_bar + I) • χ⟫_ℂ - ⟪η, I • ξ⟫_ℂ := by rw [inner_sub_right]
         _ = (z_bar + I) * ⟪η, χ⟫_ℂ - I * ⟪η, ξ⟫_ℂ := by rw [inner_smul_right, inner_smul_right]
 
-    -- From symmetry: (z + i)⟪χ,ξ⟫ - i⟪η,ξ⟫ = (z̄ + i)⟪η,χ⟫ - i⟪η,ξ⟫
-    -- Therefore: (z + i)⟪χ,ξ⟫ = (z̄ + i)⟪η,χ⟫
     have h_cancel : (z + I) * ⟪χ, ξ⟫_ℂ = (z_bar + I) * ⟪η, χ⟫_ℂ := by
-      have : (z + I) * ⟪χ, ξ⟫_ℂ - I * ⟪η, ξ⟫_ℂ = (z_bar + I) * ⟪η, χ⟫_ℂ - I * ⟪η, ξ⟫_ℂ := by
+      have h : (z + I) * ⟪χ, ξ⟫_ℂ - I * ⟪η, ξ⟫_ℂ = (z_bar + I) * ⟪η, χ⟫_ℂ - I * ⟪η, ξ⟫_ℂ := by
         rw [← h_LHS, ← h_RHS, h_sym]
-      -- find alternative to this tactic.
-      simp_all +arith
+      calc (z + I) * ⟪χ, ξ⟫_ℂ
+          = (z + I) * ⟪χ, ξ⟫_ℂ - I * ⟪η, ξ⟫_ℂ + I * ⟪η, ξ⟫_ℂ := by ring
+        _ = (z_bar + I) * ⟪η, χ⟫_ℂ - I * ⟪η, ξ⟫_ℂ + I * ⟪η, ξ⟫_ℂ := by rw [h]
+        _ = (z_bar + I) * ⟪η, χ⟫_ℂ := by ring
 
-    -- From h_relation_η: (z̄ + i)⟪η, χ⟫ = (z + i)‖χ‖²
-    -- So: (z + i)⟪χ,ξ⟫ = (z + i)‖χ‖²
     have h_chi_xi_eq : (z + I) * ⟪χ, ξ⟫_ℂ = (z + I) * ‖χ‖^2 := by
       calc (z + I) * ⟪χ, ξ⟫_ℂ
           = (z_bar + I) * ⟪η, χ⟫_ℂ := h_cancel
         _ = (z + I) * ‖χ‖^2 := h_relation_η
 
-    -- Now we show χ = 0 by considering cases on z + i ≠ 0
-    -- Since Im(z) ≠ 0, we have z ≠ -i, so z + i ≠ 0
-    --have h_z_plus_i_ne : z + I ≠ 0 := by
-    -- We need to show χ = 0. Split cases on whether z = -I.
     by_cases h_z_eq_neg_I : z = -I
-    · -- Case z = -I: use h_relation_ξ directly
-      -- z_bar = conj(-I) = I, so z_bar - I = 0, and z - I = -2I
+    · -- Case z = -I
       have h_zbar_eq : z_bar = I := by
-        simp only [hz_bar_def, h_z_eq_neg_I, map_neg, Complex.conj_I]
-        ring
+        simp only [hz_bar_def, h_z_eq_neg_I, map_neg, Complex.conj_I]; ring
       have h_zbar_minus_I : z_bar - I = 0 := by rw [h_zbar_eq]; ring
       have h_z_minus_I : z - I = -2 * I := by rw [h_z_eq_neg_I]; ring
-      -- Substitute into h_relation_ξ: 0 * ⟪ξ, χ⟫ = (-2I) * ‖χ‖²
       rw [h_zbar_minus_I, h_z_minus_I] at h_relation_ξ
       simp only [zero_mul] at h_relation_ξ
-      -- So 0 = -2I * ‖χ‖², and -2I ≠ 0
       have h_two_I_ne : (-2 : ℂ) * I ≠ 0 := by
-        simp only [ne_eq, mul_eq_zero, Complex.I_ne_zero]
-        subst h_z_eq_neg_I
-        simp_all only [conj_I, map_neg, neg_neg, sub_self, neg_mul, neg_smul, zero_eq_neg, mul_eq_zero, OfNat.ofNat_ne_zero,
-          I_ne_zero, or_self, ne_eq, not_false_eq_true, pow_eq_zero_iff, ofReal_eq_zero, norm_eq_zero, false_or, neg_im, I_im,
-          neg_eq_zero, one_ne_zero, sub_neg_eq_add, inner_zero_right, implies_true, mul_zero, smul_zero, zero_add, zero_sub,
-          neg_add_cancel, map_zero, norm_zero, ofReal_zero, zero_pow, add_zero, map_add, inner_zero_left, inner_neg_right,
-          neg_inj, z_bar]
+        simp only [ne_eq, mul_eq_zero, Complex.I_ne_zero, neg_eq_zero, OfNat.ofNat_ne_zero, or_self, not_false_eq_true]
       have h_norm_sq_zero : (‖χ‖^2 : ℂ) = 0 := by
         have := mul_eq_zero.mp h_relation_ξ.symm
         cases this with
@@ -2049,7 +1500,7 @@ theorem self_adjoint_range_all_z
         exact Complex.ofReal_eq_zero.mp h
       exact norm_eq_zero.mp h_norm_zero
 
-    · -- Case z ≠ -I, so z + I ≠ 0
+    · -- Case z ≠ -I
       have h_z_plus_i_ne : z + I ≠ 0 := by
         intro h_eq
         apply h_z_eq_neg_I
@@ -2057,29 +1508,22 @@ theorem self_adjoint_range_all_z
           _ = 0 - I := by rw [h_eq]
           _ = -I := by ring
 
-      -- Now proceed with the original argument...
-
-
-      -- From h_chi_xi_eq and z + I ≠ 0: ⟪χ, ξ⟫ = ‖χ‖²
       have h_inner_chi_xi : ⟪χ, ξ⟫_ℂ = ‖χ‖^2 := by
         have := mul_left_cancel₀ h_z_plus_i_ne h_chi_xi_eq
         calc ⟪χ, ξ⟫_ℂ = (‖χ‖^2 : ℂ) := this
           _ = ‖χ‖^2 := by norm_cast
 
-      -- Also get ⟪ξ, χ⟫ = ‖χ‖² via conjugate symmetry
       have h_inner_xi_chi : ⟪ξ, χ⟫_ℂ = ‖χ‖^2 := by
         have h1 : ⟪ξ, χ⟫_ℂ = (starRingEnd ℂ) ⟪χ, ξ⟫_ℂ := (inner_conj_symm ξ χ).symm
         rw [h_inner_chi_xi] at h1
         simp at h1
         exact h1
 
-      -- Substitute into h_relation_ξ
       have h_final : (z_bar - I) * (‖χ‖^2 : ℂ) = (z - I) * ‖χ‖^2 := by
         calc (z_bar - I) * (‖χ‖^2 : ℂ)
             = (z_bar - I) * ⟪ξ, χ⟫_ℂ := by rw [← h_inner_xi_chi]
           _ = (z - I) * ↑‖χ‖^2 := h_relation_ξ
 
-      -- So (z̄ - z) * ‖χ‖² = 0
       have h_diff_zero : (z_bar - z) * (‖χ‖^2 : ℂ) = 0 := by
         have : (z_bar - I) * (‖χ‖^2 : ℂ) - (z - I) * ‖χ‖^2 = 0 := by
           rw [h_final]; ring
@@ -2088,7 +1532,6 @@ theorem self_adjoint_range_all_z
           _ = (z_bar - I) * ‖χ‖^2 - (z - I) * ‖χ‖^2 := by ring
           _ = 0 := this
 
-      -- Now z̄ - z = -2i * Im(z) ≠ 0 since Im(z) ≠ 0
       have h_zbar_minus_z_ne : z_bar - z ≠ 0 := by
         intro h_eq
         have h_zbar_eq_z : z_bar = z := sub_eq_zero.mp h_eq
@@ -2097,203 +1540,202 @@ theorem self_adjoint_range_all_z
             rw [hz_bar_def] at h_zbar_eq_z
             exact congrArg Complex.im h_zbar_eq_z
           simp only [Complex.conj_im] at h1
-          -- h1 : -z.im = z.im, so z.im = 0
           linarith
         exact hz h_im_zero
 
-      -- Therefore ‖χ‖² = 0
       have h_norm_sq_zero : (‖χ‖^2 : ℂ) = 0 := by
         have := mul_eq_zero.mp h_diff_zero
         cases this with
         | inl h => exact absurd h h_zbar_minus_z_ne
         | inr h => exact h
 
-      -- So χ = 0
       have h_norm_zero : ‖χ‖ = 0 := by
         have h : (‖χ‖ : ℂ) = 0 := sq_eq_zero_iff.mp h_norm_sq_zero
         exact Complex.ofReal_eq_zero.mp h
 
       exact norm_eq_zero.mp h_norm_zero
 
-  -- Part 2: Use density to show existence
-  -- Range(A - zI)⊥ = {0} implies Range(A - zI) is dense
-  -- Combined with closedness (from lower_bound_estimate) gives Range = H
-
-  have h_range_closed : IsClosed (Set.range (fun (ψ : {x : H // x ∈ gen.domain}) =>
-                                            gen.op ψ.val - z • ψ.val)) := by
+  -- Part 2: Range is closed
+  have h_range_closed : IsClosed (Set.range (fun (ψ : gen.domain) => gen.op ψ - z • (ψ : H))) := by
     rw [← isSeqClosed_iff_isClosed]
-    intro u φ hu_range hφ_lim
-  -- Now we have:
-  -- u : ℕ → H
-  -- hu_range : ∀ n, u n ∈ Set.range ...
-  -- hφ_lim : Tendsto u atTop (𝓝 φ)
-  -- Goal: φ ∈ Set.range ...
+    intro u φ_lim hu_range hφ_lim
+
     have hu_cauchy : CauchySeq u := hφ_lim.cauchySeq
     choose ψ_seq hψ_seq using fun n => Set.mem_range.mp (hu_range n)
 
-    have hψ_cauchy : CauchySeq (fun n => (ψ_seq n).val) := by
+    have hψ_cauchy : CauchySeq (fun n => (ψ_seq n : H)) := by
       rw [Metric.cauchySeq_iff]
       intro ε hε
       have hε_scaled : 0 < |z.im| * ε := mul_pos (abs_pos.mpr hz) hε
       obtain ⟨N, hN⟩ := Metric.cauchySeq_iff.mp hu_cauchy (|z.im| * ε) hε_scaled
       use N
       intro m hm n hn
-      have h_sub_domain : (ψ_seq m).val - (ψ_seq n).val ∈ gen.domain :=
+      have h_sub_mem : (ψ_seq m : H) - (ψ_seq n : H) ∈ gen.domain :=
         gen.domain.sub_mem (ψ_seq m).property (ψ_seq n).property
-      have h_bound := lower_bound_estimate gen z hz
-        ((ψ_seq m).val - (ψ_seq n).val) h_sub_domain
-      have h_diff : gen.op ((ψ_seq m).val - (ψ_seq n).val) -
-                    z • ((ψ_seq m).val - (ψ_seq n).val) = u m - u n := by
-        calc gen.op ((ψ_seq m).val - (ψ_seq n).val) - z • ((ψ_seq m).val - (ψ_seq n).val)
-            = (gen.op (ψ_seq m).val - gen.op (ψ_seq n).val) -
-              z • ((ψ_seq m).val - (ψ_seq n).val) := by rw [gen.op.map_sub]
-          _ = (gen.op (ψ_seq m).val - gen.op (ψ_seq n).val) -
-              (z • (ψ_seq m).val - z • (ψ_seq n).val) := by rw [smul_sub]
-          _ = (gen.op (ψ_seq m).val - z • (ψ_seq m).val) -
-              (gen.op (ψ_seq n).val - z • (ψ_seq n).val) := by abel
+      have h_bound := lower_bound_estimate gen z hz ((ψ_seq m : H) - (ψ_seq n : H)) h_sub_mem
+
+      have h_diff : gen.op ⟨(ψ_seq m : H) - (ψ_seq n : H), h_sub_mem⟩ -
+                    z • ((ψ_seq m : H) - (ψ_seq n : H)) = u m - u n := by
+        have op_sub := gen.op.map_sub (ψ_seq m) (ψ_seq n)
+        have op_eq : gen.op ⟨(ψ_seq m : H) - (ψ_seq n : H), h_sub_mem⟩ =
+                     gen.op (ψ_seq m) - gen.op (ψ_seq n) := by
+          convert op_sub using 1
+        calc gen.op ⟨(ψ_seq m : H) - (ψ_seq n : H), h_sub_mem⟩ - z • ((ψ_seq m : H) - (ψ_seq n : H))
+            = (gen.op (ψ_seq m) - gen.op (ψ_seq n)) - z • ((ψ_seq m : H) - (ψ_seq n : H)) := by rw [op_eq]
+          _ = (gen.op (ψ_seq m) - gen.op (ψ_seq n)) - (z • (ψ_seq m : H) - z • (ψ_seq n : H)) := by
+              rw [smul_sub]
+          _ = (gen.op (ψ_seq m) - z • (ψ_seq m : H)) - (gen.op (ψ_seq n) - z • (ψ_seq n : H)) := by abel
           _ = u m - u n := by rw [hψ_seq m, hψ_seq n]
+
       rw [h_diff] at h_bound
       have h_ubound : dist (u m) (u n) < |z.im| * ε := hN m hm n hn
       rw [dist_eq_norm] at h_ubound
-      have h_chain : |z.im| * ‖(ψ_seq m).val - (ψ_seq n).val‖ < |z.im| * ε := by
-        calc |z.im| * ‖(ψ_seq m).val - (ψ_seq n).val‖
+      have h_chain : |z.im| * ‖(ψ_seq m : H) - (ψ_seq n : H)‖ < |z.im| * ε := by
+        calc |z.im| * ‖(ψ_seq m : H) - (ψ_seq n : H)‖
             ≤ ‖u m - u n‖ := h_bound
           _ < |z.im| * ε := h_ubound
       have h_pos : 0 < |z.im| := abs_pos.mpr hz
       rw [dist_eq_norm]
       exact (mul_lt_mul_left h_pos).mp h_chain
 
-    -- ψ_seq converges to some limit ψ_lim
     obtain ⟨ψ_lim, hψ_lim⟩ := cauchySeq_tendsto_of_complete hψ_cauchy
-
-    -- The hard part: showing ψ_lim ∈ domain
-    -- This requires that generators are closed operators (graph closed)
-    -- Standard result but needs additional infrastructure
-    -- Show ψ_lim ∈ domain using the resolvent at i
-    -- Key: R_i is bounded and R_i((A - iI)ψ) = ψ for ψ ∈ domain
 
     let R := resolvent_at_i gen hsa
 
-    -- (A - iI)ψ_n = (A - zI)ψ_n + (z - i)ψ_n = u_n + (z - i)ψ_n
-    have h_AiI : ∀ n, gen.op (ψ_seq n).val - I • (ψ_seq n).val =
-                      u n + (z - I) • (ψ_seq n).val := by
+    have h_AiI : ∀ n, gen.op (ψ_seq n) - I • (ψ_seq n : H) = u n + (z - I) • (ψ_seq n : H) := by
       intro n
-      have h := hψ_seq n  -- (A - zI)ψ_n = u_n
-      calc gen.op (ψ_seq n).val - I • (ψ_seq n).val
-          = (gen.op (ψ_seq n).val - z • (ψ_seq n).val) + (z - I) • (ψ_seq n).val := by
+      have h := hψ_seq n
+      calc gen.op (ψ_seq n) - I • (ψ_seq n : H)
+          = (gen.op (ψ_seq n) - z • (ψ_seq n : H)) + (z - I) • (ψ_seq n : H) := by
               rw [sub_smul]; abel
-        _ = u n + (z - I) • (ψ_seq n).val := by rw [h]
+        _ = u n + (z - I) • (ψ_seq n : H) := by rw [h]
 
-    -- The sequence (A - iI)ψ_n converges to φ + (z - i)·ψ_lim
-    have h_AiI_lim : Tendsto (fun n => gen.op (ψ_seq n).val - I • (ψ_seq n).val)
-                            atTop (𝓝 (φ + (z - I) • ψ_lim)) := by
-      have h1 : Tendsto u atTop (𝓝 φ) := hφ_lim
-      have h2 : Tendsto (fun n => (z - I) • (ψ_seq n).val) atTop (𝓝 ((z - I) • ψ_lim)) := by
-        exact Tendsto.const_smul hψ_lim (z - I)
-      have h3 : Tendsto (fun n => u n + (z - I) • (ψ_seq n).val) atTop
-                        (𝓝 (φ + (z - I) • ψ_lim)) := Tendsto.add h1 h2
+    have h_AiI_lim : Tendsto (fun n => gen.op (ψ_seq n) - I • (ψ_seq n : H))
+                            atTop (𝓝 (φ_lim + (z - I) • ψ_lim)) := by
+      have h1 : Tendsto u atTop (𝓝 φ_lim) := hφ_lim
+      have h2 : Tendsto (fun n => (z - I) • (ψ_seq n : H)) atTop (𝓝 ((z - I) • ψ_lim)) :=
+        Tendsto.const_smul hψ_lim (z - I)
+      have h3 : Tendsto (fun n => u n + (z - I) • (ψ_seq n : H)) atTop
+                        (𝓝 (φ_lim + (z - I) • ψ_lim)) := Tendsto.add h1 h2
       convert h3 using 1
       ext n
       exact h_AiI n
 
-    -- R_i((A - iI)ψ) = ψ for any ψ ∈ domain
     have h_R_inverse : ∀ (ψ : H) (hψ : ψ ∈ gen.domain),
-                        R (gen.op ψ - I • ψ) = ψ := by
+                        R (gen.op ⟨ψ, hψ⟩ - I • ψ) = ψ := by
       intro ψ hψ
-      -- R_i(η) is the unique element satisfying (A - iI)(R_i η) = η
-      -- We have (A - iI)ψ = gen.op ψ - I • ψ, and ψ ∈ domain
-      -- So ψ is a solution to (A - iI)x = (gen.op ψ - I • ψ)
-      -- By uniqueness, R_i(gen.op ψ - I • ψ) = ψ
-      let η := gen.op ψ - I • ψ
-      have h_Rη_spec := resolvent_at_i_spec gen hsa η
-      -- h_Rη_spec.1 : R η ∈ domain
-      -- h_Rη_spec.2 : (A - iI)(R η) = η
-      apply resolvent_at_i_unique gen hsa η (R η) ψ h_Rη_spec.1 hψ h_Rη_spec.2
-      rfl  -- (A - iI)ψ = η by definition of η
+      let η := gen.op ⟨ψ, hψ⟩ - I • ψ
+      have h_Rη_mem := resolvent_solution_mem gen hsa η
+      have h_Rη_eq := resolvent_solution_eq gen hsa η
+      exact resolvent_at_i_unique gen hsa η (R η) ψ h_Rη_mem hψ h_Rη_eq rfl
 
-    -- By continuity: R_i((A - iI)ψ_n) → R_i(φ + (z - i)·ψ_lim)
-    have h_R_lim : Tendsto (fun n => R (gen.op (ψ_seq n).val - I • (ψ_seq n).val))
-                          atTop (𝓝 (R (φ + (z - I) • ψ_lim))) := by
-      exact R.continuous.tendsto _ |>.comp h_AiI_lim
+    have h_R_lim : Tendsto (fun n => R (gen.op (ψ_seq n) - I • (ψ_seq n : H)))
+                          atTop (𝓝 (R (φ_lim + (z - I) • ψ_lim))) :=
+      R.continuous.tendsto _ |>.comp h_AiI_lim
 
-    -- But R_i((A - iI)ψ_n) = ψ_n
-    have h_R_eq : ∀ n, R (gen.op (ψ_seq n).val - I • (ψ_seq n).val) = (ψ_seq n).val := by
+    have h_R_eq : ∀ n, R (gen.op (ψ_seq n) - I • (ψ_seq n : H)) = (ψ_seq n : H) := by
       intro n
-      exact h_R_inverse (ψ_seq n).val (ψ_seq n).property
+      exact h_R_inverse (ψ_seq n : H) (ψ_seq n).property
 
-    -- So ψ_n → R_i(φ + (z - i)·ψ_lim)
-    have h_ψ_lim_alt : Tendsto (fun n => (ψ_seq n).val) atTop (𝓝 (R (φ + (z - I) • ψ_lim))) := by
+    have h_ψ_lim_alt : Tendsto (fun n => (ψ_seq n : H)) atTop (𝓝 (R (φ_lim + (z - I) • ψ_lim))) := by
       convert h_R_lim using 1
       ext n
       exact (h_R_eq n).symm
 
-    -- By uniqueness of limits: ψ_lim = R_i(φ + (z - i)·ψ_lim)
-    have h_ψ_lim_eq : ψ_lim = R (φ + (z - I) • ψ_lim) := by
-      exact tendsto_nhds_unique hψ_lim h_ψ_lim_alt
+    have h_ψ_lim_eq : ψ_lim = R (φ_lim + (z - I) • ψ_lim) :=
+      tendsto_nhds_unique hψ_lim h_ψ_lim_alt
 
-    -- Since R_i maps into domain, ψ_lim ∈ domain
     have h_ψ_lim_domain : ψ_lim ∈ gen.domain := by
       rw [h_ψ_lim_eq]
-      exact (resolvent_at_i_spec gen hsa (φ + (z - I) • ψ_lim)).1
+      exact resolvent_solution_mem gen hsa (φ_lim + (z - I) • ψ_lim)
 
-    -- Now show (A - zI)ψ_lim = φ
-    have h_eq : gen.op ψ_lim - z • ψ_lim = φ := by
-      -- We have (A - zI)ψ_n → φ and ψ_n → ψ_lim
-      -- Need continuity of A on domain in graph topology, or use the limit directly
-      -- Since (A - iI)ψ_lim = φ + (z - i)·ψ_lim (from R_i inversion)
-      have h_AiI_ψ_lim : gen.op ψ_lim - I • ψ_lim = φ + (z - I) • ψ_lim := by
-        have h_spec := resolvent_at_i_spec gen hsa (φ + (z - I) • ψ_lim)
-        conv_lhs => rw [h_ψ_lim_eq]
-        exact h_spec.2
-      calc gen.op ψ_lim - z • ψ_lim
-          = (gen.op ψ_lim - I • ψ_lim) - (z - I) • ψ_lim := by rw [sub_smul]; abel
-        _ = (φ + (z - I) • ψ_lim) - (z - I) • ψ_lim := by rw [h_AiI_ψ_lim]
-        _ = φ := by abel
+    have h_eq : gen.op ⟨ψ_lim, h_ψ_lim_domain⟩ - z • ψ_lim = φ_lim := by
+      have h_AiI_ψ_lim : gen.op ⟨R (φ_lim + (z - I) • ψ_lim),
+                          resolvent_solution_mem gen hsa (φ_lim + (z - I) • ψ_lim)⟩ -
+                         I • R (φ_lim + (z - I) • ψ_lim) = φ_lim + (z - I) • ψ_lim :=
+        resolvent_solution_eq gen hsa (φ_lim + (z - I) • ψ_lim)
+
+      have h_op_eq : gen.op ⟨ψ_lim, h_ψ_lim_domain⟩ =
+                     gen.op ⟨R (φ_lim + (z - I) • ψ_lim),
+                            resolvent_solution_mem gen hsa (φ_lim + (z - I) • ψ_lim)⟩ := by
+        congr 1
+        exact Subtype.ext h_ψ_lim_eq
+
+      calc gen.op ⟨ψ_lim, h_ψ_lim_domain⟩ - z • ψ_lim
+          = gen.op ⟨R (φ_lim + (z - I) • ψ_lim),
+                  resolvent_solution_mem gen hsa (φ_lim + (z - I) • ψ_lim)⟩ -
+          z • R (φ_lim + (z - I) • ψ_lim) := by
+            have h_smul : z • ψ_lim = z • R (φ_lim + (z - I) • ψ_lim) := by
+              rw [h_ψ_lim_eq]
+              exact
+                congrArg (HSMul.hSMul z)
+                  (congrArg (⇑R)
+                    (congrArg (HAdd.hAdd φ_lim) (congrArg (HSMul.hSMul (z - I)) h_ψ_lim_eq)))
+            rw [h_op_eq, h_smul]
+        _ = (gen.op ⟨R (φ_lim + (z - I) • ψ_lim),
+                    resolvent_solution_mem gen hsa (φ_lim + (z - I) • ψ_lim)⟩ -
+            I • R (φ_lim + (z - I) • ψ_lim)) - (z - I) • R (φ_lim + (z - I) • ψ_lim) := by
+          have hz_split : z • R (φ_lim + (z - I) • ψ_lim) =
+                          I • R (φ_lim + (z - I) • ψ_lim) + (z - I) • R (φ_lim + (z - I) • ψ_lim) := by
+            rw [← add_smul]; congr 1; ring
+          rw [hz_split]
+          abel
+        _ = (φ_lim + (z - I) • ψ_lim) - (z - I) • R (φ_lim + (z - I) • ψ_lim) := by
+            rw [h_AiI_ψ_lim]
+        _ = (φ_lim + (z - I) • ψ_lim) - (z - I) • ψ_lim := by rw [← h_ψ_lim_eq]
+        _ = φ_lim := by abel
 
     exact ⟨⟨ψ_lim, h_ψ_lim_domain⟩, h_eq⟩
 
-  have h_dense : Dense (Set.range (fun (ψ : {x : H // x ∈ gen.domain}) =>
-                                    gen.op ψ.val - z • ψ.val)) := by
-    set S := Set.range (fun (ψ : {x : H // x ∈ gen.domain}) => gen.op ψ.val - z • ψ.val) with hS_def
+  -- Part 3: Range is dense
+  have h_dense : Dense (Set.range (fun (ψ : gen.domain) => gen.op ψ - z • (ψ : H))) := by
+    set S := Set.range (fun (ψ : gen.domain) => gen.op ψ - z • (ψ : H)) with hS_def
 
-    -- S is the carrier of a submodule M (range of a linear map is a subspace)
     let M : Submodule ℂ H := {
       carrier := S
       add_mem' := by
         intro a b ha hb
         obtain ⟨ψa, hψa⟩ := ha
         obtain ⟨ψb, hψb⟩ := hb
-        refine ⟨⟨ψa.val + ψb.val, gen.domain.add_mem ψa.property ψb.property⟩, ?_⟩
+        refine ⟨⟨(ψa : H) + (ψb : H), gen.domain.add_mem ψa.property ψb.property⟩, ?_⟩
+        have op_add := gen.op.map_add ψa ψb
         simp only [← hψa, ← hψb]
-        rw [gen.op.map_add, smul_add]
-        abel
-      zero_mem' := ⟨⟨0, gen.domain.zero_mem⟩, by simp⟩
+        calc gen.op ⟨(ψa : H) + (ψb : H), _⟩ - z • ((ψa : H) + (ψb : H))
+            = (gen.op ψa + gen.op ψb) - z • ((ψa : H) + (ψb : H)) := by
+                congr 1
+          _ = (gen.op ψa + gen.op ψb) - (z • (ψa : H) + z • (ψb : H)) := by rw [smul_add]
+          _ = (gen.op ψa - z • (ψa : H)) + (gen.op ψb - z • (ψb : H)) := by abel
+      zero_mem' := ⟨⟨0, gen.domain.zero_mem⟩, by
+        simp only [smul_zero, sub_zero]
+        exact gen.op.map_zero⟩
       smul_mem' := by
         intro c a ha
         obtain ⟨ψ, hψ⟩ := ha
-        refine ⟨⟨c • ψ.val, gen.domain.smul_mem c ψ.property⟩, ?_⟩
+        refine ⟨⟨c • (ψ : H), gen.domain.smul_mem c ψ.property⟩, ?_⟩
+        have op_smul := gen.op.map_smul c ψ
         simp only [← hψ]
-        rw [gen.op.map_smul, smul_sub, smul_comm z c]
+        calc gen.op ⟨c • (ψ : H), _⟩ - z • (c • (ψ : H))
+            = c • gen.op ψ - z • (c • (ψ : H)) := by
+                congr 1
+          _ = c • gen.op ψ - c • (z • (ψ : H)) := by rw [smul_comm z c]
+          _ = c • (gen.op ψ - z • (ψ : H)) := by rw [smul_sub]
     }
 
     have hM_eq : (M : Set H) = S := rfl
 
-    -- Mᗮ = ⊥ because h_ker_zero says orthogonal complement is trivial
     have h_M_orth : Mᗮ = ⊥ := by
       rw [Submodule.eq_bot_iff]
       intro χ hχ
       apply h_ker_zero χ
       intro ψ
-      have h_mem : gen.op ψ.val - z • ψ.val ∈ M := ⟨ψ, rfl⟩
+      have h_mem : gen.op ψ - z • (ψ : H) ∈ M := ⟨ψ, rfl⟩
       exact Submodule.inner_right_of_mem_orthogonal h_mem hχ
 
-    -- Mᗮ = ⊥ implies M.topologicalClosure = ⊤
     have h_M_top : M.topologicalClosure = ⊤ := by
       rw [← Submodule.orthogonal_orthogonal_eq_closure]
       rw [h_M_orth]
       exact Submodule.bot_orthogonal_eq_top
 
-    -- M is dense in H
     have h_M_dense : Dense (M : Set H) := by
       rw [dense_iff_closure_eq]
       have h_coe : closure (M : Set H) = (M.topologicalClosure : Set H) :=
@@ -2301,49 +1743,57 @@ theorem self_adjoint_range_all_z
       rw [h_coe, h_M_top]
       rfl
 
-    -- S = M as sets, so S is dense
     rw [← hM_eq]
     exact h_M_dense
 
-  -- Combine: closed + dense = univ
-  have h_eq_univ : Set.range (fun (ψ : {x : H // x ∈ gen.domain}) =>
-                                gen.op ψ.val - z • ψ.val) = Set.univ := by
+  -- Combine closed + dense = univ
+  have h_eq_univ : Set.range (fun (ψ : gen.domain) => gen.op ψ - z • (ψ : H)) = Set.univ := by
     have h_closure := h_dense.closure_eq
     rw [IsClosed.closure_eq h_range_closed] at h_closure
     exact h_closure
 
   -- Existence
-  have h_exists : ∃ (ψ : {x : H // x ∈ gen.domain}), gen.op ψ.val - z • ψ.val = φ := by
+  have h_exists : ∃ (ψ : gen.domain), gen.op ψ - z • (ψ : H) = φ := by
     have : φ ∈ Set.univ := Set.mem_univ φ
     rw [← h_eq_univ] at this
     exact Set.mem_range.mp this
 
-  -- Uniqueness (already proven via lower_bound_estimate)
+  -- Uniqueness
   obtain ⟨ψ, hψ⟩ := h_exists
   use ψ, hψ
   intro ψ' hψ'
-  have h_diff : gen.op (ψ.val - ψ'.val) - z • (ψ.val - ψ'.val) = 0 := by
-    calc gen.op (ψ.val - ψ'.val) - z • (ψ.val - ψ'.val)
-        = (gen.op ψ.val - gen.op ψ'.val) - z • (ψ.val - ψ'.val) := by rw [gen.op.map_sub]
-      _ = (gen.op ψ.val - gen.op ψ'.val) - (z • ψ.val - z • ψ'.val) := by rw [smul_sub]
-      _ = (gen.op ψ.val - z • ψ.val) - (gen.op ψ'.val - z • ψ'.val) := by abel
+
+  have h_sub_mem : (ψ : H) - (ψ' : H) ∈ gen.domain :=
+    gen.domain.sub_mem ψ.property ψ'.property
+
+  have h_diff : gen.op ⟨(ψ : H) - (ψ' : H), h_sub_mem⟩ - z • ((ψ : H) - (ψ' : H)) = 0 := by
+    have op_sub := gen.op.map_sub ψ ψ'
+    have op_eq : gen.op ⟨(ψ : H) - (ψ' : H), h_sub_mem⟩ = gen.op ψ - gen.op ψ' := by
+      convert op_sub using 1
+    calc gen.op ⟨(ψ : H) - (ψ' : H), h_sub_mem⟩ - z • ((ψ : H) - (ψ' : H))
+        = (gen.op ψ - gen.op ψ') - z • ((ψ : H) - (ψ' : H)) := by rw [op_eq]
+      _ = (gen.op ψ - gen.op ψ') - (z • (ψ : H) - z • (ψ' : H)) := by rw [smul_sub]
+      _ = (gen.op ψ - z • (ψ : H)) - (gen.op ψ' - z • (ψ' : H)) := by abel
       _ = φ - φ := by rw [hψ, hψ']
       _ = 0 := sub_self φ
-  have h_bound : ‖gen.op (ψ.val - ψ'.val) - z • (ψ.val - ψ'.val)‖ ≥
-                  |z.im| * ‖ψ.val - ψ'.val‖ := by
-    exact lower_bound_estimate gen z hz (ψ.val - ψ'.val)
-      (gen.domain.sub_mem ψ.property ψ'.property)
+
+  have h_bound := lower_bound_estimate gen z hz ((ψ : H) - (ψ' : H)) h_sub_mem
   rw [h_diff] at h_bound
-  simp at h_bound
+  simp only [norm_zero, ge_iff_le] at h_bound
+
   have h_im_pos : 0 < |z.im| := abs_pos.mpr hz
-  have : ‖ψ.val - ψ'.val‖ = 0 := by
+
+  have h_norm_zero : ‖(ψ : H) - (ψ' : H)‖ = 0 := by
     by_contra h_ne
-    have h_elem_ne : ψ.val - ψ'.val ≠ 0 := fun h_eq => h_ne (h_eq ▸ norm_zero)
-    have h_norm_pos : 0 < ‖ψ.val - ψ'.val‖ := norm_pos_iff.mpr h_elem_ne
-    have : 0 < |z.im| * ‖ψ.val - ψ'.val‖ := mul_pos h_im_pos h_norm_pos
+    have h_pos : 0 < ‖(ψ : H) - (ψ' : H)‖ := by
+      cases' (norm_nonneg ((ψ : H) - (ψ' : H))).lt_or_eq with h h
+      · exact h
+      · exact absurd h.symm h_ne
+    have : 0 < |z.im| * ‖(ψ : H) - (ψ' : H)‖ := mul_pos h_im_pos h_pos
     linarith
-  ext
-  exact (sub_eq_zero.mp (norm_eq_zero.mp this)).symm
+
+  rw [norm_sub_rev] at h_norm_zero
+  exact Subtype.ext (sub_eq_zero.mp (norm_eq_zero.mp h_norm_zero))
 
 
 /--
@@ -2353,126 +1803,116 @@ For self-adjoint generator A and Im(z) ≠ 0, this is well-defined and bounded.
 -/
 noncomputable def resolvent {U_grp : OneParameterUnitaryGroup (H := H)}
     (gen : Generator U_grp) (z : ℂ)
-    (hz : z.im ≠ 0) (hsa : IsSelfAdjoint gen) : H →L[ℂ] H :=
-  { toFun := fun φ => (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ)).val
+    (hz : z.im ≠ 0) (hsa : Generator.IsSelfAdjoint gen) : H →L[ℂ] H :=
+  LinearMap.mkContinuous
+    { toFun := fun φ =>
+        let ψ : gen.domain := Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists
+        (ψ : H)
 
-    map_add' := by
-      intro φ₁ φ₂
-      let ψ₁_sub := Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁)
-      let ψ₂_sub := Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂)
-      let ψ_sum_sub := Classical.choose (self_adjoint_range_all_z gen hsa z hz (φ₁ + φ₂))
+      map_add' := fun φ₁ φ₂ => by
+        have h₁ := Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz φ₁).exists
+        have h₂ := Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz φ₂).exists
+        have h_sum_eq := Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz (φ₁ + φ₂)).exists
 
-      have h₁ := (Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz φ₁)).1
-      have h₂ := (Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz φ₂)).1
-      have h_sum_unique := (Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz (φ₁ + φ₂))).2
+        have h_add_mem : ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) : H) +
+                         ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain) : H) ∈ gen.domain :=
+          gen.domain.add_mem
+            (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain).property
+            (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain).property
 
-      -- ψ₁ + ψ₂ is in domain
-      have h_add_domain : ψ₁_sub.val + ψ₂_sub.val ∈ gen.domain :=
-        gen.domain.add_mem ψ₁_sub.property ψ₂_sub.property
+        have h_add_eq : gen.op ⟨((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) : H) +
+                                ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain) : H), h_add_mem⟩ -
+                        z • (((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) : H) +
+                             ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain) : H)) = φ₁ + φ₂ := by
+          have op_add := gen.op.map_add
+            (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain)
+            (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain)
+          have op_eq : gen.op ⟨((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) : H) +
+                               ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain) : H), h_add_mem⟩ =
+                       gen.op (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) +
+                       gen.op (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain) := by
+            convert op_add using 1
+          calc gen.op ⟨((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) : H) +
+                       ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain) : H), h_add_mem⟩ -
+               z • (((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) : H) +
+                    ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain) : H))
+              = (gen.op (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) +
+                 gen.op (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain)) -
+                z • (((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) : H) +
+                     ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain) : H)) := by rw [op_eq]
+            _ = (gen.op (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) +
+                 gen.op (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain)) -
+                (z • ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) : H) +
+                 z • ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain) : H)) := by rw [smul_add]
+            _ = (gen.op (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) -
+                 z • ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) : H)) +
+                (gen.op (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain) -
+                 z • ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain) : H)) := by abel
+            _ = φ₁ + φ₂ := by rw [h₁, h₂]
 
-      -- (A - zI)(ψ₁ + ψ₂) = φ₁ + φ₂
-      have h_add_eq : gen.op (ψ₁_sub.val + ψ₂_sub.val) - z • (ψ₁_sub.val + ψ₂_sub.val) = φ₁ + φ₂ := by
-        calc gen.op (ψ₁_sub.val + ψ₂_sub.val) - z • (ψ₁_sub.val + ψ₂_sub.val)
-            = (gen.op ψ₁_sub.val + gen.op ψ₂_sub.val) - z • (ψ₁_sub.val + ψ₂_sub.val) := by
-                rw [gen.op.map_add]
-          _ = (gen.op ψ₁_sub.val + gen.op ψ₂_sub.val) - (z • ψ₁_sub.val + z • ψ₂_sub.val) := by
-                rw [smul_add]
-          _ = (gen.op ψ₁_sub.val - z • ψ₁_sub.val) + (gen.op ψ₂_sub.val - z • ψ₂_sub.val) := by abel
-          _ = φ₁ + φ₂ := by rw [h₁, h₂]
+        have h_eq : (Classical.choose (self_adjoint_range_all_z gen hsa z hz (φ₁ + φ₂)).exists : gen.domain) =
+                    ⟨((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) : H) +
+                     ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain) : H), h_add_mem⟩ :=
+          (self_adjoint_range_all_z gen hsa z hz (φ₁ + φ₂)).unique h_sum_eq h_add_eq
 
-      -- By uniqueness
-      have h_eq : ψ_sum_sub = (⟨ψ₁_sub.val + ψ₂_sub.val, h_add_domain⟩ : {x : H // x ∈ gen.domain}) := by
-        symm
-        apply h_sum_unique
-        simp only
-        exact h_add_eq
+        calc ((Classical.choose (self_adjoint_range_all_z gen hsa z hz (φ₁ + φ₂)).exists : gen.domain) : H)
+            = (⟨((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) : H) +
+               ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain) : H), h_add_mem⟩ : gen.domain) := by rw [h_eq]
+          _ = ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁).exists : gen.domain) : H) +
+              ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂).exists : gen.domain) : H) := rfl
 
-      exact congrArg Subtype.val h_eq
+      map_smul' := fun c φ => by
+        simp only [RingHom.id_apply]
 
-    map_smul' := by
-      intro c φ
-      let ψ_sub := Classical.choose (self_adjoint_range_all_z gen hsa z hz φ)
-      let ψ_scaled_sub := Classical.choose (self_adjoint_range_all_z gen hsa z hz (c • φ))
+        have h := Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz φ).exists
+        have h_scaled_eq := Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz (c • φ)).exists
 
-      have h := (Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz φ)).1
-      have h_scaled_unique := (Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz (c • φ))).2
+        have h_smul_mem : c • ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) : H) ∈ gen.domain :=
+          gen.domain.smul_mem c (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain).property
 
-      -- c • ψ is in domain
-      have h_smul_domain : c • ψ_sub.val ∈ gen.domain :=
-        gen.domain.smul_mem c ψ_sub.property
+        have h_smul_eq : gen.op ⟨c • ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) : H), h_smul_mem⟩ -
+                         z • (c • ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) : H)) = c • φ := by
+          have op_smul := gen.op.map_smul c (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain)
+          have op_eq : gen.op ⟨c • ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) : H), h_smul_mem⟩ =
+                       c • gen.op (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) := by
+            convert op_smul using 1
+          calc gen.op ⟨c • ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) : H), h_smul_mem⟩ -
+               z • (c • ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) : H))
+              = c • gen.op (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) -
+                z • (c • ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) : H)) := by rw [op_eq]
+            _ = c • gen.op (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) -
+                c • (z • ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) : H)) := by rw [smul_comm z c]
+            _ = c • (gen.op (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) -
+                z • ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) : H)) := by rw [smul_sub]
+            _ = c • φ := by rw [h]
 
-      -- (A - zI)(c • ψ) = c • φ
-      have h_smul_eq : gen.op (c • ψ_sub.val) - z • (c • ψ_sub.val) = c • φ := by
-        calc gen.op (c • ψ_sub.val) - z • (c • ψ_sub.val)
-            = c • gen.op ψ_sub.val - z • (c • ψ_sub.val) := by
-                rw [gen.op.map_smul]
-          _ = c • gen.op ψ_sub.val - c • (z • ψ_sub.val) := by
-                rw [smul_comm z c]
-          _ = c • (gen.op ψ_sub.val - z • ψ_sub.val) := by
-                rw [smul_sub]
-          _ = c • φ := by rw [h]
+        have h_eq : (Classical.choose (self_adjoint_range_all_z gen hsa z hz (c • φ)).exists : gen.domain) =
+                    ⟨c • ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) : H), h_smul_mem⟩ :=
+          (self_adjoint_range_all_z gen hsa z hz (c • φ)).unique h_scaled_eq h_smul_eq
 
-      -- By uniqueness
-      have h_eq : ψ_scaled_sub = (⟨c • ψ_sub.val, h_smul_domain⟩ : {x : H // x ∈ gen.domain}) := by
-        symm
-        apply h_scaled_unique
-        simp only
-        exact h_smul_eq
+        have h_val := congrArg (↑· : gen.domain → H) h_eq
+        simp only at h_val
+        exact h_val
+    }
+    (1 / |z.im|)
+    (by
+      intro φ
 
-      exact congrArg Subtype.val h_eq
+      have h := Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz φ).exists
+      have h_mem := (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain).property
 
-    cont := by
-      -- Use the bound ‖R_z(φ)‖ ≤ (1/|Im(z)|) · ‖φ‖
-      have h_lip : LipschitzWith ⟨1 / |z.im|, by positivity⟩
-          (fun φ => (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ)).val) := by
-        intro φ₁ φ₂
-        let ψ₁ := (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁)).val
-        let ψ₂ := (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂)).val
+      have h_bound := lower_bound_estimate gen z hz
+        ((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) : H) h_mem
+      rw [h] at h_bound
 
-        have h₁ := (Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz φ₁)).1
-        have h₂ := (Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz φ₂)).1
-        have h₁_dom := (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₁)).property
-        have h₂_dom := (Classical.choose (self_adjoint_range_all_z gen hsa z hz φ₂)).property
+      have h_im_pos : 0 < |z.im| := abs_pos.mpr hz
 
-        -- (A - zI)(ψ₁ - ψ₂) = φ₁ - φ₂
-        have h_diff : gen.op (ψ₁ - ψ₂) - z • (ψ₁ - ψ₂) = φ₁ - φ₂ := by
-          calc gen.op (ψ₁ - ψ₂) - z • (ψ₁ - ψ₂)
-              = (gen.op ψ₁ - gen.op ψ₂) - z • (ψ₁ - ψ₂) := by rw [gen.op.map_sub]
-            _ = (gen.op ψ₁ - gen.op ψ₂) - (z • ψ₁ - z • ψ₂) := by rw [smul_sub]
-            _ = (gen.op ψ₁ - z • ψ₁) - (gen.op ψ₂ - z • ψ₂) := by abel
-            _ = φ₁ - φ₂ := by rw [h₁, h₂]
-
-        have h_sub_domain : ψ₁ - ψ₂ ∈ gen.domain := gen.domain.sub_mem h₁_dom h₂_dom
-
-        -- Apply lower_bound_estimate
-        have h_bound := lower_bound_estimate gen z hz (ψ₁ - ψ₂) h_sub_domain
-        rw [h_diff] at h_bound
-
-        -- |Im(z)| · ‖ψ₁ - ψ₂‖ ≤ ‖φ₁ - φ₂‖
-        have h_im_pos : 0 < |z.im| := abs_pos.mpr hz
-
-        have h_norm_bound : ‖ψ₁ - ψ₂‖ ≤ (1 / |z.im|) * ‖φ₁ - φ₂‖ := by
-          have h1 : |z.im| * ‖ψ₁ - ψ₂‖ ≤ ‖φ₁ - φ₂‖ := h_bound
-          calc ‖ψ₁ - ψ₂‖
-              = (1 / |z.im|) * (|z.im| * ‖ψ₁ - ψ₂‖) := by field_simp
-            _ ≤ (1 / |z.im|) * ‖φ₁ - φ₂‖ := by
-                apply mul_le_mul_of_nonneg_left h1
-                positivity
-
-        rw [edist_dist, edist_dist, dist_eq_norm, dist_eq_norm]
-        have h_nnreal : (0 : ℝ) ≤ 1 / |z.im| := by positivity
-        let c : NNReal := ⟨1 / |z.im|, h_nnreal⟩
-        calc ENNReal.ofReal ‖ψ₁ - ψ₂‖
-            ≤ ENNReal.ofReal (1 / |z.im| * ‖φ₁ - φ₂‖) := ENNReal.ofReal_le_ofReal h_norm_bound
-          _ = ENNReal.ofReal (1 / |z.im|) * ENNReal.ofReal ‖φ₁ - φ₂‖ := by
-              rw [ENNReal.ofReal_mul (by positivity : 0 ≤ 1 / |z.im|)]
-          _ = (c : ENNReal) * ENNReal.ofReal ‖φ₁ - φ₂‖ := by
-              congr 1
-              exact ENNReal.ofReal_eq_coe_nnreal h_nnreal
-
-
-
-      exact h_lip.continuous }
+      calc ‖((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) : H)‖
+          = (1 / |z.im|) * (|z.im| * ‖((Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists : gen.domain) : H)‖) := by field_simp
+        _ ≤ (1 / |z.im|) * ‖φ‖ := by
+            apply mul_le_mul_of_nonneg_left h_bound
+            positivity
+    )
 
 /--
 Resolvent identity: R(z) - R(w) = (z - w)R(z)R(w)
@@ -2480,29 +1920,29 @@ Resolvent identity: R(z) - R(w) = (z - w)R(z)R(w)
 This fundamental identity relates resolvents at different points.
 -/
 theorem resolvent_identity {U_grp : OneParameterUnitaryGroup (H := H)}
-    (gen : Generator U_grp) (hsa : IsSelfAdjoint gen)
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen)
     (z w : ℂ) (hz : z.im ≠ 0) (hw : w.im ≠ 0) :
     resolvent gen z hz hsa - resolvent gen w hw hsa =
     (z - w) • ((resolvent gen z hz hsa).comp (resolvent gen w hw hsa)) := by
   ext φ
 
   -- Let ψ_w = R_w(φ), so (A - wI)ψ_w = φ
-  let ψ_w_sub := Classical.choose (self_adjoint_range_all_z gen hsa w hw φ)
-  let ψ_w := ψ_w_sub.val
+  let ψ_w_sub : gen.domain := Classical.choose (self_adjoint_range_all_z gen hsa w hw φ).exists
+  let ψ_w := (ψ_w_sub : H)
   have h_w_domain : ψ_w ∈ gen.domain := ψ_w_sub.property
-  have h_w_eq : gen.op ψ_w - w • ψ_w = φ := (Classical.choose_spec (self_adjoint_range_all_z gen hsa w hw φ)).1
+  have h_w_eq : gen.op ψ_w_sub - w • ψ_w = φ := Classical.choose_spec (self_adjoint_range_all_z gen hsa w hw φ).exists
 
   -- Let ψ_z = R_z(φ), so (A - zI)ψ_z = φ
-  let ψ_z_sub := Classical.choose (self_adjoint_range_all_z gen hsa z hz φ)
-  let ψ_z := ψ_z_sub.val
+  let ψ_z_sub : gen.domain := Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists
+  let ψ_z := (ψ_z_sub : H)
   have h_z_domain : ψ_z ∈ gen.domain := ψ_z_sub.property
-  have h_z_eq : gen.op ψ_z - z • ψ_z = φ := (Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz φ)).1
+  have h_z_eq : gen.op ψ_z_sub - z • ψ_z = φ := Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz φ).exists
 
   -- Let η = R_z(ψ_w), so (A - zI)η = ψ_w
-  let η_sub := Classical.choose (self_adjoint_range_all_z gen hsa z hz ψ_w)
-  let η := η_sub.val
+  let η_sub : gen.domain := Classical.choose (self_adjoint_range_all_z gen hsa z hz ψ_w).exists
+  let η := (η_sub : H)
   have h_η_domain : η ∈ gen.domain := η_sub.property
-  have h_η_eq : gen.op η - z • η = ψ_w := (Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz ψ_w)).1
+  have h_η_eq : gen.op η_sub - z • η = ψ_w := Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz ψ_w).exists
 
   have h_Rz : resolvent gen z hz hsa φ = ψ_z := rfl
   have h_Rw : resolvent gen w hw hsa φ = ψ_w := rfl
@@ -2513,12 +1953,13 @@ theorem resolvent_identity {U_grp : OneParameterUnitaryGroup (H := H)}
   rw [h_Rz, h_Rw, h_Rz_ψw]
 
   -- Key: (A - zI)ψ_w = φ + (w - z)ψ_w
-  have h_Az_ψw : gen.op ψ_w - z • ψ_w = φ + (w - z) • ψ_w := by
-    have h_Aw : gen.op ψ_w = φ + w • ψ_w := by
-      calc gen.op ψ_w
-          = (gen.op ψ_w - w • ψ_w) + w • ψ_w := by abel
+  have h_Az_ψw : gen.op ⟨ψ_w, h_w_domain⟩ - z • ψ_w = φ + (w - z) • ψ_w := by
+    have h_Aw : gen.op ⟨ψ_w, h_w_domain⟩ = φ + w • ψ_w := by
+      have h_eq : gen.op ⟨ψ_w, h_w_domain⟩ = gen.op ψ_w_sub := rfl
+      calc gen.op ⟨ψ_w, h_w_domain⟩
+          = (gen.op ψ_w_sub - w • ψ_w) + w • ψ_w := by abel
         _ = φ + w • ψ_w := by rw [h_w_eq]
-    calc gen.op ψ_w - z • ψ_w
+    calc gen.op ⟨ψ_w, h_w_domain⟩ - z • ψ_w
         = (φ + w • ψ_w) - z • ψ_w := by rw [h_Aw]
       _ = φ + (w - z) • ψ_w := by rw [sub_smul]; abel
 
@@ -2527,41 +1968,34 @@ theorem resolvent_identity {U_grp : OneParameterUnitaryGroup (H := H)}
     apply gen.domain.add_mem h_z_domain
     exact gen.domain.smul_mem (w - z) h_η_domain
 
-  have h_sum_eq : gen.op (ψ_z + (w - z) • η) - z • (ψ_z + (w - z) • η) = φ + (w - z) • ψ_w := by
-    calc gen.op (ψ_z + (w - z) • η) - z • (ψ_z + (w - z) • η)
-        = (gen.op ψ_z + gen.op ((w - z) • η)) - z • (ψ_z + (w - z) • η) := by
-            rw [gen.op.map_add]
-      _ = (gen.op ψ_z + (w - z) • gen.op η) - z • (ψ_z + (w - z) • η) := by
-            rw [gen.op.map_smul]
-      _ = (gen.op ψ_z + (w - z) • gen.op η) - (z • ψ_z + z • ((w - z) • η)) := by
-            rw [smul_add]
-      _ = (gen.op ψ_z - z • ψ_z) + ((w - z) • gen.op η - z • ((w - z) • η)) := by abel
-      _ = (gen.op ψ_z - z • ψ_z) + ((w - z) • gen.op η - (w - z) • (z • η)) := by
-            rw [smul_comm z (w - z) η]
-      _ = (gen.op ψ_z - z • ψ_z) + (w - z) • (gen.op η - z • η) := by
-            rw [← smul_sub]
+  have h_sum_eq : gen.op ⟨ψ_z + (w - z) • η, h_sum_domain⟩ - z • (ψ_z + (w - z) • η) = φ + (w - z) • ψ_w := by
+    have op_add := gen.op.map_add ψ_z_sub ((w - z) • η_sub)
+    have h_smul_mem : (w - z) • η ∈ gen.domain := gen.domain.smul_mem (w - z) h_η_domain
+    have op_eq : gen.op ⟨ψ_z + (w - z) • η, h_sum_domain⟩ =
+                 gen.op ψ_z_sub + gen.op ⟨(w - z) • η, h_smul_mem⟩ := by
+      convert op_add using 1
+    have op_smul := gen.op.map_smul (w - z) η_sub
+    have op_smul_eq : gen.op ⟨(w - z) • η, h_smul_mem⟩ = (w - z) • gen.op η_sub := by
+      convert op_smul using 1
+    calc gen.op ⟨ψ_z + (w - z) • η, h_sum_domain⟩ - z • (ψ_z + (w - z) • η)
+        = (gen.op ψ_z_sub + gen.op ⟨(w - z) • η, h_smul_mem⟩) - z • (ψ_z + (w - z) • η) := by rw [op_eq]
+      _ = (gen.op ψ_z_sub + (w - z) • gen.op η_sub) - z • (ψ_z + (w - z) • η) := by rw [op_smul_eq]
+      _ = (gen.op ψ_z_sub + (w - z) • gen.op η_sub) - (z • ψ_z + z • ((w - z) • η)) := by rw [smul_add]
+      _ = (gen.op ψ_z_sub - z • ψ_z) + ((w - z) • gen.op η_sub - z • ((w - z) • η)) := by abel
+      _ = (gen.op ψ_z_sub - z • ψ_z) + ((w - z) • gen.op η_sub - (w - z) • (z • η)) := by rw [smul_comm z (w - z) η]
+      _ = (gen.op ψ_z_sub - z • ψ_z) + (w - z) • (gen.op η_sub - z • η) := by rw [← smul_sub]
       _ = φ + (w - z) • ψ_w := by rw [h_z_eq, h_η_eq]
 
   -- Both ψ_w and ψ_z + (w-z)η solve (A - zI)x = φ + (w-z)ψ_w
   -- By uniqueness they are equal
   let target := φ + (w - z) • ψ_w
-  let canonical := Classical.choose (self_adjoint_range_all_z gen hsa z hz target)
-  have h_canonical_unique := (Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz target)).2
 
-  have h_ψw_is_canonical : (⟨ψ_w, h_w_domain⟩ : {x : H // x ∈ gen.domain}) = canonical := by
-    apply h_canonical_unique
-    simp only
-    exact h_Az_ψw
-
-  have h_sum_is_canonical : (⟨ψ_z + (w - z) • η, h_sum_domain⟩ : {x : H // x ∈ gen.domain}) = canonical := by
-    apply h_canonical_unique
-    simp only
-    exact h_sum_eq
+  have h_ψw_solves : gen.op ⟨ψ_w, h_w_domain⟩ - z • ψ_w = target := h_Az_ψw
+  have h_sum_solves : gen.op ⟨ψ_z + (w - z) • η, h_sum_domain⟩ - z • (ψ_z + (w - z) • η) = target := h_sum_eq
 
   have h_eq_vals : ψ_w = ψ_z + (w - z) • η := by
-    have h1 : (⟨ψ_w, h_w_domain⟩ : {x : H // x ∈ gen.domain}) =
-              ⟨ψ_z + (w - z) • η, h_sum_domain⟩ := by
-      rw [h_ψw_is_canonical, ← h_sum_is_canonical]
+    have h1 : (⟨ψ_w, h_w_domain⟩ : gen.domain) = (⟨ψ_z + (w - z) • η, h_sum_domain⟩ : gen.domain) :=
+      (self_adjoint_range_all_z gen hsa z hz target).unique h_ψw_solves h_sum_solves
     exact congrArg Subtype.val h1
 
   -- ψ_z - ψ_w = ψ_z - (ψ_z + (w - z)η) = -(w-z)η = (z-w)η
@@ -2571,13 +2005,14 @@ theorem resolvent_identity {U_grp : OneParameterUnitaryGroup (H := H)}
     _ = (-(w - z)) • η := by rw [neg_smul]
     _ = (z - w) • η := by ring_nf
 
+
 /--
 Bound on resolvent norm: ‖R_z‖ ≤ 1/|Im(z)|
 
 This shows the resolvent is bounded with an explicit bound.
 -/
 theorem resolvent_bound {U_grp : OneParameterUnitaryGroup (H := H)}
-    (gen : Generator U_grp) (hsa : IsSelfAdjoint gen)
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen)
     (z : ℂ) (hz : z.im ≠ 0) :
     ‖resolvent gen z hz hsa‖ ≤ 1 / |z.im| := by
   -- Prove pointwise bound: ‖R_z(φ)‖ ≤ (1/|Im(z)|) · ‖φ‖
@@ -2585,16 +2020,15 @@ theorem resolvent_bound {U_grp : OneParameterUnitaryGroup (H := H)}
     intro φ
 
     -- ψ := R_z(φ) is the unique element satisfying (A - zI)ψ = φ
-    let ψ_sub := Classical.choose (self_adjoint_range_all_z gen hsa z hz φ)
-    let ψ := ψ_sub.val
+    let ψ_sub : gen.domain := Classical.choose (self_adjoint_range_all_z gen hsa z hz φ).exists
+    let ψ := (ψ_sub : H)
 
     -- ψ is in the domain
     have h_domain : ψ ∈ gen.domain := ψ_sub.property
 
     -- (A - zI)ψ = φ
-    have h_eq : gen.op ψ - z • ψ = φ := by
-      have h_spec := Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz φ)
-      exact h_spec.1
+    have h_eq : gen.op ψ_sub - z • ψ = φ :=
+      Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz φ).exists
 
     -- From lower_bound_estimate: ‖(A - zI)ψ‖ ≥ |Im(z)| · ‖ψ‖
     have h_lower := lower_bound_estimate gen z hz ψ h_domain
@@ -2629,7 +2063,6 @@ theorem resolvent_bound {U_grp : OneParameterUnitaryGroup (H := H)}
     · exact abs_nonneg _
   · exact h_pointwise
 
-
 /-- **Resolvent Adjoint Identity**
 
 For a self-adjoint generator A and z with Im(z) ≠ 0, the adjoint of the resolvent
@@ -2647,7 +2080,7 @@ This identity is essential for proving that the Yosida approximants (after symme
 are self-adjoint, which in turn ensures exp(itA_n) is unitary.
 -/
 theorem resolvent_adjoint {U_grp : OneParameterUnitaryGroup (H := H)}
-    (gen : Generator U_grp) (hsa : IsSelfAdjoint gen)
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen)
     (z : ℂ) (hz : z.im ≠ 0) :
     (resolvent gen z hz hsa).adjoint =
     resolvent gen (starRingEnd ℂ z) (by simp only [Complex.conj_im, neg_ne_zero]; exact hz) hsa := by
@@ -2661,22 +2094,22 @@ theorem resolvent_adjoint {U_grp : OneParameterUnitaryGroup (H := H)}
 
   -- Set up notation
   set z_bar := (starRingEnd ℂ) z with hz_bar_def
-  have hz_bar : z_bar.im ≠ 0 := by rw [hz_bar_def] ;simp only [Complex.conj_im, neg_ne_zero]; exact hz
+  have hz_bar : z_bar.im ≠ 0 := by rw [hz_bar_def]; simp only [Complex.conj_im, neg_ne_zero]; exact hz
 
   -- Let ξ = R(z)ψ, so (A - zI)ξ = ψ
-  let ξ_sub := Classical.choose (self_adjoint_range_all_z gen hsa z hz ψ)
-  let ξ := ξ_sub.val
+  let ξ_sub : gen.domain := Classical.choose (self_adjoint_range_all_z gen hsa z hz ψ).exists
+  let ξ := (ξ_sub : H)
   have hξ_domain : ξ ∈ gen.domain := ξ_sub.property
-  have hξ_eq : gen.op ξ - z • ξ = ψ :=
-    (Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz ψ)).1
+  have hξ_eq : gen.op ξ_sub - z • ξ = ψ :=
+    Classical.choose_spec (self_adjoint_range_all_z gen hsa z hz ψ).exists
   have hξ_def : resolvent gen z hz hsa ψ = ξ := rfl
 
   -- Let η = R(z̄)φ, so (A - z̄I)η = φ
-  let η_sub := Classical.choose (self_adjoint_range_all_z gen hsa z_bar hz_bar φ)
-  let η := η_sub.val
+  let η_sub : gen.domain := Classical.choose (self_adjoint_range_all_z gen hsa z_bar hz_bar φ).exists
+  let η := (η_sub : H)
   have hη_domain : η ∈ gen.domain := η_sub.property
-  have hη_eq : gen.op η - z_bar • η = φ :=
-    (Classical.choose_spec (self_adjoint_range_all_z gen hsa z_bar hz_bar φ)).1
+  have hη_eq : gen.op η_sub - z_bar • η = φ :=
+    Classical.choose_spec (self_adjoint_range_all_z gen hsa z_bar hz_bar φ).exists
   have hη_def : resolvent gen z_bar hz_bar hsa φ = η := rfl
 
   -- Rewrite goal using these definitions
@@ -2684,45 +2117,39 @@ theorem resolvent_adjoint {U_grp : OneParameterUnitaryGroup (H := H)}
   -- Goal: ⟨φ, ξ⟩ = ⟨η, ψ⟩
 
   -- From hξ_eq: Aξ = ψ + z•ξ
-  have hAξ : gen.op ξ = ψ + z • ξ := by
-    calc gen.op ξ = (gen.op ξ - z • ξ) + z • ξ := by abel
+  have hAξ : gen.op ξ_sub = ψ + z • ξ := by
+    calc gen.op ξ_sub = (gen.op ξ_sub - z • ξ) + z • ξ := by abel
       _ = ψ + z • ξ := by rw [hξ_eq]
 
   -- From hη_eq: Aη = φ + z̄•η
-  have hAη : gen.op η = φ + z_bar • η := by
-    calc gen.op η = (gen.op η - z_bar • η) + z_bar • η := by abel
+  have hAη : gen.op η_sub = φ + z_bar • η := by
+    calc gen.op η_sub = (gen.op η_sub - z_bar • η) + z_bar • η := by abel
       _ = φ + z_bar • η := by rw [hη_eq]
 
   -- Key calculation using symmetry of A
   -- ⟨Aη, ξ⟩ = ⟨η, Aξ⟩
-  have h_sym : ⟪gen.op η, ξ⟫_ℂ = ⟪η, gen.op ξ⟫_ℂ := gen.symmetric η ξ hη_domain hξ_domain
+  have h_sym : ⟪gen.op η_sub, ξ⟫_ℂ = ⟪η, gen.op ξ_sub⟫_ℂ := gen.symmetric η_sub ξ_sub
 
   -- Expand LHS: ⟨Aη, ξ⟩ = ⟨φ + z̄•η, ξ⟩ = ⟨φ, ξ⟩ + z•⟨η, ξ⟩
-  have h_LHS : ⟪gen.op η, ξ⟫_ℂ = ⟪φ, ξ⟫_ℂ + z • ⟪η, ξ⟫_ℂ := by
-    calc ⟪gen.op η, ξ⟫_ℂ
+  have h_LHS : ⟪gen.op η_sub, ξ⟫_ℂ = ⟪φ, ξ⟫_ℂ + z • ⟪η, ξ⟫_ℂ := by
+    calc ⟪gen.op η_sub, ξ⟫_ℂ
         = ⟪φ + z_bar • η, ξ⟫_ℂ := by rw [hAη]
       _ = ⟪φ, ξ⟫_ℂ + ⟪z_bar • η, ξ⟫_ℂ := by rw [inner_add_left]
-      _ = ⟪φ, ξ⟫_ℂ + (starRingEnd ℂ z_bar) • ⟪η, ξ⟫_ℂ := by rw [inner_smul_left]; rfl
+      _ = ⟪φ, ξ⟫_ℂ + (starRingEnd ℂ) z_bar • ⟪η, ξ⟫_ℂ := by rw [inner_smul_left]; exact rfl
       _ = ⟪φ, ξ⟫_ℂ + z • ⟪η, ξ⟫_ℂ := by simp [hz_bar_def]
 
   -- Expand RHS: ⟨η, Aξ⟩ = ⟨η, ψ + z•ξ⟩ = ⟨η, ψ⟩ + z•⟨η, ξ⟩
-  have h_RHS : ⟪η, gen.op ξ⟫_ℂ = ⟪η, ψ⟫_ℂ + z • ⟪η, ξ⟫_ℂ := by
-    calc ⟪η, gen.op ξ⟫_ℂ
+  have h_RHS : ⟪η, gen.op ξ_sub⟫_ℂ = ⟪η, ψ⟫_ℂ + z • ⟪η, ξ⟫_ℂ := by
+    calc ⟪η, gen.op ξ_sub⟫_ℂ
         = ⟪η, ψ + z • ξ⟫_ℂ := by rw [hAξ]
       _ = ⟪η, ψ⟫_ℂ + ⟪η, z • ξ⟫_ℂ := by rw [inner_add_right]
-      _ = ⟪η, ψ⟫_ℂ + z • ⟪η, ξ⟫_ℂ := by rw [inner_smul_right]; rfl
+      _ = ⟪η, ψ⟫_ℂ + z • ⟪η, ξ⟫_ℂ := by rw [inner_smul_right] ; exact rfl
 
   -- From h_sym, h_LHS, h_RHS: ⟨φ, ξ⟩ + z•⟨η, ξ⟩ = ⟨η, ψ⟩ + z•⟨η, ξ⟩
   have h_cancel : ⟪φ, ξ⟫_ℂ + z • ⟪η, ξ⟫_ℂ = ⟪η, ψ⟫_ℂ + z • ⟪η, ξ⟫_ℂ := by
     rw [← h_LHS, ← h_RHS, h_sym]
 
   -- Cancel z•⟨η, ξ⟩ from both sides
-  have h_result : ⟪φ, ξ⟫_ℂ = ⟪η, ψ⟫_ℂ := by
-    have := add_right_cancel h_cancel
-    exact this
+  exact add_right_cancel h_cancel
 
-  exact h_result
-
-
-end Generator
 end StonesTheorem.Resolvent
