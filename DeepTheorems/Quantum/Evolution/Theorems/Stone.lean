@@ -1,6 +1,8 @@
 /-
 Author: Adam Bornemann
-Created: [11-25-2025]
+Created: 10/22/2025
+Updated: 12/26/2025
+
 ================================================================================
 STONE'S THEOREM: THE COMPLETE STATEMENT
 ================================================================================
@@ -22,12 +24,12 @@ References:
   - Hall, B.C. "Quantum Theory for Mathematicians" Ch. 9-10
 -/
 
-import LogosLibrary.DeepTheorems.Quantum.Evolution.Stone.Exponential
-import LogosLibrary.DeepTheorems.Quantum.Evolution.Stone.Resolvent
+import LogosLibrary.DeepTheorems.Quantum.Evolution.Yosida
+import LogosLibrary.DeepTheorems.Quantum.Evolution.Resolvent
 namespace StonesTheorem
 
 open InnerProductSpace Complex Filter Topology
-open StonesTheorem.Exponential StonesTheorem.Resolvent Generator
+open StonesTheorem.Yosida StonesTheorem.Resolvent StonesTheorem.Bochner Stone.Generators
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
@@ -70,16 +72,17 @@ theorem stone_uniqueness
     (gen₁ gen₂ : Generator U_grp)
     (hsa₁ : gen₁.IsSelfAdjoint)
     (hsa₂ : gen₂.IsSelfAdjoint) :
-    gen₁.op = gen₂.op ∧ gen₁.domain = gen₂.domain := by
+    HEq gen₁.op gen₂.op ∧ gen₁.domain = gen₂.domain := by
   -- Domains are equal by maximality of self-adjoint operators
   have h_dom := selfAdjoint_generators_domain_eq U_grp gen₁ gen₂ hsa₁ hsa₂
 
   -- Operators agree on the common domain by uniqueness of limits
-  have h_eq_on_dom : ∀ ψ ∈ gen₁.domain, gen₁.op ψ = gen₂.op ψ := by
-    intro ψ hψ
-    exact generator_op_eq_on_domain U_grp gen₁ gen₂ ψ hψ (h_dom ▸ hψ)
+  have h_eq_on_dom : ∀ (ψ : H) (hψ₁ : ψ ∈ gen₁.domain) (hψ₂ : ψ ∈ gen₂.domain),
+      gen₁.op ⟨ψ, hψ₁⟩ = gen₂.op ⟨ψ, hψ₂⟩ := by
+    intro ψ hψ₁ hψ₂
+    exact generator_op_eq_on_domain U_grp gen₁ gen₂ ψ hψ₁ hψ₂
 
-  -- Operators are equal everywhere
+  -- Operators are equal everywhere (as HEq since domains are equal)
   have h_op := generator_op_ext_of_eq_on_domain U_grp gen₁ gen₂ h_dom h_eq_on_dom
 
   exact ⟨h_op, h_dom⟩
@@ -98,14 +101,16 @@ theorem stone_part_one (U_grp : OneParameterUnitaryGroup (H := H)) :
   intro gen' hsa'
   have ⟨h_op, h_dom⟩ := stone_uniqueness U_grp gen gen' hsa hsa'
   -- Generator is a structure with op and domain as data fields
-  -- The remaining fields (dense_domain, generator_formula, domain_invariant, symmetric)
+  -- The remaining fields (dense_domain, generator_formula, domain_invariant, symmetric, domain_maximal)
   -- are proofs (Prop-valued), so they're equal by proof irrelevance once data matches
   cases gen with
-  | mk op domain dense_domain generator_formula domain_invariant symmetric =>
+  | mk op domain dense_domain generator_formula domain_invariant symmetric domain_maximal =>
     cases gen' with
-    | mk op' domain' dense_domain' generator_formula' domain_invariant' symmetric' =>
+    | mk op' domain' dense_domain' generator_formula' domain_invariant' symmetric' domain_maximal' =>
       simp only at h_op h_dom
-      subst h_op h_dom
+      subst h_dom
+      simp only [heq_eq_eq] at h_op
+      subst h_op
       rfl
 
 /-!
@@ -132,27 +137,27 @@ theorem stone_exponential_eq_group
     (hsa : gen.IsSelfAdjoint)
     (h_dense : Dense (gen.domain : Set H))
     (t : ℝ) (ψ : H) :
-    exponential gen hsa t ψ = U_grp.U t ψ := by
+    exponential' gen hsa h_dense t ψ = U_grp.U t ψ := by
   -- Both exponential and U(t) are continuous linear maps
   -- They agree on the dense set D(A)
   -- Therefore they agree everywhere by density
 
   -- Step 1: Agreement on domain
-  have h_agree_on_domain : ∀ φ ∈ gen.domain, exponential gen hsa t φ = U_grp.U t φ := by
+  have h_agree_on_domain : ∀ φ ∈ gen.domain, exponential' gen hsa h_dense t φ = U_grp.U t φ := by
     intro φ hφ
     have h_tendsto := expBounded_yosidaApproxSym_tendsto_unitary gen hsa h_dense t φ hφ
     have h_exp_tendsto := exponential_tendsto gen hsa h_dense t φ
     exact tendsto_nhds_unique h_exp_tendsto h_tendsto
 
   -- Step 2: Both are isometries
-  have h_exp_isometry : ∀ χ : H, ‖exponential gen hsa t χ‖ = ‖χ‖ := by
+  have h_exp_isometry : ∀ χ : H, ‖exponential' gen hsa h_dense t χ‖ = ‖χ‖ := by
     intro χ
     have h := exponential_unitary gen hsa h_dense t χ χ
     rw [inner_self_eq_norm_sq_to_K, inner_self_eq_norm_sq_to_K] at h
-    have h_sq : ‖exponential gen hsa t χ‖^2 = ‖χ‖^2 := by exact_mod_cast h
-    nlinarith [sq_nonneg (‖exponential gen hsa t χ‖ - ‖χ‖),
-               sq_nonneg (‖exponential gen hsa t χ‖ + ‖χ‖),
-               norm_nonneg (exponential gen hsa t χ), norm_nonneg χ]
+    have h_sq : ‖exponential' gen hsa h_dense t χ‖^2 = ‖χ‖^2 := by exact_mod_cast h
+    nlinarith [sq_nonneg (‖exponential' gen hsa h_dense t χ‖ - ‖χ‖),
+               sq_nonneg (‖exponential' gen hsa h_dense t χ‖ + ‖χ‖),
+               norm_nonneg (exponential' gen hsa h_dense t χ), norm_nonneg χ]
 
   have h_U_isometry : ∀ χ : H, ‖U_grp.U t χ‖ = ‖χ‖ := by
     intro χ
@@ -172,16 +177,16 @@ theorem stone_exponential_eq_group
     (h_dense.closure_eq ▸ Set.mem_univ ψ) (ε / 2) hε2
   rw [dist_eq_norm] at hφ_close ⊢
 
-  calc ‖exponential gen hsa t ψ - U_grp.U t ψ‖
-      = ‖(exponential gen hsa t ψ - exponential gen hsa t φ) +
-         (exponential gen hsa t φ - U_grp.U t φ) +
+  calc ‖exponential' gen hsa h_dense t ψ - U_grp.U t ψ‖
+      = ‖(exponential' gen hsa h_dense t ψ - exponential' gen hsa h_dense t φ) +
+         (exponential' gen hsa h_dense t φ - U_grp.U t φ) +
          (U_grp.U t φ - U_grp.U t ψ)‖ := by congr 1; abel
-    _ ≤ ‖exponential gen hsa t ψ - exponential gen hsa t φ‖ +
-        ‖exponential gen hsa t φ - U_grp.U t φ‖ +
+    _ ≤ ‖exponential' gen hsa h_dense t ψ - exponential' gen hsa h_dense t φ‖ +
+        ‖exponential' gen hsa h_dense t φ - U_grp.U t φ‖ +
         ‖U_grp.U t φ - U_grp.U t ψ‖ := by
           apply le_trans (norm_add_le _ _)
           apply add_le_add_right (norm_add_le _ _)
-    _ = ‖exponential gen hsa t (ψ - φ)‖ + 0 + ‖U_grp.U t (φ - ψ)‖ := by
+    _ = ‖exponential' gen hsa h_dense t (ψ - φ)‖ + 0 + ‖U_grp.U t (φ - ψ)‖ := by
           rw [← map_sub, ← map_sub, h_agree_on_domain φ hφ_mem, sub_self, norm_zero]
     _ = ‖ψ - φ‖ + 0 + ‖φ - ψ‖ := by
           rw [h_exp_isometry, h_U_isometry]
@@ -200,13 +205,13 @@ theorem stone_exponential_is_unitary_group
     (hsa : gen.IsSelfAdjoint)
     (h_dense : Dense (gen.domain : Set H)) :
     -- Unitarity
-    (∀ t ψ φ, ⟪exponential gen hsa t ψ, exponential gen hsa t φ⟫_ℂ = ⟪ψ, φ⟫_ℂ) ∧
+    (∀ t ψ φ, ⟪exponential' gen hsa h_dense t ψ, exponential' gen hsa h_dense t φ⟫_ℂ = ⟪ψ, φ⟫_ℂ) ∧
     -- Group law
-    (∀ s t ψ, exponential gen hsa (s + t) ψ = exponential gen hsa s (exponential gen hsa t ψ)) ∧
+    (∀ s t ψ, exponential' gen hsa h_dense (s + t) ψ = exponential' gen hsa h_dense s (exponential' gen hsa h_dense t ψ)) ∧
     -- Identity
-    (∀ ψ, exponential gen hsa 0 ψ = ψ) ∧
+    (∀ ψ, exponential' gen hsa h_dense 0 ψ = ψ) ∧
     -- Strong continuity
-    (∀ ψ, Continuous (fun t => exponential gen hsa t ψ)) := by
+    (∀ ψ, Continuous (fun t => exponential' gen hsa h_dense t ψ)) := by
   refine ⟨?_, ?_, ?_, ?_⟩
   · exact fun t ψ φ => exponential_unitary gen hsa h_dense t ψ φ
   · exact fun s t ψ => exponential_group_law gen hsa h_dense s t ψ
@@ -234,15 +239,15 @@ theorem stone_generator_of_exponential
     (hsa : gen.IsSelfAdjoint)
     (h_dense : Dense (gen.domain : Set H))
     (ψ : H) (hψ : ψ ∈ gen.domain) :
-    Tendsto (fun t : ℝ => ((I * t)⁻¹ : ℂ) • (exponential gen hsa t ψ - ψ))
-            (𝓝[≠] 0) (𝓝 (gen.op ψ)) := by
+    Tendsto (fun t : ℝ => ((I * t)⁻¹ : ℂ) • (exponential' gen hsa h_dense t ψ - ψ))
+            (𝓝[≠] 0) (𝓝 (gen.op ⟨ψ, hψ⟩)) := by
   -- exponential_generator_eq gives: t⁻¹ • (exp(t)ψ - ψ) → I • Aψ
   have h := exponential_generator_eq gen hsa h_dense ψ hψ
 
   -- Convert: (I * t)⁻¹ • x = -I • (t⁻¹ • x)
   have h_convert : ∀ t : ℝ, t ≠ 0 →
-      ((I * (t : ℂ))⁻¹ : ℂ) • (exponential gen hsa t ψ - ψ) =
-      (-I) • ((t⁻¹ : ℂ) • (exponential gen hsa t ψ - ψ)) := by
+      ((I * (t : ℂ))⁻¹ : ℂ) • (exponential' gen hsa h_dense t ψ - ψ) =
+      (-I) • ((t⁻¹ : ℂ) • (exponential' gen hsa h_dense t ψ - ψ)) := by
     intro t ht
     rw [← smul_assoc]
     congr 1
@@ -253,7 +258,7 @@ theorem stone_generator_of_exponential
   have h_lim := h.const_smul (-I)
 
   -- Simplify: (-I) • I • Aψ = Aψ
-  have h_simp : (-I) • I • gen.op ψ = gen.op ψ := by
+  have h_simp : (-I) • I • gen.op ⟨ψ, hψ⟩ = gen.op ⟨ψ, hψ⟩ := by
     rw [smul_smul]
     simp only [neg_mul, I_mul_I, neg_neg, one_smul]
   rw [h_simp] at h_lim
@@ -274,7 +279,8 @@ Given by: U(t) ↔ A where U(t) = exp(itA)
 theorem stone_bijection :
     ∀ (U_grp : OneParameterUnitaryGroup (H := H)),
     ∃! (gen : Generator U_grp), gen.IsSelfAdjoint ∧
-      (∀ (hsa : gen.IsSelfAdjoint), Dense (gen.domain : Set H) → ∀ t ψ, U_grp.U t ψ = exponential gen hsa t ψ) := by
+      (∀ (hsa : gen.IsSelfAdjoint) (h_dense : Dense (gen.domain : Set H)),
+        ∀ t ψ, U_grp.U t ψ = exponential' gen hsa h_dense t ψ) := by
   intro U_grp
   obtain ⟨gen, hsa, h_unique⟩ := stone_part_one U_grp
   refine ⟨gen, ⟨hsa, ?_⟩, ?_⟩
@@ -312,27 +318,21 @@ theorem schrodinger_equation
     (ψ₀ : H) (hψ₀ : ψ₀ ∈ gen.domain) :
     -- The evolved state ψ(t) = U(t)ψ₀ satisfies d/dt[U(t)ψ₀]|_{t=0} = iAψ₀
     HasDerivAt (fun t : ℝ => U_grp.U t ψ₀)
-               (I • gen.op (U_grp.U 0 ψ₀))
+               (I • gen.op ⟨U_grp.U 0 ψ₀, gen.domain_invariant 0 ψ₀ hψ₀⟩)
                0 := by
   -- Use exponential_derivative_on_domain at t = 0
   have h_deriv := exponential_derivative_on_domain gen hsa h_dense 0 ψ₀ hψ₀
 
   -- Convert from exponential to U_grp.U
-  have h_eq : ∀ t, exponential gen hsa t ψ₀ = U_grp.U t ψ₀ :=
+  have h_eq : ∀ t, exponential' gen hsa h_dense t ψ₀ = U_grp.U t ψ₀ :=
     fun t => stone_exponential_eq_group U_grp gen hsa h_dense t ψ₀
 
   -- Rewrite the derivative using the equality
-  have h_fun_eq : (fun t => exponential gen hsa t ψ₀) = (fun t => U_grp.U t ψ₀) := by
+  have h_fun_eq : (fun t => exponential' gen hsa h_dense t ψ₀) = (fun t => U_grp.U t ψ₀) := by
     ext t; exact h_eq t
   rw [h_fun_eq] at h_deriv
 
-  -- Simplify: exponential 0 ψ₀ = ψ₀ = U_grp.U 0 ψ₀
-  have h_zero : exponential gen hsa 0 ψ₀ = U_grp.U 0 ψ₀ := h_eq 0
-  have h_U_zero : U_grp.U 0 ψ₀ = ψ₀ := by
-    rw [U_grp.identity]; simp only [ContinuousLinearMap.id_apply]
-
-  convert h_deriv using 2
-  rw [h_zero]
+  exact h_deriv
 
 /-!
 ================================================================================
@@ -365,9 +365,10 @@ Let H be a complex Hilbert space.
     strongly continuous one-parameter unitary groups and self-adjoint operators.
 
 DEPENDENCIES:
-  • Core.lean:        Structures, ~600 lines
+  • Generator.lean:        Structures, ~700 lines
+  • Bochner.lean:     Bochner machinery, 2500 lines
   • Resolvent.lean:   Resolvent theory, ~2500 lines
-  • Exponential.lean: Yosida approximation, ~3000 lines
+  • Yosida.lean: Yosida approximation, ~5000 lines
   • Theorem.lean:     This file, assembly
 
 REMAINING SORRIES (in Exponential.lean):
@@ -375,7 +376,7 @@ REMAINING SORRIES (in Exponential.lean):
   • yosidaApproxSym_uniform_convergence_on_orbit: Requires Arzelà-Ascoli
   • exponential_tendsto: Technical issue with limUnder definition
 
-Total: ~6100+ lines for the complete formalization of Stone's theorem.
+Total: ~10,000+ lines for the complete formalization of Stone's theorem.
 ================================================================================
 -/
 
