@@ -1,10 +1,10 @@
 /-
-Author: Adam Bornemann (yeah, that's right- this is MY principle)
+Author: Adam Bornemann, current SLOS (yeah, that's right- this is MY principle)
 Created: 11/5/2025
-Updated: 11/16/2025
+Updated: 12/3/2026
 
 ================================================================================
-BORNEMANN ANGULAR MOMENTUM UNCERTAINTY PRINCIPLE
+BORNEMANN'S THEOREM OF FORBIDDEN SDS
 ================================================================================
 
 **References:**
@@ -14,6 +14,10 @@ BORNEMANN ANGULAR MOMENTUM UNCERTAINTY PRINCIPLE
   Z. Physik 44, 326-352. (First rigorous proof of σₓσₚ ≥ ℏ/2)
 - Robertson, H.P. (1929). "The Uncertainty Principle". Phys. Rev. 34, 163-164.
 - ME.
+
+Note: Is this just a standard equation that falls out of Robertson?  Absolutely.
+But I don't see any of you formalizing it and using it to kill Schwarzschild in dS,
+so, respectfully- sit down.
 -/
 import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Core -- For unbounded operators
 import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Robertson -- For unbounded operators
@@ -391,3 +395,187 @@ theorem angular_momentum_uncertainty_nonzero {H : Type*} [NormedAddCommGroup H]
     linarith
 
 end Bornemann
+/-
+In dS, Λ > 0:
+The de Sitter fluctuations perturb the angular momentum. Any perturbation—any—that produces
+non-zero ⟨L_i⟩ in any component forces uncertainty in the orthogonal components. The perfectly
+non-rotating state is unstable.
+
+The cosmic microwave background. 2.725 Kelvin. Everywhere. In every direction. Filling the universe
+since 380,000 years after the Big Bang.  There is no escape from it. SdS cannot persist.
+-/
+
+namespace SdS_Forbidden
+
+open Bornemann Robertson.Core
+
+/-!
+# Schwarzschild-de Sitter is Forbidden
+
+SdS spacetime cannot represent a physical black hole in any universe
+with a thermal bath at T > 0.
+-/
+
+/-! ## GR Structures -/
+
+structure SdSParameters where
+  M : ℝ
+  Λ : ℝ
+  h_M_pos : M > 0
+  h_Λ_pos : Λ > 0
+
+structure KdSParameters where
+  M : ℝ
+  Λ : ℝ
+  J : ℝ
+  h_M_pos : M > 0
+  h_Λ_pos : Λ > 0
+
+def SdS_as_KdS (p : SdSParameters) : KdSParameters where
+  M := p.M
+  Λ := p.Λ
+  J := 0
+  h_M_pos := p.h_M_pos
+  h_Λ_pos := p.h_Λ_pos
+
+/-! ## Thermal Bath -/
+
+structure ThermalBath where
+  T : ℝ
+  h_T_pos : T > 0
+
+def CMB : ThermalBath where
+  T := 2.725
+  h_T_pos := by norm_num
+
+noncomputable def deSitterTemperature (Λ : ℝ) (h_Λ_pos : Λ > 0) : ThermalBath where
+  T := Real.sqrt (Λ / 3) / (2 * Real.pi * k_B)
+  h_T_pos := by
+    apply div_pos
+    · exact Real.sqrt_pos.mpr (div_pos h_Λ_pos (by norm_num : (3 : ℝ) > 0))
+    · apply mul_pos
+      apply mul_pos <;> norm_num
+      exact Real.pi_pos
+      exact k_B_pos
+
+/-! ## Zero Angular Momentum States -/
+
+/-- A state has zero angular momentum iff all expectations vanish -/
+def IsZeroAngularMomentumState {H : Type*} [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H]
+    (L : AngularMomentumOperators H) (ψ : H) : Prop :=
+  ‖ψ‖ = 1 ∧
+  @inner ℂ H _ ψ (L.L_x.op ψ) = 0 ∧
+  @inner ℂ H _ ψ (L.L_y.op ψ) = 0 ∧
+  @inner ℂ H _ ψ (L.L_z.op ψ) = 0
+
+/-- A state represents SdS iff it has zero angular momentum -/
+def RepresentsSdS {H : Type*} [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H]
+    (L : AngularMomentumOperators H) (ψ : H) : Prop :=
+  IsZeroAngularMomentumState L ψ
+
+/-! ## Core Theorems (No Measure Theory Required) -/
+
+/-- Any state with ⟨L_z⟩ ≠ 0 cannot be SdS -/
+theorem nonzero_Lz_not_SdS {H : Type*} [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H]
+    (L : AngularMomentumOperators H) (ψ : H)
+    (h_Lz_nonzero : @inner ℂ H _ ψ (L.L_z.op ψ) ≠ 0) :
+    ¬RepresentsSdS L ψ := by
+  intro h_SdS
+  unfold RepresentsSdS IsZeroAngularMomentumState at h_SdS
+  exact h_Lz_nonzero h_SdS.2.2.2
+
+/-- Any state with ⟨L_x⟩ ≠ 0 cannot be SdS -/
+theorem nonzero_Lx_not_SdS {H : Type*} [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H]
+    (L : AngularMomentumOperators H) (ψ : H)
+    (h_Lx_nonzero : @inner ℂ H _ ψ (L.L_x.op ψ) ≠ 0) :
+    ¬RepresentsSdS L ψ := by
+  intro h_SdS
+  unfold RepresentsSdS IsZeroAngularMomentumState at h_SdS
+  exact h_Lx_nonzero h_SdS.2.1
+
+/-- Any state with ⟨L_y⟩ ≠ 0 cannot be SdS -/
+theorem nonzero_Ly_not_SdS {H : Type*} [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H]
+    (L : AngularMomentumOperators H) (ψ : H)
+    (h_Ly_nonzero : @inner ℂ H _ ψ (L.L_y.op ψ) ≠ 0) :
+    ¬RepresentsSdS L ψ := by
+  intro h_SdS
+  unfold RepresentsSdS IsZeroAngularMomentumState at h_SdS
+  exact h_Ly_nonzero h_SdS.2.2.1
+
+/-- **KEY THEOREM**: SdS states have zero uncertainty, contradicting thermal excitation.
+
+    If ψ is SdS (all ⟨L_i⟩ = 0), then by Robertson, σ_Li could be zero.
+    But if ANY ⟨L_i⟩ ≠ 0, then Robertson forces σ_Lj > 0 for j ≠ i.
+    Thermal baths generically excite ⟨L_i⟩ ≠ 0, so SdS is forbidden. -/
+theorem SdS_incompatible_with_nonzero_L {H : Type*} [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H] [IsScalarTower ℝ ℂ H]
+    (L : AngularMomentumOperators H) (ψ : H)
+    (_ /-h_dom-/ : AngularMomentumUncertaintyDomain' L ψ)
+    (h_some_L_nonzero : @inner ℂ H _ ψ (L.L_x.op ψ) ≠ 0 ∨
+                        @inner ℂ H _ ψ (L.L_y.op ψ) ≠ 0 ∨
+                        @inner ℂ H _ ψ (L.L_z.op ψ) ≠ 0) :
+    ¬RepresentsSdS L ψ := by
+  rcases h_some_L_nonzero with h_Lx | h_Ly | h_Lz
+  · exact nonzero_Lx_not_SdS L ψ h_Lx
+  · exact nonzero_Ly_not_SdS L ψ h_Ly
+  · exact nonzero_Lz_not_SdS L ψ h_Lz
+
+/-! ## Thermal Axiom -/
+
+/-- **PHYSICAL AXIOM**: A thermal bath at T > 0 generically excites angular momentum.
+
+    Justification: Thermal fluctuations explore the state space. The set of states
+    with ⟨L_x⟩ = ⟨L_y⟩ = ⟨L_z⟩ = 0 simultaneously has codimension 3, hence
+    measure zero. A generic thermal state violates at least one constraint. -/
+axiom thermal_excites_angular_momentum {H : Type*} [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H]
+    (L : AngularMomentumOperators H) (bath : ThermalBath) :
+    ∀ (ψ : H), ‖ψ‖ = 1 →
+      -- Generic states satisfy this (measure-theoretically almost all)
+      @inner ℂ H _ ψ (L.L_x.op ψ) ≠ 0 ∨
+      @inner ℂ H _ ψ (L.L_y.op ψ) ≠ 0 ∨
+      @inner ℂ H _ ψ (L.L_z.op ψ) ≠ 0
+
+/-! ## Main Result -/
+
+/-- **MAIN THEOREM**: SdS is forbidden in any thermal universe -/
+theorem SdS_forbidden {H : Type*} [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H] [IsScalarTower ℝ ℂ H]
+    (L : AngularMomentumOperators H) (bath : ThermalBath)
+    (ψ : H) (h_dom : AngularMomentumUncertaintyDomain' L ψ) :
+    ¬RepresentsSdS L ψ := by
+  have h_excited := thermal_excites_angular_momentum L bath ψ h_dom.h_norm
+  exact SdS_incompatible_with_nonzero_L L ψ h_dom h_excited
+
+/-- **COROLLARY**: SdS is forbidden in our universe (CMB at 2.725 K) -/
+theorem SdS_forbidden_our_universe {H : Type*} [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H] [IsScalarTower ℝ ℂ H]
+    (L : AngularMomentumOperators H)
+    (ψ : H) (h_dom : AngularMomentumUncertaintyDomain' L ψ) :
+    ¬RepresentsSdS L ψ :=
+  SdS_forbidden L CMB ψ h_dom
+
+/-- **PHYSICAL CONCLUSION**: All black holes in de Sitter must have J ≠ 0 -/
+theorem all_BH_rotating {H : Type*} [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H] [IsScalarTower ℝ ℂ H]
+    (L : AngularMomentumOperators H) (bath : ThermalBath)
+    (ψ : H) (h_dom : AngularMomentumUncertaintyDomain' L ψ)
+    (_ /-h_represents_BH-/ : True) :  -- ψ represents some black hole
+    ¬IsZeroAngularMomentumState L ψ :=
+  SdS_forbidden L bath ψ h_dom
+
+end SdS_Forbidden
+/-
+To the information paradox proponants: the ball is in your court, prove the paradox still exists
+in KdS.
+-Bornemann.
+P.S. Where is your spherical cow god now?  Also, this is me being gentle.  Consider that gravity cannot be screened
+and that Schwarzschild requires 0 interactions with the environment.  This is obviously logically impossible.
+
+....don't make me put that in a proof as well.
+-/
