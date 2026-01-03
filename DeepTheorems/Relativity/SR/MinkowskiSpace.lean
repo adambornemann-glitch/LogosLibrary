@@ -1,4 +1,7 @@
 /-
+Author: Adam Bornemann, current SLOS (undefeated)
+Created: 11/5/2025
+Updated: 1/1/2026
 ==================================================================================================================
   MINKOWSKI SPACE: The Foundation of Relativity
 ==================================================================================================================
@@ -92,16 +95,26 @@ Let's begin with the simplest structure: a vector in spacetime.
 -/
 import Mathlib.LinearAlgebra.QuadraticForm.Basic
 import Mathlib.Analysis.InnerProductSpace.Basic
+import Mathlib.Analysis.SpecialFunctions.Log.Basic
+import Mathlib.Analysis.SpecialFunctions.Sqrt
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.Complex.Basic
+
+
+
 
 /-- The Minkowski metric signature (+, -, -, -) or (-, +, +, +) depending on convention -/
 structure MinkowskiSpace (n : ℕ) where
   /-- We'll use ℝⁿ⁺¹ as our vector space (n spatial + 1 time) -/
   vec : Fin (n + 1) → ℝ
+@[ext]
+theorem MinkowskiSpace.ext {n : ℕ} {v w : MinkowskiSpace n}
+    (h : ∀ i, v.vec i = w.vec i) : v = w := by
+  cases v; cases w; simp only [mk.injEq]; ext i; exact h i
 
 namespace MinkowskiSpace
+
 
 /-- The Minkowski inner product with signature (-, +, +, ..., +) -/
 
@@ -134,10 +147,36 @@ def isLightlike {n : ℕ} (v : MinkowskiSpace n) : Prop :=
 def lightCone (n : ℕ) : Set (MinkowskiSpace n) :=
   {v | isLightlike v}
 
+instance : AddCommGroup (MinkowskiSpace n) where
+  add v w := ⟨fun i => v.vec i + w.vec i⟩
+  add_assoc := by intros a b c; ext i; exact add_assoc (a.vec i) (b.vec i) (c.vec i)
+  zero := ⟨fun _ => 0⟩
+  zero_add := by intros a; ext i; exact zero_add (a.vec i)
+  add_zero := by intros a; ext i; exact add_zero (a.vec i)
+  nsmul := fun n v => ⟨fun i => n • v.vec i⟩
+  nsmul_zero := by intros; ext i; exact rfl
+  nsmul_succ := by intros n a; ext i; exact rfl
+  neg v := ⟨fun i => -v.vec i⟩
+  zsmul := fun n v => ⟨fun i => n • v.vec i⟩
+  zsmul_zero' := by intros; ext i; exact rfl
+  zsmul_succ' := by intros n a; ext i; exact rfl
+  zsmul_neg' := by intros n a; ext i; exact rfl
+  neg_add_cancel := by intros a; ext i; exact neg_add_cancel (a.vec i)
+  add_comm := by intros a b; ext i; exact add_comm (a.vec i) (b.vec i)
+
+instance : Module ℝ (MinkowskiSpace n) where
+  smul r v := ⟨fun i => r * v.vec i⟩
+  one_smul := by intros a; ext i; exact one_mul (a.vec i)
+  mul_smul := by intros r s a; ext i; exact mul_assoc r s (a.vec i)
+  smul_zero := by intros r; ext i; exact mul_zero r
+  smul_add := by intros r a b; ext i; exact mul_add r (a.vec i) (b.vec i)
+  add_smul := by intros r s a; ext i; exact add_mul r s (a.vec i)
+  zero_smul := by intros a; ext i; exact zero_mul (a.vec i)
+
 /-- Lorentz transformation: preserves the Minkowski metric -/
 structure LorentzTransform (n : ℕ) where
-  transform : MinkowskiSpace n → MinkowskiSpace n
-  preserves_metric : ∀ v w, ⟪transform v, transform w⟫ₘ = ⟪v, w⟫ₘ
+  toLinearMap : MinkowskiSpace n →ₗ[ℝ] MinkowskiSpace n
+  preserves_metric : ∀ v w, ⟪toLinearMap v, toLinearMap w⟫ₘ = ⟪v, w⟫ₘ
 
 
 /-- Example: construct a 4-vector (for 3+1 spacetime) -/
@@ -158,14 +197,21 @@ def fourVector' (t x y z : ℝ) : MinkowskiSpace 3 :=
     else if _ : i = 3 then z
     else 0⟩  -- Never reached but Lean needs completeness
 
+/--
+The inverse temperature 4-vector β^μ = u^μ / T
+where u^μ is the 4-velocity of the heat bath.
+This transforms as a proper 4-vector iff T → γT (Ott).
+-/
+structure InverseTemperature4Vector where
+  vec : MinkowskiSpace 3
+  timelike : isTimelike vec
+
 /-- Prove that the metric is symmetric -/
 theorem minkowski_symmetric {n : ℕ} (v w : MinkowskiSpace n) :
     ⟪v, w⟫ₘ = ⟪w, v⟫ₘ := by
-  --simp [minkowskiMetric, mul_comm]
   unfold minkowskiMetric
-  simp only [mul_comm (v.vec _) (w.vec _)]
-  congr 1
-  linarith
+  congr 1 <;> [ring; exact Finset.sum_congr rfl fun _ _ => mul_comm _ _]
+
 
 /-- A simple example: a photon's 4-velocity is lightlike -/
 example : isLightlike (fourVector' 1 1 0 0) := by
@@ -175,15 +221,77 @@ example : isLightlike (fourVector' 1 1 0 0) := by
   abel_nf!;simp! -- <-- metho 3
    -- The metric gives -1 + 1 + 0 + 0 = 0 ✓
 
+
+@[simp]
+lemma add_vec (v w : MinkowskiSpace n) (i : Fin (n+1)) :
+    (v + w).vec i = v.vec i + w.vec i := rfl
+
+@[simp]
+lemma smul_vec (r : ℝ) (v : MinkowskiSpace n) (i : Fin (n+1)) :
+    (r • v).vec i = r * v.vec i := rfl
+
+@[simp]
+lemma mk_vec (f : Fin (n+1) → ℝ) (i : Fin (n+1)) :
+    (⟨f⟩ : MinkowskiSpace n).vec i = f i := rfl
+
 /-- A Lorentz boost in the x-direction with velocity v (where c=1) -/
 noncomputable def lorentzBoostX (v : ℝ) (hv : |v| < 1) : LorentzTransform 3 where
-  transform := fun vec4 =>
-    let γ := 1 / Real.sqrt (1 - v^2)
-    ⟨fun i =>
-      if i = 0 then γ * (vec4.vec 0 - v * vec4.vec 1)
-      else if i = 1 then γ * (vec4.vec 1 - v * vec4.vec 0)
-      else vec4.vec i⟩
-  preserves_metric := by sorry -- This is a real proof but non-trivial!
+  toLinearMap := {
+    toFun := fun vec4 =>
+      let γ := 1 / Real.sqrt (1 - v^2)
+      ⟨fun i =>
+        if i = 0 then γ * (vec4.vec 0 - v * vec4.vec 1)
+        else if i = 1 then γ * (vec4.vec 1 - v * vec4.vec 0)
+        else vec4.vec i⟩
+    map_add' := by
+      intros x y; ext i
+      simp only [add_vec, one_div] -- Unknown identifier `add_vec`
+      split_ifs <;> ring
+    map_smul' := by
+      intros r x; ext i
+      simp only [smul_vec, one_div, RingHom.id_apply]
+      split_ifs <;> ring
+  }
+  preserves_metric := by
+    intro p q
+    unfold minkowskiMetric
+    -- Simplify the LinearMap application to the underlying function
+    simp only [LinearMap.coe_mk, AddHom.coe_mk, mk_vec]
+    -- Define γ and establish its key property
+    set γ := 1 / Real.sqrt (1 - v^2) with hγ_def
+    -- Fundamental facts about v and γ
+    have hv_sq : v^2 < 1 := by exact (sq_lt_one_iff_abs_lt_one v).mpr hv
+    have h_pos : 1 - v^2 > 0 := sub_pos.mpr hv_sq
+    have h_sqrt_pos : Real.sqrt (1 - v^2) > 0 := Real.sqrt_pos.mpr h_pos
+    -- THE key identity: γ² * (1 - v²) = 1
+    have h_key : γ^2 * (1 - v^2) = 1 := by
+      rw [hγ_def]
+      have h_ne : Real.sqrt (1 - v^2) ≠ 0 := ne_of_gt h_sqrt_pos
+      field_simp
+      exact (Real.sq_sqrt (le_of_lt h_pos)).symm
+    -- Expand the Finset sums to explicit terms
+    rw [Finset.sum_fin_eq_sum_range, Finset.sum_fin_eq_sum_range]
+    simp only [Finset.sum_range_succ, Finset.sum_range_zero] --unused , add_zero, Fin.succ_zero_eq_one, Fin.succ_one_eq_two
+    -- Handle Fin.succ for index 2 → 3
+    have h_succ2 : (⟨2, by omega⟩ : Fin 3).succ = (3 : Fin 4) := by native_decide
+    -- Simplify all the if-then-else conditionals at concrete indices
+    simp only [↓reduceIte, Fin.isValue, neg_mul, Nat.ofNat_pos, ↓reduceDIte, Nat.reduceAdd,
+      Fin.zero_eta, Fin.succ_zero_eq_one, one_ne_zero, zero_add, Nat.one_lt_ofNat, Fin.mk_one,
+      Fin.succ_one_eq_two, Fin.reduceEq, Nat.lt_add_one, Fin.reduceFinMk, Fin.reduceSucc]
+    -- The p.vec 2 * q.vec 2 and p.vec 3 * q.vec 3 terms are identical on both sides
+    -- So we just need the time-space mixing terms to work out
+    suffices h_suff : -(γ * (p.vec 0 - v * p.vec 1)) * (γ * (q.vec 0 - v * q.vec 1)) +
+                      (γ * (p.vec 1 - v * p.vec 0)) * (γ * (q.vec 1 - v * q.vec 0)) =
+                      -(p.vec 0 * q.vec 0) + p.vec 1 * q.vec 1 by linarith
+    -- Prove via the algebraic identity
+    calc -(γ * (p.vec 0 - v * p.vec 1)) * (γ * (q.vec 0 - v * q.vec 1)) +
+        (γ * (p.vec 1 - v * p.vec 0)) * (γ * (q.vec 1 - v * q.vec 0))
+        = γ^2 * (-(p.vec 0 - v * p.vec 1) * (q.vec 0 - v * q.vec 1) +
+                (p.vec 1 - v * p.vec 0) * (q.vec 1 - v * q.vec 0)) := by ring
+      _ = γ^2 * ((v^2 - 1) * (p.vec 0 * q.vec 0) + (1 - v^2) * (p.vec 1 * q.vec 1)) := by ring
+      _ = γ^2 * (1 - v^2) * (-(p.vec 0 * q.vec 0) + p.vec 1 * q.vec 1) := by ring
+      _ = 1 * (-(p.vec 0 * q.vec 0) + p.vec 1 * q.vec 1) := by rw [h_key]
+      _ = -(p.vec 0 * q.vec 0) + p.vec 1 * q.vec 1 := by ring
 
 /-- The zero vector (origin in spacetime) -/
 def origin (n : ℕ) : MinkowskiSpace n := ⟨fun _ => 0⟩
@@ -264,8 +372,7 @@ structure Worldline (n : ℕ) where
 noncomputable def uniformMotion (v : ℝ) (_ : |v| < 1) : Worldline 3 where
   path := fun τ =>
     let γ := 1 / Real.sqrt (1 - v^2)
-    --fourVector (γ * τ) (γ * v * τ) 0 0
-    fourVector (γ * τ) (γ * v * τ) τ τ
+    fourVector (γ * τ) (γ * v * τ) 0 0
 
 /-- A metric tensor at a point (symmetric 2-tensor) -/
 structure MetricTensor (n : ℕ) where
@@ -280,3 +387,25 @@ structure ChristoffelSymbols (n : ℕ) where
 structure RiemannTensor (n : ℕ) where
   R : Fin n → Fin n → Fin n → Fin n → ℝ  -- Rⁱⱼₖₗ
   -- Should satisfy various symmetries
+
+
+/-- The Lorentz factor γ = 1/√(1-v²) -/
+noncomputable def lorentzGamma (v : ℝ) (_ /-hv-/ : |v| < 1) : ℝ :=
+  1 / Real.sqrt (1 - v^2)
+
+/-- γ ≥ 1 always -/
+theorem lorentzGamma_ge_one (v : ℝ) (hv : |v| < 1) :
+    lorentzGamma v hv ≥ 1 := by
+  unfold lorentzGamma
+  have h1 : 1 - v^2 > 0 := by simp_all only [gt_iff_lt, sub_pos, sq_lt_one_iff_abs_lt_one]
+  have h2 : 1 - v^2 ≤ 1 := by nlinarith [sq_nonneg v]
+  have h3 : Real.sqrt (1 - v^2) ≤ 1 := by
+    rw [@Real.sqrt_le_one]
+    exact h2
+  have h4 : Real.sqrt (1 - v^2) > 0 := Real.sqrt_pos.mpr h1
+  calc 1 / Real.sqrt (1 - v^2) ≥ 1 / 1 := by
+        exact one_div_le_one_div_of_le h4 h3
+      _ = 1 := by ring
+
+
+end MinkowskiSpace
