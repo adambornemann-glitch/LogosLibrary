@@ -103,14 +103,14 @@ DeepTheorems/
 │   │   │   └── Angular.lean         ✅ COMPLETE
 │   │   │
 │   │   └── Heisenberg/
-│   │       └── Core.md              ⏳ PLANNED
+│   │       └── Core.md              ✅ COMPLETE
 │   │   
 │   └── Evolution/
 │       └── Stone/
-│           ├── Theorem.lean         ⏳ PLANNED
+│           ├── Theorem.lean         ✅ COMPLETE
 │           ├── Core.lean            ✅ COMPLETE
 │           ├── Resolvent.lean       ✅ COMPLETE
-│           └── Exponential.lean     🔄 IN PROGRESS
+│           └── Exponential.lean     ✅ COMPLETE
 │
 ├── Gravity/
 │   └── Thermodynamics/
