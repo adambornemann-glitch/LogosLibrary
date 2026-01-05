@@ -1,4 +1,4 @@
-# The Superior TOE
+# The Superior TOE, First 1/2
 
 ## Much Better Than Your TOE
 
@@ -148,19 +148,19 @@ This follows directly from Ott + Landauer. Temperature requires a bath. Measurem
 
 ### Axiom Y: What Is a Measurement?
 
-_A measurement is an interaction that increases the entanglement entropy between system and environment by at least 2π bits._
+_A measurement is an interaction that increases the entanglement entropy between system and environment by at least 2π Nats._
 
 Equivalently: A measurement is an interaction that causes one tick of thermal time.
 
 **Source:** The 2π comes from Tomita-Takesaki modular theory. The KMS condition gives thermal states periodicity 2π in imaginary time. This is a theorem, not a choice.
 
-**Consequence:** After 2π bits of entropy production:
+**Consequence:** After 2π Nats of entropy production:
 
 $$\rho_{\text{off-diagonal}} \to e^{-2\pi}\rho_{\text{off-diagonal}} \approx 0.002 \times \rho_{\text{off-diagonal}}$$
 
 Coherence reduced to 0.2%. Effectively complete decoherence.
 
-**One measurement = one modular cycle = 2π bits = complete collapse.**
+**One measurement = one modular cycle = 2π Nats = complete collapse.**
 
 ### Axiom Z: Apparent Randomness
 
@@ -368,13 +368,13 @@ Position-dependence has been absorbed into the rate of entropy production itself
 
 ### The 2π Threshold
 
-From Tomita-Takesaki: one complete modular cycle = 2π bits.
+From Tomita-Takesaki: one complete modular cycle = 2π Nats.
 
 After σ = 2π:
 
 $$\rho_{\text{off-diag}} \to e^{-2\pi}\rho_{\text{off-diag}} \approx 0.002 \times \rho_{\text{off-diag}}$$
 
-**One measurement = one modular cycle = 2π bits = complete collapse.**
+**One measurement = one modular cycle = 2π Nats = complete collapse.**
 
 ---
 
@@ -768,7 +768,7 @@ That's how science works.
 ---
 
 **Document Version:** 1.0  
-**Date:** January 2026  
+**Date:** December 2025  
 **Status:** Superior
 
 ---
