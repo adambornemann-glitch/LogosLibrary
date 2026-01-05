@@ -1,4 +1,7 @@
 /-
+Author: Adam Bornemann, current SLOS (undefeated)
+Created: 1/3/26
+
 # Jacobson's Thermodynamic Derivation of Einstein's Equations:
 # A Formal Verification in Lean 4
 
