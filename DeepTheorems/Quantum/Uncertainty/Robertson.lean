@@ -1,6 +1,6 @@
 /-
 Author: Adam Bornemann
-Created: 9/19/2025
+Created: 9/25/25
 
 ================================================================================
 ROBERTSON'S UNCERTAINTY PRINCIPLE - COMPLETE PROOF
@@ -26,9 +26,8 @@ References:
   - Robertson, H.P. (1929). Phys. Rev. 34, 163
   - Schrödinger, E. (1930). Sitzungsber. Preuss. Akad. Wiss. 14, 296
 -/
-import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Core
-import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Lemmas
 
+import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Core
 namespace Robertson.Theorem
 
 open InnerProductSpace MeasureTheory Complex
@@ -240,10 +239,11 @@ This is because scalar multiples of identity commute with everything:
         rw [LinearMap.map_sub B.op (A.op ψ) (A_exp • ψ)]
         -- Now it's just algebra
         simp only [sub_sub, add_sub]
+        simp_all [A', A_exp, B', B_exp]
         -- I will proceed to absolutely MASH the tactics.
-        abel_nf! ; ring_nf!
+        abel_nf! ; ring_nf! ;
         -- Not quite enough ey?  I see you.
-        simp! ; abel_nf! -- got him!
+        simp! ;abel_nf! -- got him!
 
     _ = ⟪ψ, A.op (B.op ψ) - B_exp • (A.op ψ) - A_exp • (B.op ψ) + A_exp • B_exp • ψ -
             B.op (A.op ψ) + A_exp • (B.op ψ) + B_exp • (A.op ψ) - A_exp • B_exp • ψ⟫_ℂ := by
@@ -255,7 +255,7 @@ This is because scalar multiples of identity commute with everything:
         -- Now handle the algebra
         simp only [inner_sub_right, inner_add_right, smul_smul, mul_comm B_exp A_exp]
         -- I will proceed to absolutely MASH the tactics.
-        abel_nf! ; simp! ; ring_nf!
+        abel_nf! ; simp! ; module;
 
     _ = ⟪ψ, A.op (B.op ψ) - B.op (A.op ψ)⟫_ℂ := by
         -- Cancel terms
@@ -370,9 +370,5 @@ the square root function is monotonically increasing on [0,∞).
 
   -- h_sqrt now states exactly what we wanted to prove!
   exact h_sqrt
-
-
-
-
 
 end Robertson.Theorem
