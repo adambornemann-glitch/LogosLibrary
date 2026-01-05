@@ -596,6 +596,9 @@ The Gaussian integral - fundamental for quantum mechanics.
 
 Used for normalizing Gaussian wave packets and computing
 partition functions in quantum statistical mechanics.
+
+This is now a theorem thanks to the helpful tip from Matteo Cipollina, and
+import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 -/
 theorem integral_gaussian_unit : ∫ x : ℝ, Real.exp (-x^2) = Real.sqrt Real.pi := by
   simpa using integral_gaussian 1
