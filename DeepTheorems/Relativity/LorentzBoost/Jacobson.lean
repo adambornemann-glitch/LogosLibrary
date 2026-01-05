@@ -1,7 +1,4 @@
 /-
-Author: Adam Bornemann, current SLOS (undefeated)
-Created: 1/3/26
-
 # Jacobson's Thermodynamic Derivation of Einstein's Equations:
 # A Formal Verification in Lean 4
 
@@ -16,7 +13,7 @@ theories and articulated the broader "emergent gravity" program.
 The derivation rests on three physical inputs:
 
 1. **The Clausius relation**: δQ = T dS
-2. **The Bekenstein-Hawking area law**: S = A/(4ℓ_P²)  
+2. **The Bekenstein-Hawking area law**: S = A/(4ℓ_P²)
 3. **The Unruh effect**: T = ℏa/(2πkc)
 
 The key insight: demanding that δQ = T dS hold for *all* local Rindler horizons
@@ -130,7 +127,7 @@ It is not physics. It is nonsense.
 
 /--
 **THEOREM: Jacobson's derivation requires Ott**
-  
+
 Under Landsberg (T' = T), the Clausius ratio δQ/T is NOT Lorentz invariant.
 Different Rindler observers at the same spacetime point would compute different
 values for dS = δQ/T, leading to different "field equations".
@@ -142,7 +139,7 @@ Therefore Landsberg is incompatible with Jacobson's derivation.
 
 Given:
 - `δQ` : energy flux through local Rindler horizon (δQ ≠ 0)
-- `T` : Unruh temperature in rest frame (T > 0)  
+- `T` : Unruh temperature in rest frame (T > 0)
 - `v` : relative velocity of boosted observer (|v| < 1, v ≠ 0)
 
 Prove:
@@ -162,24 +159,23 @@ theorem jacobson_1995_requires_ott
     ratio_boosted ≠ ratio_rest := by
   simp only [energyFluxTransform, unruhTempLandsberg, clausiusRatio]
   constructor
-  
+
   · -- Part 1: ratio_boosted = γ · ratio_rest
     -- This is just algebra: (γδQ)/T = γ · (δQ/T)
     have hT_ne : T ≠ 0 := ne_of_gt hT
     exact Eq.symm (mul_div_assoc' (lorentzGamma v hv) δQ T)
-  
+
   · -- Part 2: ratio_boosted ≠ ratio_rest
     -- We need γ ≠ 1, which holds iff v ≠ 0
-    
+
     -- Step 1: Establish γ > 1 for any nonzero velocity
     have hγ_gt_one : lorentzGamma v hv > 1 := by
       unfold lorentzGamma
-      -- γ = 1/√(1-v²). For v ≠ 0, we have 1-v² < 1, so √(1-v²) < 1, so γ > 1.
       have hv_sq : v^2 < 1 := (sq_lt_one_iff_abs_lt_one v).mpr hv
       have h_pos : 0 < 1 - v^2 := sub_pos.mpr hv_sq
       have h_lt_one : 1 - v^2 < 1 := by
         simp only [sub_lt_self_iff]
-        exact pow_two_pos_of_ne_zero hv_ne  -- v ≠ 0 implies v² > 0
+        exact pow_two_pos_of_ne_zero hv_ne
       have h_sqrt_pos : Real.sqrt (1 - v^2) > 0 := Real.sqrt_pos.mpr h_pos
       have h_sqrt_lt_one : Real.sqrt (1 - v^2) < 1 := by
         have h : Real.sqrt (1 - v^2) < Real.sqrt 1 :=
@@ -187,20 +183,23 @@ theorem jacobson_1995_requires_ott
         rwa [Real.sqrt_one] at h
       calc 1 = 1 / 1 := by ring
         _ < 1 / Real.sqrt (1 - v^2) := one_div_lt_one_div_of_lt h_sqrt_pos h_sqrt_lt_one
-    
+
     -- Step 2: γ > 1 implies γ ≠ 1
     have hγ_ne_one : lorentzGamma v hv ≠ 1 := ne_of_gt hγ_gt_one
-    
+
     -- Step 3: The ratio δQ/T is nonzero (since δQ ≠ 0 and T > 0)
     have hT_ne : T ≠ 0 := ne_of_gt hT
     have hδQT_ne : δQ / T ≠ 0 := div_ne_zero hδQ hT_ne
-    
+
     -- Step 4: Suppose for contradiction that γ · (δQ/T) = δQ/T
     intro h_eq
-    -- Then (γ - 1) · (δQ/T) = 0
-    have h1 : lorentzGamma v hv * (δQ / T) = δQ / T := by
-      exact entropy_invariant (δQ / T) v hv
-    have h2 : (lorentzGamma v hv - 1) * (δQ / T) = 0 := by linarith
+    -- h_eq : lorentzGamma v hv * (δQ / T) = δQ / T
+    have h2 : (lorentzGamma v hv - 1) * (δQ / T) = 0 := by
+      rw [sub_mul, one_mul]
+      -- Goal: lorentzGamma v hv * (δQ / T) - δQ / T = 0
+      rw [← mul_div_assoc]
+      -- Goal: lorentzGamma v hv * δQ / T - δQ / T = 0
+      rw [h_eq, sub_self]
     -- Since product = 0, one factor must be 0
     rcases mul_eq_zero.mp h2 with h3 | h4
     · -- Case: γ - 1 = 0, i.e., γ = 1. Contradicts γ > 1.
@@ -289,16 +288,16 @@ theorem jacobson_1995_with_ott
     -- The ratios are equal: γ cancels, all observers agree
     ratio_boosted = ratio_rest := by
   simp only [energyFluxTransform, unruhTempOtt, clausiusRatio]
-  
+
   -- The proof is almost embarrassingly simple: (γδQ)/(γT) = δQ/T
   -- We just need γ ≠ 0 to cancel, which follows from γ ≥ 1 > 0
-  
+
   have hγ_pos : lorentzGamma v hv > 0 := by
     have := lorentzGamma_ge_one v hv  -- γ ≥ 1 for all |v| < 1
     linarith
   have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
   have hT_ne : T ≠ 0 := ne_of_gt hT
-  
+
   -- The heavy lifting is in the Unification module, which establishes
   -- that Ott's transformation is precisely what makes detailed balance
   -- (and hence the Clausius relation) frame-invariant
@@ -423,18 +422,18 @@ theorem jacobson_uniquely_determines_ott
     -- Then f MUST be the Lorentz factor (Ott transformation)
     ∀ v (hv : |v| < 1), f v = lorentzGamma v hv := by
   intro v hv
-  
+
   -- The key insight: use δQ = T = 1 to make the algebra trivial
   -- Any f that works for all δQ, T must work for this special case
   have h := hf_preserves 1 1 v hv one_pos
   simp only [clausiusRatio, one_div, mul_one] at h
-  
+
   -- h now says: γ / f(v) = 1, i.e., γ = f(v)
   have hf_ne : f v ≠ 0 := ne_of_gt (hf_pos v hv)
   have hγ_pos : lorentzGamma v hv > 0 := by
     have := lorentzGamma_ge_one v hv  -- γ ≥ 1
     linarith
-  
+
   -- The uniqueness lemma from the Ott module does the rest
   exact ott_unique_for_entropy_invariance f hf_pos hf_preserves v hv
 
@@ -570,20 +569,20 @@ theorem jacobson_physical_interpretation
     -- Setup: relate temperature to acceleration via Unruh (T ∝ a, constants absorbed)
     let T := a
     let γ := lorentzGamma v hv
-    
+
     -- Boosted quantities
     let a' := γ * a           -- Proper acceleration transforms
     let T'_ott := γ * T       -- Ott: temperature transforms the same way
-    
+
     -- Entropy changes
     let dS_rest := δQ / T                 -- Rest frame: dS = δQ/T
     let dS_boosted := (γ * δQ) / T'_ott   -- Boosted: dS' = (γδQ)/(γT)
-    
+
     -- The two key results
     dS_boosted = dS_rest ∧ T'_ott = a' := by
   simp only
   constructor
-  
+
   · -- Part 1: Entropy agreement (dS' = dS)
     -- This is the same calculation as jacobson_1995_with_ott:
     -- (γδQ)/(γT) = δQ/T because γ cancels
@@ -593,7 +592,7 @@ theorem jacobson_physical_interpretation
     have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
     have ha_ne : a ≠ 0 := ne_of_gt ha
     exact Unification.corollary_detailed_balance δQ a ha v hv
-  
+
   · -- Part 2: Temperature tracks acceleration (T' = a')
     -- This is trivial: T = a by definition, so γT = γa
     -- But the triviality IS the point: Ott makes this automatic
@@ -698,7 +697,7 @@ Given:
 
 Prove:
   (1) (γδQ)/(γT) = δQ/T                    [Ott preserves the ratio]
-  (2) (γδQ)/T ≠ δQ/T                       [Landsberg breaks the ratio]  
+  (2) (γδQ)/T ≠ δQ/T                       [Landsberg breaks the ratio]
   (3) For any f: if (γδQ)/(f(v)·T) = δQ/T  [Uniqueness]
                  then f(v) = γ
 ```
@@ -755,60 +754,70 @@ No circular dependencies. Each component was proven independently.
 theorem jacobson_complete
     (δQ T : ℝ) (hδQ : δQ ≠ 0) (hT : T > 0)
     (v : ℝ) (hv : |v| < 1) (hv_ne : v ≠ 0) :
-    
+
     --=========================================================================
     -- PART 1: Ott preserves the Clausius ratio (field equations are tensorial)
     --=========================================================================
     (clausiusRatio (lorentzGamma v hv * δQ) (lorentzGamma v hv * T) = clausiusRatio δQ T) ∧
-    
+
     --=========================================================================
     -- PART 2: Landsberg breaks the Clausius ratio (field equations NOT tensorial)
     --=========================================================================
     (clausiusRatio (lorentzGamma v hv * δQ) T ≠ clausiusRatio δQ T) ∧
-    
+
     --=========================================================================
     -- PART 3: Ott is the UNIQUE transformation preserving the ratio
     --=========================================================================
     (∀ f : ℝ → ℝ, (∀ w, |w| < 1 → f w > 0) →
       clausiusRatio (lorentzGamma v hv * δQ) (f v * T) = clausiusRatio δQ T →
       f v = lorentzGamma v hv) := by
-  
+
   --===========================================================================
   -- We prove each part separately, then combine with ⟨_, _, _⟩
   --===========================================================================
-  
+
   constructor
-  
+
   · --=========================================================================
     -- Part 1: Ott preserves the ratio
     -- This is exactly `jacobson_1995_with_ott`
     --=========================================================================
     exact jacobson_1995_with_ott δQ T hT v hv
-  
+
   constructor
-  
+
   · --=========================================================================
     -- Part 2: Landsberg breaks the ratio
     -- This is the second conjunct of `jacobson_1995_requires_ott`
     --=========================================================================
     exact (jacobson_1995_requires_ott δQ T hδQ hT v hv hv_ne).2
-  
+
   · --=========================================================================
     -- Part 3: Uniqueness of Ott
     -- For any f that preserves the ratio, f must equal γ
     --=========================================================================
     intro f hf_pos hf_eq
     simp only [clausiusRatio] at hf_eq
-    
-    -- Standard setup: γ > 0, T ≠ 0
+    -- hf_eq : lorentzGamma v hv * δQ / (f v * T) = δQ / T
+
     have hf_ne : f v ≠ 0 := ne_of_gt (hf_pos v hv)
     have hT_ne : T ≠ 0 := ne_of_gt hT
-    have hγ_pos : lorentzGamma v hv > 0 := by
-      have := lorentzGamma_ge_one v hv
-      linarith
-    
-    -- The uniqueness lemma from the Ott module completes the proof
-    exact Eq.symm (entropy_invariant (f v) v hv)
+    have hfT_ne : f v * T ≠ 0 := mul_ne_zero hf_ne hT_ne
+    have hδQT_ne : δQ * T ≠ 0 := mul_ne_zero hδQ hT_ne
+
+    -- Cross multiply: γ * δQ * T = δQ * (f v * T)
+    rw [div_eq_div_iff hfT_ne hT_ne] at hf_eq
+    -- hf_eq : lorentzGamma v hv * δQ * T = δQ * (f v * T)
+
+    -- Rearrange to: γ * (δQ * T) = f v * (δQ * T)
+    have h : lorentzGamma v hv * (δQ * T) = f v * (δQ * T) := by
+      calc lorentzGamma v hv * (δQ * T)
+          = lorentzGamma v hv * δQ * T := by ring
+        _ = δQ * (f v * T) := hf_eq
+        _ = f v * (δQ * T) := by ring
+
+    -- Cancel the nonzero factor (δQ * T)
+    exact mul_right_cancel₀ hδQT_ne h.symm
 
 /-!
 ### Reading the Theorem Statement (For Non-Lean Users)
@@ -938,7 +947,7 @@ don't care about Jacobson's thermodynamic derivation of gravity, you should care
 about this: Landsberg contradicts quantum field theory.
 -/
 
-/-- 
+/--
 **Helper: Unruh temperature is proportional to proper acceleration**
 
 In units where ℏ/(2πk_B c) = 1, the Unruh temperature equals the proper
@@ -950,7 +959,7 @@ temperature proportional to their acceleration.
 -/
 noncomputable def unruhTemperature (a : ℝ) : ℝ := a
 
-/-- 
+/--
 **Helper: Proper acceleration transformation under boosts**
 
 When an observer with proper acceleration `a` is viewed from a boosted frame
@@ -1018,11 +1027,11 @@ theorem landsberg_breaks_unruh_relation
     -- The punchline: Landsberg contradicts Unruh
     T'_landsberg ≠ T'_expected := by
   simp only [unruhTemperature, boostedAcceleration]
-  
+
   -- We need to show: a ≠ γa
   -- Equivalently: γ ≠ 1
   -- This holds iff v ≠ 0
-  
+
   -- Step 1: Establish γ > 1 for nonzero velocity
   have hγ_gt_one : lorentzGamma v hv > 1 := by
     unfold lorentzGamma
@@ -1040,7 +1049,7 @@ theorem landsberg_breaks_unruh_relation
       rwa [Real.sqrt_one] at h
     calc 1 = 1 / 1 := by ring
       _ < 1 / Real.sqrt (1 - v^2) := one_div_lt_one_div_of_lt h_sqrt_pos h_sqrt_lt_one
-  
+
   -- Step 2: Use γ > 1 to derive contradiction from a = γa
   intro h_eq
   -- h_eq : a = γ * a
@@ -1351,22 +1360,22 @@ theorem landsberg_rindler_entropy_failure
     -- Setup: Unruh temperature equals acceleration (in natural units)
     let T := unruhTemperature a                       -- T = a
     let dS := δQ / T                                  -- Rest frame entropy change
-    
+
     -- Boosted quantities under Landsberg
     let δQ' := lorentzGamma v hv * δQ                -- Energy transforms: δQ → γδQ
     let T'_landsberg := T                             -- Landsberg: T → T (unchanged!)
     let dS'_landsberg := δQ' / T'_landsberg          -- Boosted entropy: γδQ / T
-    
+
     -- The two failure modes:
     -- 1. Entropy changes DISAGREE (qualitative failure)
     -- 2. They disagree by EXACTLY factor γ (quantitative failure)
     dS'_landsberg ≠ dS ∧ dS'_landsberg = lorentzGamma v hv * dS := by
   simp only [unruhTemperature]
   constructor
-  
+
   · -- Part 1: dS' ≠ dS (qualitative failure)
     -- We need γ ≠ 1, which holds iff v ≠ 0
-    
+
     -- Step 1: Establish γ > 1
     have hγ_gt_one : lorentzGamma v hv > 1 := by
       unfold lorentzGamma
@@ -1382,12 +1391,12 @@ theorem landsberg_rindler_entropy_failure
         rwa [Real.sqrt_one] at h
       calc 1 = 1 / 1 := by ring
         _ < 1 / Real.sqrt (1 - v^2) := one_div_lt_one_div_of_lt h_sqrt_pos h_sqrt_lt_one
-    
+
     -- Step 2: γ > 1 and dS ≠ 0 implies γ·dS ≠ dS
     have hγ_ne_one : lorentzGamma v hv ≠ 1 := ne_of_gt hγ_gt_one
     have ha_ne : a ≠ 0 := ne_of_gt ha
     have hdSa_ne : δQ / a ≠ 0 := div_ne_zero hδQ ha_ne
-    
+
     intro h_eq
     -- h_eq : γδQ/a = δQ/a
     -- Rewrite as: γ · (δQ/a) = δQ/a
@@ -1401,7 +1410,7 @@ theorem landsberg_rindler_entropy_failure
       exact hγ_ne_one (by linarith)
     · -- Case δQ/a = 0: contradicts δQ ≠ 0, a > 0
       exact hdSa_ne h5
-  
+
   · -- Part 2: dS' = γ · dS (quantitative failure)
     -- This is just algebra: (γδQ)/a = γ · (δQ/a)
     have ha_ne : a ≠ 0 := ne_of_gt ha
@@ -1523,23 +1532,23 @@ theorem ott_rindler_entropy_invariant
     -- Setup
     let T := unruhTemperature a                       -- T = a
     let dS := δQ / T                                  -- Rest frame entropy
-    
+
     -- Boosted quantities under Ott
     let δQ' := lorentzGamma v hv * δQ                -- Energy: δQ → γδQ
     let T'_ott := lorentzGamma v hv * T              -- Ott: T → γT
     let dS'_ott := δQ' / T'_ott                      -- Boosted entropy
-    
+
     -- The result: all observers agree
     dS'_ott = dS := by
   simp only [unruhTemperature]
-  
+
   -- The proof: (γδQ)/(γa) = δQ/a because γ cancels
   have hγ_pos : lorentzGamma v hv > 0 := by
     have := lorentzGamma_ge_one v hv
     linarith
   have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
   have ha_ne : a ≠ 0 := ne_of_gt ha
-  
+
   -- Delegate to the unification lemma
   exact Unification.corollary_detailed_balance δQ a ha v hv
 
@@ -1610,27 +1619,27 @@ Prove:
 theorem landsberg_rindler_failure_summary
     (a : ℝ) (ha : a > 0) (δQ : ℝ) (hδQ : δQ ≠ 0)
     (v : ℝ) (hv : |v| < 1) (hv_ne : v ≠ 0) :
-    
+
     --=========================================================================
     -- FAILURE 1: Unruh relation violated
     -- Rest temperature T = a does not equal boosted Unruh prediction γa
     --=========================================================================
     (unruhTemperature a ≠ unruhTemperature (boostedAcceleration a v hv)) ∧
-    
+
     --=========================================================================
     -- FAILURE 2: Entropy is observer-dependent
     -- Boosted entropy γδQ/T ≠ rest entropy δQ/T
     --=========================================================================
     (lorentzGamma v hv * δQ / unruhTemperature a ≠ δQ / unruhTemperature a) ∧
-    
+
     --=========================================================================
     -- FIX: Ott restores Unruh consistency
     -- Ott temperature γT equals boosted Unruh prediction γa
     --=========================================================================
     (lorentzGamma v hv * (unruhTemperature a) = unruhTemperature (boostedAcceleration a v hv)) := by
-  
+
   constructor
-  
+
   · -- Failure 1: Unruh violation (a ≠ γa)
     simp only [unruhTemperature, boostedAcceleration]
     -- Need: a ≠ γa, i.e., γ ≠ 1
@@ -1638,12 +1647,12 @@ theorem landsberg_rindler_failure_summary
       unfold lorentzGamma
       have hv_sq : v^2 < 1 := (sq_lt_one_iff_abs_lt_one v).mpr hv
       have h_pos : 0 < 1 - v^2 := sub_pos.mpr hv_sq
-      have h_lt_one : 1 - v^2 < 1 := by 
+      have h_lt_one : 1 - v^2 < 1 := by
         simp only [sub_lt_self_iff]
         exact pow_two_pos_of_ne_zero hv_ne
       have h_sqrt_pos : Real.sqrt (1 - v^2) > 0 := Real.sqrt_pos.mpr h_pos
       have h_sqrt_lt_one : Real.sqrt (1 - v^2) < 1 := by
-        have h : Real.sqrt (1 - v^2) < Real.sqrt 1 := 
+        have h : Real.sqrt (1 - v^2) < Real.sqrt 1 :=
           Real.sqrt_lt_sqrt (le_of_lt h_pos) h_lt_one
         rwa [Real.sqrt_one] at h
       calc 1 = 1 / 1 := by ring
@@ -1651,12 +1660,12 @@ theorem landsberg_rindler_failure_summary
     -- a ≠ γa because γ > 1 and a > 0
     have ha_pos : a > 0 := ha
     nlinarith
-  
+
   constructor
-  
+
   · -- Failure 2: Entropy observer-dependent
     exact (landsberg_rindler_entropy_failure δQ a hδQ ha v hv hv_ne).1
-  
+
   · -- Fix: Ott restores consistency (γa = γa)
     simp only [unruhTemperature, boostedAcceleration]
 
@@ -1736,7 +1745,7 @@ theorem ott_carnot_invariant
     have := lorentzGamma_ge_one v hv; linarith
   have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
   have hThot_ne : T_hot ≠ 0 := ne_of_gt hThot
-  exact entropy_invariant (1 - T_cold / T_hot) v hv
+  field_simp
 
 
 /-- Under Landsberg, Carnot efficiency is NOT frame-invariant -/
@@ -1765,15 +1774,25 @@ theorem landsberg_carnot_not_invariant
   have hThot_ne : T_hot ≠ 0 := ne_of_gt hThot
   have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt (by linarith : lorentzGamma v hv > 0)
   intro h_eq
-  -- 1 - T_cold/(γ T_hot) = 1 - T_cold/T_hot
-  -- T_cold/(γ T_hot) = T_cold/T_hot
-  -- 1/γ = 1, contradiction
+  -- h_eq : 1 - T_cold / (γ * T_hot) = 1 - T_cold / T_hot
+  -- Extract the fraction equality
   have h1 : T_cold / (lorentzGamma v hv * T_hot) = T_cold / T_hot := by linarith
-  have h2 : T_cold / T_hot / lorentzGamma v hv = T_cold / T_hot := by
-    exact entropy_invariant (T_cold / T_hot) v hv
-  have h3 : lorentzGamma v hv = 1 := by
-    have hr_ne : T_cold / T_hot ≠ 0 := h_ratio
-    exact Eq.symm (entropy_invariant (lorentzGamma v hv) v hv)
+
+  have hTcold_ne : T_cold ≠ 0 := ne_of_gt hTcold
+  have hγThot_ne : lorentzGamma v hv * T_hot ≠ 0 := mul_ne_zero hγ_ne hThot_ne
+
+  -- Cross-multiply: T_cold * T_hot = T_cold * (γ * T_hot)
+  rw [div_eq_div_iff hγThot_ne hThot_ne] at h1
+
+  -- Cancel T_cold: T_hot = γ * T_hot
+  have h2 : T_hot = lorentzGamma v hv * T_hot := mul_left_cancel₀ hTcold_ne h1
+
+  -- Cancel T_hot: 1 = γ
+  have h3 : (1 : ℝ) = lorentzGamma v hv := by
+    have h4 : 1 * T_hot = lorentzGamma v hv * T_hot := by rw [one_mul]; exact h2
+    exact mul_right_cancel₀ hThot_ne h4
+
+  -- But γ > 1, contradiction
   linarith
 
 /-!
@@ -2085,7 +2104,7 @@ theorem ott_ideal_gas_pressure
   have hγ_pos : lorentzGamma v hv > 0 := by have := lorentzGamma_ge_one v hv; linarith
   have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
   have hV_ne : V ≠ 0 := ne_of_gt hV
-  exact Eq.symm (entropy_invariant (N * (lorentzGamma v hv * T) / (V / lorentzGamma v hv)) v hv)
+  field_simp
 
 
 end Extras
