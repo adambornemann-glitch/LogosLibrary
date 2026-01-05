@@ -2,8 +2,8 @@
 
 ## A Master Equation for Objective Reduction in Entropic Time
 
-**Authors:** Adam Bornemann, current SLOS (undefeated)
-**Date:** January 2026  
+**Authors:** Adam Bornemann (current SLOS)
+**Date:** December 2025  
 **Status:** Complete formulation
 **Note:** This is part III of the Superior TOE.
 
@@ -250,15 +250,15 @@ Position-dependence has been entirely absorbed into the _rate of entropy product
 
 ### 4.2 The 2π Threshold
 
-From Tomita-Takesaki modular theory, the thermal/modular flow has period 2π. One complete modular cycle produces 2π bits of entropy.
+From Tomita-Takesaki modular theory, the thermal/modular flow has period 2π. One complete modular cycle produces 2π Nats of entropy.
 
-After σ = 2π bits:
+After σ = 2π Nats:
 
 $$\rho_{\text{off-diag}} \to e^{-2\pi}\rho_{\text{off-diag}} \approx 0.0019,\rho_{\text{off-diag}}$$
 
 Coherence is reduced to 0.2%—effectively complete decoherence.
 
-**One measurement = one modular cycle = 2π bits = complete collapse**
+**One measurement = one modular cycle = 2π Nats = complete collapse**
 
 This provides a precise, quantitative answer to "what constitutes a measurement."
 
@@ -477,7 +477,7 @@ Each bit of entropy produced:
 - Advances the "crystallization" of geometry
 - Reduces quantum coherence by factor e⁻¹
 
-The 2π bits threshold corresponds to one complete cycle of information transfer—a "measurement" in the operational sense.
+The 2π Nats threshold corresponds to one complete cycle of information transfer—a "measurement" in the operational sense.
 
 ---
 
@@ -667,7 +667,7 @@ $$\frac{\lambda_G}{\ell_P} = \frac{m}{m_P}$$
 ---
 
 **Document Version:** 1.0  
-**Date:** January 2026  
+**Date:** December 2025  
 **Status:** Complete formulation
 
 ---
