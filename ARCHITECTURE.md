@@ -165,22 +165,9 @@ structure UnboundedObservable where
 
 This pattern now used in all subsequent theorem work.
 
-#### 🔄 Stone's Theorem (~4000 lines estimated)
+#### ✅ Stone's Theorem (~11000 lines estimated)
 
-**Goal**: Prove U(t) = exp(itA) bijection between:
-- Strongly continuous one-parameter unitary groups U(t)
-- Self-adjoint operators A
-
-**Progress**:
-- Pedagogy: ~1100 lines ✅
-- Resolvent theory: ~1700 lines 🔄
-- Spectral theorem: Not started
-- Functional calculus: Not started
-- Time evolution: Not started
-
-**Expected completion**: 3-6 months
-
-**Why it matters**: Fundamental to all of quantum dynamics
+#### 🔄 Spectral Theory
 
 #### 🔄 General Relativity
 
