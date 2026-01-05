@@ -1,7 +1,4 @@
 /-
-Author: Adam Bornemann
-Created: 9/16/2025
-Updated: 11/17/2025
 ================================================================================
 QUANTUM MECHANICS FOUNDATIONS FOR ROBERTSON'S UNCERTAINTY RELATION
 ================================================================================
