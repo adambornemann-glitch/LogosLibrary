@@ -1,7 +1,7 @@
 /-
 Author: Adam Bornemann
 Created: 10/10/2025
-Updated: 12/26/2025
+Updated: 1/05/2025
 
 ================================================================================
 STONE'S THEOREM: CORE STRUCTURES AND DEFINITIONS
@@ -22,18 +22,47 @@ References:
   - Our own Robertson.Core for the unbounded operator pattern
 -/
 
-import Mathlib.Analysis.InnerProductSpace.l2Space
-import Mathlib.Analysis.InnerProductSpace.Adjoint
-import Mathlib.Analysis.Normed.Operator.Basic
-import Mathlib.Analysis.Calculus.Deriv.Basic
-import Mathlib.MeasureTheory.Integral.Bochner.Basic
-import Mathlib.MeasureTheory.Integral.Bochner.L1
-import Mathlib.MeasureTheory.Integral.Bochner.VitaliCaratheodory
-import Mathlib.Topology.Algebra.Group.Basic
+/- Core mathematical structures -/
 import Mathlib.Data.Complex.Basic
-import Mathlib.Tactic
--- Import Robertson's proven unbounded operator machinery
-import LogosLibrary.DeepTheorems.Quantum.Uncertainty.Core
+import Mathlib.Data.Real.Sqrt
+import Mathlib.Data.Fin.Basic
+
+/- Hilbert space machinery -/
+import Mathlib.Analysis.InnerProductSpace.l2Space
+import Mathlib.Analysis.InnerProductSpace.Projection.Basic
+import Mathlib.Analysis.InnerProductSpace.Adjoint
+import Mathlib.Analysis.Normed.Operator.ContinuousLinearMap
+
+/- Calculus for position/momentum operators -/
+import Mathlib.Analysis.Calculus.Deriv.Comp
+import Mathlib.Analysis.Calculus.Deriv.Basic
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Analysis.SpecialFunctions.Exp
+
+/- Measure theory for L² spaces -/
+import Mathlib.MeasureTheory.Function.LpSpace.Basic
+import Mathlib.MeasureTheory.Function.LpSpace.Complete
+import Mathlib.MeasureTheory.Integral.Lebesgue.Basic
+import Mathlib.MeasureTheory.Integral.IntegralEqImproper
+import Mathlib.MeasureTheory.Function.Jacobian
+import Mathlib.MeasureTheory.Integral.ExpDecay
+import Mathlib.MeasureTheory.Measure.MeasureSpace
+
+/- Linear algebra -/
+import Mathlib.LinearAlgebra.Matrix.Hermitian
+import Mathlib.LinearAlgebra.Matrix.Trace
+import Mathlib.LinearAlgebra.BilinearForm.Basic
+import Mathlib.LinearAlgebra.TensorProduct.Basic
+import Mathlib.LinearAlgebra.Basis.Basic
+
+/- Operator theory -/
+import Mathlib.Algebra.Star.SelfAdjoint
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+
+/- Other -/
+import Mathlib.Topology.MetricSpace.Completion
+import Mathlib.Probability.Distributions.Gaussian.Real
+import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 
 namespace Stone.Generators
 
