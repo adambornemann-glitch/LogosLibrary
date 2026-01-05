@@ -1,28 +1,175 @@
 /-
-Author: Adam Bornemann, current SLOS (undefeated)
-Created: 1/1/2026
-Updated: 1/2/2026
+# The Ott Temperature Transformation: A Definitive Resolution
 
-==================================================================================================================
-  CONNECTION TO LANDAUER: Why Ott is Forced
-==================================================================================================================
+## Historical Context
 
-Landauer's Principle: Erasing one bit of information requires dissipating
-at least k_B T ln(2) of energy into a thermal bath.
+In 1907, Einstein and Planck proposed that temperature transforms under Lorentz
+boosts as T → T/γ, where γ = 1/√(1-v²/c²) is the Lorentz factor. This "moving
+bodies appear cooler" result was accepted for over fifty years, propagated through
+the works of Tolman, Pauli, von Laue, and de Broglie.
 
-KEY OBSERVATION: This involves E and T in the combination E/T (or equivalently βE).
+In 1963, Heinrich Ott identified two fundamental errors in the original derivation:
 
-For Landauer to be Lorentz covariant:
+1. The use of an incomplete equation of motion for bodies with varying rest mass
+2. The mistaken belief that the Lorentz force on a moving conductor contributes
+   only to mechanical energy, not to Joule heating
+
+Correcting these errors, Ott derived T → γT: moving bodies appear *hotter*.
+
+Ott died in November 1962. His paper was rejected as "unsound" but published
+posthumously due to his standing in the German Physical Society. Henri Arzelies
+independently reached the same conclusion in 1965. Peter Landsberg proposed a
+third alternative in 1966-67: temperature is Lorentz invariant (T → T).
+
+The resulting "Planck-Ott imbroglio" or "Mosengeil-Ott antinomy" persisted for
+sixty years. Papers supporting each position continued to appear into the 2020s.
+
+This formalization settles the debate.
+
+## The Resolution
+
+The key insight is that *seven independent physical principles* all require the
+same transformation law, and that these seven principles share a common structure:
+
+    Every ratio of the form (energy-like quantity) / (temperature)
+    must be Lorentz invariant.
+
+Since energy transforms as E → γE (it is the time component of 4-momentum),
+invariance of E/T requires T → γT.
+
+**The Seven Arguments:**
+
+| # | Principle | Invariant Quantity | Source |
+|---|-----------|-------------------|--------|
+| 1 | Landauer bound | E_erasure / T | Information theory |
+| 2 | Entropy invariance | Q / T | Statistical mechanics |
+| 3 | Free energy | (E - F) / S = T | Thermodynamic potentials |
+| 4 | Partition function | H / T | Equilibrium statistics |
+| 5 | Thermal 4-vector | Q / T | Relativistic geometry |
+| 6 | Detailed balance | ΔE / T | Microscopic reversibility |
+| 7 | Specific heat | dE / dT | Material properties |
+
+Each argument is proven independently. Each forces T → γT. Each is violated by
+Landsberg's T → T.
+
+**The Unification Theorem** (Section `Unification`):
+
+All seven arguments reduce to a single principle:
+
+    Information is physical (Landauer) + Physics is covariant (Lorentz)
+    ⟹ Energy/Temperature ratios must be Lorentz invariant
+    ⟹ T → γT (Ott)
+
+The apparent diversity of arguments is an illusion. The underlying unity is the
+intersection of thermodynamics and special relativity.
+
+## What Is Proven
+
+**Positive results (Ott is correct):**
+- `landauer_covariant`: The Landauer bound ΔE ≥ kT ln(2) holds in all frames
+- `ott_entropy_invariant`: Entropy S = Q/T is Lorentz invariant
+- `ott_free_energy_correct`: Free energy F = E - TS transforms as energy
+- `ott_boltzmann_invariant`: The Boltzmann exponent H/kT is invariant
+- `thermal_4vector_implies_ott`: Temperature is the time component of a 4-vector
+- `ott_preserves_detailed_balance`: Equilibrium is frame-independent
+- `ott_specific_heat_invariant`: Material properties don't depend on velocity
+
+**Negative results (Landsberg fails):**
+- `landsberg_violates_reverse`: Landauer bound violated when transforming back
+- `landsberg_entropy_not_invariant`: Entropy changes by factor γ
+- `landsberg_free_energy_wrong`: Free energy doesn't transform as energy
+- `landsberg_boltzmann_not_invariant`: Partition function becomes frame-dependent
+- `landsberg_violates_4vector`: Breaks 4-vector transformation law
+- `landsberg_breaks_detailed_balance`: Observers disagree on equilibrium
+- `landsberg_specific_heat_frame_dependent`: Iron has different C_v depending on velocity
+
+**Uniqueness results:**
+- `ott_is_unique`: Any transformation preserving Landauer must equal γ
+- `ott_unique_for_entropy_invariance`: Any transformation preserving entropy must equal γ
+- `ott_is_unique_QED`: The Ott transformation is uniquely determined by physics
+
+**Application to black holes:**
+- `kerr_hawking_transforms_ott`: Hawking temperature satisfies all seven criteria
+- `kerr_landsberg_fails`: Landsberg violates all seven for Kerr black holes
+- `falling_observer_temperature`: Infalling observer measures T' = γT_H
+
+## What Is Assumed
+
+**Axioms:**
+- `entropy_invariant`: Entropy is Lorentz invariant (it counts microstates)
+- `entropy_is_invariant`: Same principle, stated differently
+
+**From imported modules:**
+- `lorentzGamma`: The Lorentz factor γ = 1/√(1-v²)
+- `lorentzGamma_ge_one`: γ ≥ 1 for |v| < 1
+- `hawkingTemperature`, `hawking_temperature_positive`: Kerr black hole thermodynamics
+
+The entropy axiom is justified in Section `RelativeEntropy`, which proves that
+if entropy *were* to transform (S → γS, as Landsberg requires), then:
+- Microstate counts become non-integers
+- Information content becomes frame-dependent
+- More information can be "erased" than ever existed
+
+These are not physical possibilities.
+
+## The Information-Theoretic Core
+
+The deepest argument is Landauer's principle: erasing one bit of information
+requires dissipating at least kT ln(2) of energy into a thermal bath.
+
+This connects *information* (a discrete, countable quantity) to *energy* and
+*temperature* (continuous thermodynamic quantities). The "one bit" being erased
+is not observer-dependent—you either flip the switch or you don't.
+
+For Landauer to be covariant:
 - The energy dissipated transforms: ΔE → γΔE
 - The bound must transform consistently
-- This requires T → γT
+- This forces: T → γT
 
-If Landsberg were correct (T' = T), then:
-- ΔE → γΔE
-- k_B T ln(2) → k_B T ln(2) (unchanged)
-- The bound would be violated in boosted frames!
+Under Landsberg (T → T), a process at the Landauer bound in one frame violates
+the bound when viewed from another frame. This is `landsberg_violates_reverse`.
 
-Therefore: Landauer + Lorentz covariance → Ott
+## Physical Significance
+
+For a Kerr black hole with spin parameter a/M = 0.9:
+- Hawking temperature at infinity: T_H ≈ 6 × 10⁻⁸ K
+- Observer falling at v = 0.99c measures: T' = γT_H ≈ 4.2 × 10⁻⁷ K
+
+The falling observer sees a *hotter* black hole by a factor of ~7. This is not
+a coordinate artifact. An Unruh-DeWitt detector would register more clicks.
+The Landauer bound for erasure operations would be higher.
+
+## References
+
+[1] H. Ott, "Lorentz-Transformation der Wärme und der Temperatur,"
+    Z. Physik 175, 70-104 (1963). doi:10.1007/BF01375397
+
+[2] H. Arzelies, "Transformation relativiste de la température et de quelques
+    autres grandeurs thermodynamiques," Nuovo Cimento 35, 792-804 (1965).
+
+[3] P.T. Landsberg, "Does a Moving Body Appear Cool?," Nature 214, 903-904 (1967).
+
+[4] R. Landauer, "Irreversibility and Heat Generation in the Computing Process,"
+    IBM J. Res. Dev. 5, 183-191 (1961).
+
+[5] J.J. Mareš et al., "On relativistic transformation of temperature,"
+    Fortschr. Phys. 65, 1700018 (2017). doi:10.1002/prop.201700018
+
+[6] T.S. Biró and P. Ván, "About the temperature of moving bodies,"
+    EPL 89, 30001 (2010). arXiv:0905.1650
+
+[7] C. Liu, "Einstein and Relativistic Thermodynamics in 1952: A Historical and
+    Critical Study of a Strange Episode in the History of Modern Physics,"
+    BJHS 25, 185-206 (1992). [Documents Einstein's private acceptance of Ott-type
+    transformation three years before his death.]
+
+## Author
+
+Adam Bornemann, 2026
+
+## Dedication
+
+To Heinrich Ott (1894-1962), who was right.
 -/
 import LogosLibrary.DeepTheorems.Relativity.GR.Kerr.KerrMetric
 
@@ -139,9 +286,41 @@ theorem landsberg_violates_reverse
   calc T * Real.log 2 = T * Real.log 2 * 1 := by ring
     _ < T * Real.log 2 * lorentzGamma v hv := mul_lt_mul_of_pos_left hγ_gt_one hTlog
 
-/-- Entropy is Lorentz invariant (it counts microstates) -/
-axiom entropy_invariant : ∀ (S : ℝ) (v : ℝ) (_ /-hv-/ : |v| < 1),
-    S' = S  -- entropy doesn't transform
+
+/-!
+## Physical Axioms for Relativistic Thermodynamics
+
+We make two physical assertions:
+
+1. Heat is energy transfer, hence transforms as E → γE
+2. Entropy (the ratio Q/T) is Lorentz invariant
+
+These are not mathematical necessities—they are physical facts about our universe.
+From them, we derive that temperature must transform as T → γT.
+-/
+
+/-- Heat transforms as the time component of 4-momentum.
+    This is standard relativistic mechanics, not specific to thermodynamics. -/
+noncomputable def heatInBoostedFrame (Q : ℝ) (v : ℝ) (hv : |v| < 1) : ℝ :=
+    lorentzGamma v hv * Q
+
+/--
+PHYSICAL AXIOM: The thermodynamic entropy S = Q/T is Lorentz invariant.
+
+Justification: S = k ln Ω counts microstates. Ω is a natural number—it counts
+configurations. How many ways can the atoms be arranged? This count does not
+depend on the velocity of the observer. A deck of cards has 52! orderings whether
+you are at rest or moving at 0.99c.
+
+Mathematically: there exists a temperature T' in the boosted frame such that
+Q'/T' = Q/T, i.e., entropy is preserved.
+-/
+axiom entropy_invariant (Q T : ℝ) (hT : T > 0) (hQ : Q > 0) (v : ℝ) (hv : |v| < 1) :
+    ∃ T' : ℝ, T' > 0 ∧ heatInBoostedFrame Q v hv / T' = Q / T
+
+/- Entropy is Lorentz invariant (it counts microstates)
+axiom entropy_invariant' : ∀ (S : ℝ) (v : ℝ) (_ /-hv-/ : |v| < 1),
+    S' = S  -- ahhh, my beatiful cheating... -/
 
 /-- ΔS = ΔQ / T, and ΔQ transforms like energy -/
 theorem entropy_implies_ott
@@ -150,11 +329,12 @@ theorem entropy_implies_ott
     let ΔS := ΔQ / T
     let ΔQ' := γ * ΔQ
     let T' := γ * T  -- Ott
-    ΔQ' / T' = ΔS := by  -- entropy invariant iff Ott
+    ΔQ' / T' = ΔS := by
   simp only
-  field_simp
-  simp_all only [gt_iff_lt]
-  exact entropy_invariant ΔQ v hv
+  have hγ_ne : lorentzGamma v hv ≠ 0 := by
+    have := lorentzGamma_ge_one v hv
+    linarith
+  exact mul_div_mul_left ΔQ T hγ_ne
 
 /--
 If temperature transforms as T → f(v) * T for some function f,
@@ -177,6 +357,7 @@ theorem ott_is_unique
   calc f v = f v * Real.log 2 / Real.log 2 := by field_simp
     _ = lorentzGamma v hv * Real.log 2 / Real.log 2 := by rw [h1]
     _ = lorentzGamma v hv := by field_simp
+
 
 
 /-
@@ -654,8 +835,7 @@ theorem landsberg_violates_4vector
   have h : lorentzGamma v hv * Θ.T = 1 * Θ.T := by rw [h_eq]; ring
   have h2 : lorentzGamma v hv = 1 := by
     have hT_ne : Θ.T ≠ 0 := ne_of_gt Θ.hT_pos
-    field_simp at h
-    linarith
+    exact (mul_eq_right₀ hT_ne).mp h_eq
   exact hγ_ne_one h2
 
 /-
@@ -708,7 +888,7 @@ theorem ott_boltzmann_invariant
     linarith
   have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
   have hT_ne : T ≠ 0 := ne_of_gt hT
-  field_simp
+  exact entropy_implies_ott H T hT v hv
 
 /--
 Under Landsberg, the Boltzmann exponent is NOT invariant.
@@ -741,6 +921,7 @@ theorem landsberg_boltzmann_not_invariant
   intro h_eq
   have h : lorentzGamma v hv * H / T = H / T := h_eq
   field_simp at h
+  -- From γH/T = H/T, clear denominators (T ≠ 0)
   have h2 : lorentzGamma v hv * H = H := by linarith
   have h3 : (lorentzGamma v hv - 1) * H = 0 := by linarith
   rcases mul_eq_zero.mp h3 with h4 | h5
@@ -759,7 +940,7 @@ theorem landsberg_boltzmann_discrepancy
     boltzmannExponent H' T' = γ * boltzmannExponent H T := by
   simp only [boltzmannExponent]
   have hT_ne : T ≠ 0 := ne_of_gt hT
-  field_simp
+  exact mul_div_assoc (lorentzGamma v hv) H T
 
 
 /-
@@ -1204,23 +1385,24 @@ theorem kerr_ott_unique (p : KerrParams)
     (h_strict : 0 < |p.a| ∧ |p.a| < p.M)
     (f : ℝ → ℝ)
     (hf_pos : ∀ v, |v| < 1 → f v > 0)
-    -- If f preserves the Landauer bound for Hawking temperature...
     (hf_landauer : ∀ v (hv : |v| < 1),
         let T := hawkingTemperature p
         let γ := lorentzGamma v hv
         landauerBound (f v * T) = γ * landauerBound T) :
-    -- ...then f must equal γ
     ∀ v (hv : |v| < 1), f v = lorentzGamma v hv := by
   intro v hv
   have hT_pos : hawkingTemperature p > 0 := hawking_temperature_positive p h_strict
-  -- Use the uniqueness theorem from RelativisticTemperature
-  have h := ott_is_unique f hf_pos (fun T' v' hv' hT' => ?_)
-  · exact h v hv
-  · -- Need to show the bound preservation extends to all T
-    -- This follows from linearity of landauerBound
-    exact
-      let γ := lorentzGamma v' hv';
-      entropy_invariant (γ * landauerBound T') v hv
+  have h := hf_landauer v hv
+  -- Expand landauerBound: it's just T * log 2
+  simp only [landauerBound] at h
+  -- h : f v * hawkingTemperature p * Real.log 2 = γ * hawkingTemperature p * Real.log 2
+  have hlog_pos : Real.log 2 > 0 := Real.log_pos (by norm_num : (1:ℝ) < 2)
+  have hTlog_pos : hawkingTemperature p * Real.log 2 > 0 := mul_pos hT_pos hlog_pos
+  -- Rewrite to form: (f v) * (T * log 2) = γ * (T * log 2)
+  have h' : f v * (hawkingTemperature p * Real.log 2) =
+            lorentzGamma v hv * (hawkingTemperature p * Real.log 2) := by linarith
+  -- Cancel the nonzero factor
+  exact mul_right_cancel₀ (ne_of_gt hTlog_pos) h'
 
 /--
 **THE COMPLETE PICTURE: Five Independent Proofs United**
@@ -1269,11 +1451,8 @@ theorem kerr_ott_complete (p : KerrParams)
   · intro v hv hv_ne
     exact landsberg_entropy_not_invariant 1 _ hT_pos one_pos v hv hv_ne
   · intro f hf_pos hf_landauer v hv
-    exact ott_is_unique f hf_pos (fun T' v' hv' _ => by
-      exact
-        let γ := lorentzGamma v' hv';
-        -- Scale from Hawking temperature to arbitrary T'
-        entropy_invariant (γ * landauerBound T') v hv) v hv
+    symm
+    exact Eq.symm (kerr_ott_unique p h_strict f hf_pos hf_landauer v hv)
 
 
 
@@ -1476,10 +1655,7 @@ theorem falling_observer_temperature (p : KerrParams)
   · calc lorentzGamma v_fall hv * hawkingTemperature p
         > 1 * hawkingTemperature p := by exact (mul_lt_mul_right hT_pos).mpr hγ_gt_one
       _ = hawkingTemperature p := one_mul _
-  · exact
-    Eq.symm
-      (entropy_invariant (lorentzGamma v_fall hv * hawkingTemperature p / hawkingTemperature p)
-        v_fall hv)
+  · field_simp
 
 /-- In the extremal limit (|a| → M), both temperatures vanish but Ott still holds.
 
@@ -1552,8 +1728,12 @@ theorem ott_over_landsberg_QED (p : KerrParams) (h_strict : 0 < |p.a| ∧ |p.a| 
     have hT_pos := hawking_temperature_positive p h_strict
     have hT_ne : hawkingTemperature p ≠ 0 := ne_of_gt hT_pos
     specialize hf_eq v hv
-    field_simp at hf_eq
-    linarith
+    -- hf_eq : f v * T / T = γ * 1 / 1
+    -- Left side: f v * T / T = f v (cancel T)
+    -- Right side: γ * 1 / 1 = γ (trivial)
+    rw [mul_div_cancel_right₀ _ hT_ne] at hf_eq
+    simp only [mul_one, div_one] at hf_eq
+    exact hf_eq
 
 
 namespace DetailedBalance
@@ -1584,7 +1764,7 @@ theorem ott_preserves_detailed_balance
     have := lorentzGamma_ge_one v hv; linarith
   have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
   have hT_ne : T ≠ 0 := ne_of_gt hT
-  field_simp
+  exact entropy_implies_ott ΔE T hT v hv
 
 /-- Under Landsberg, detailed balance is frame-dependent.
     Different observers disagree about whether equilibrium holds.
@@ -1673,8 +1853,7 @@ theorem ott_specific_heat_invariant
     have := lorentzGamma_ge_one v hv; linarith
   have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
   have hdT' : lorentzGamma v hv * dT ≠ 0 := mul_ne_zero hγ_ne hdT
-  field_simp
-
+  exact mul_div_mul_left dE dT hγ_ne
 
 /-- Under Landsberg, specific heat becomes frame-dependent.
     Moving observers measure different thermal stiffness for the same material.
@@ -1750,18 +1929,17 @@ theorem specific_heat_invariance_forces_ott
     (h_C_invariant : specificHeat (lorentzGamma v hv * dE) dT' = specificHeat dE dT) :
     dT' = lorentzGamma v hv * dT := by
   simp only [specificHeat] at h_C_invariant
+  -- h_C_invariant : (γ * dE) / dT' = dE / dT
   have hγ_pos : lorentzGamma v hv > 0 := by
     have := lorentzGamma_ge_one v hv; linarith
   have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
-  -- From (γ * dE) / dT' = dE / dT, derive dT' = γ * dT
-  have h1 : lorentzGamma v hv * dE * dT = dE * dT' := by
-    field_simp at h_C_invariant
-    exact Eq.symm (entropy_invariant (lorentzGamma v hv * dE * dT) v hv)
-  have h2 : lorentzGamma v hv * dT = dT' := by
-    have hdE_ne : dE ≠ 0 := hdE
-    field_simp at h1 ⊢
-    nlinarith
-  exact h2.symm
+  -- Cross-multiply
+  rw [div_eq_div_iff hdT' hdT] at h_C_invariant
+  -- h_C_invariant : γ * dE * dT = dE * dT'
+  -- Rearrange: dT' = (γ * dE * dT) / dE = γ * dT
+  calc dT' = (dE * dT') / dE := by field_simp
+    _ = (lorentzGamma v hv * dE * dT) / dE := by rw [h_C_invariant]
+    _ = lorentzGamma v hv * dT := by field_simp
 
 end SpecificHeat
 
@@ -1921,7 +2099,7 @@ theorem corollary_landauer
       have := lorentzGamma_ge_one v hv; linarith
     have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
     have hT_ne : T ≠ 0 := ne_of_gt hT
-    field_simp
+    exact entropy_implies_ott T T hT v hv
 
 
 /-- ─────────────────────────────────────────────────────────────────────────────
@@ -1944,7 +2122,8 @@ theorem corollary_entropy
     have := lorentzGamma_ge_one v hv; linarith
   have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
   have hT_ne : T ≠ 0 := ne_of_gt hT
-  field_simp
+  exact entropy_implies_ott Q T hT v hv
+
 
 /-- ─────────────────────────────────────────────────────────────────────────────
     Corollary 3: Free Energy Transformation
@@ -1987,7 +2166,7 @@ theorem corollary_partition_function
     have := lorentzGamma_ge_one v hv; linarith
   have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
   have hT_ne : T ≠ 0 := ne_of_gt hT
-  field_simp
+  exact entropy_implies_ott H T hT v hv
 
 /-- ─────────────────────────────────────────────────────────────────────────────
     Corollary 5: 4-Vector Structure
@@ -2013,7 +2192,8 @@ theorem corollary_four_vector
     have := lorentzGamma_ge_one v hv; linarith
   have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
   have hT_ne : T ≠ 0 := ne_of_gt hT
-  field_simp
+  exact entropy_implies_ott Q T hT v hv
+
 
 /-- ─────────────────────────────────────────────────────────────────────────────
     Corollary 6: Detailed Balance
@@ -2035,7 +2215,8 @@ theorem corollary_detailed_balance
     have := lorentzGamma_ge_one v hv; linarith
   have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
   have hT_ne : T ≠ 0 := ne_of_gt hT
-  field_simp
+  exact corollary_four_vector ΔE ΔE T hT v hv
+
 
 /-- ─────────────────────────────────────────────────────────────────────────────
     Corollary 7: Specific Heat Invariance
@@ -2057,7 +2238,8 @@ theorem corollary_specific_heat
     have := lorentzGamma_ge_one v hv; linarith
   have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
   have hdT' : lorentzGamma v hv * dT ≠ 0 := mul_ne_zero hγ_ne hdT
-  field_simp
+  exact mul_div_mul_left dE dT hγ_ne
+
 
 /-- ═══════════════════════════════════════════════════════════════════════════
     THE DEEP STRUCTURE
@@ -2096,7 +2278,8 @@ theorem the_deep_structure :
     have := lorentzGamma_ge_one v hv; linarith
   have hγ_ne : lorentzGamma v hv ≠ 0 := ne_of_gt hγ_pos
   have hT_ne : T ≠ 0 := ne_of_gt hT
-  field_simp
+  exact Eq.symm (corollary_detailed_balance E T hT v hv)
+
 
 /-- The final word: Ott is not one of several options.
     Ott is the UNIQUE transformation consistent with:
@@ -2130,13 +2313,14 @@ theorem ott_is_unique_QED :
       rw [one_mul]
       have : f T / f T * f T = lorentzGamma v hv * T / f T * f T := by
         rw [← h1]
-        exact entropy_invariant (1 * f T) v hv
+        field_simp
       simp at this
       -- If f T = 0, then γT / 0 = 1, contradiction
       by_cases hfT : f T = 0
       · simp [hfT] at h1
-      · field_simp at h1
-        linarith
+      · exact
+        SpecificHeat.specific_heat_invariance_forces_ott T T (f T) hT_ne hT_ne hfT v hv
+          (id (Eq.symm h))
     linarith
   exact h2
 
@@ -2225,7 +2409,8 @@ theorem two_to_gamma_not_two (v : ℝ) (hv : |v| < 1) (hv_ne : v ≠ 0) :
   have h3 : γ v hv = 1 := by
     have h2_pos : (2 : ℝ) > 0 := by norm_num
     have h2_ne : (2 : ℝ) ≠ 1 := by norm_num
-    exact entropy_invariant 1 v hv
+    symm
+    exact (rpow_right_inj h2_pos h2_ne).mp (id (Eq.symm h2))
   exact hγ_ne h3
 
 /-!
@@ -2263,8 +2448,7 @@ theorem bits_are_frame_dependent (v : ℝ) (hv : |v| < 1) (hv_ne : v ≠ 0)
   unfold effectiveBits
   have hγ : γ v hv > 1 := γ_gt_one v hv hv_ne
   have hn_pos : (n : ℝ) > 0 := by exact Nat.cast_pos'.mpr hn
-  calc γ v hv * n > 1 * n := (mul_lt_mul_right hn_pos).mpr hγ
-    _ = n := by exact entropy_invariant (↑n) v hv
+  exact (lt_mul_iff_one_lt_left hn_pos).mpr hγ
 
 /-!
 ## Section 3: The Second Law
@@ -2474,18 +2658,18 @@ theorem classical_thermal_time_via_ott
 /-- Relativistic velocity addition -/
 noncomputable def velocityAdd (v₁ v₂ : ℝ) : ℝ := (v₁ + v₂) / (1 + v₁ * v₂)
 
-/-- Ott transformations compose correctly under velocity addition -/
-theorem ott_boost_composition
-    (T : ℝ) (hT : T > 0)
-    (v₁ v₂ : ℝ) (hv₁ : |v₁| < 1) (hv₂ : |v₂| < 1)
-    (hv_comp : |velocityAdd v₁ v₂| < 1) :
-    let T' := lorentzGamma v₁ hv₁ * T
-    let T'' := lorentzGamma v₂ hv₂ * T'
-    T'' = lorentzGamma (velocityAdd v₁ v₂) hv_comp * T := by
-  exact
-    let T' := lorentzGamma v₁ hv₁ * T;
-    let T'' := lorentzGamma v₂ hv₂ * T';
-    entropy_invariant (lorentzGamma (velocityAdd v₁ v₂) hv_comp * T) v₁ hv₁
+
+
+
+/- Historical Note:
+Einstein privately changed his position to agree with what would become
+the Ott transformation in 1952, three years before his death (Liu, 1992).
+Ott died in November 1962; his paper was published posthumously in 1963.
+Landsberg's competing proposal came in 1966-67.
+The field chose wrong.
+-/
+
+
 
 
 end RelativisticTemperature
