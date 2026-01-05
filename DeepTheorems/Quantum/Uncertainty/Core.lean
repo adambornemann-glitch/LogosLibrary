@@ -86,6 +86,7 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 /- Other -/
 import Mathlib.Topology.MetricSpace.Completion
 import Mathlib.Probability.Distributions.Gaussian.Real
+import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 
 namespace Robertson.Core
 
@@ -596,7 +597,8 @@ The Gaussian integral - fundamental for quantum mechanics.
 Used for normalizing Gaussian wave packets and computing
 partition functions in quantum statistical mechanics.
 -/
-axiom integral_gaussian : ∫ x : ℝ, Real.exp (-x^2) = Real.sqrt Real.pi
+theorem integral_gaussian_unit : ∫ x : ℝ, Real.exp (-x^2) = Real.sqrt Real.pi := by
+  simpa using integral_gaussian 1
 
 /-
 ============================================================================
