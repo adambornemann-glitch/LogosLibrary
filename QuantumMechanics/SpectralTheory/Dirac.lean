@@ -192,8 +192,8 @@ REFERENCES:
   [5] Weidmann, "Linear Operators in Hilbert Spaces" Ch. 10
       - Spectral theory for Dirac-type operators
 -/
-import LogosLibrary.DeepTheorems.Quantum.Evolution.Generator
-import LogosLibrary.DeepTheorems.Quantum.Spectral.FunctionalCalc
+import LogosLibrary.QuantumMechanics.Evolution.Generator
+import LogosLibrary.QuantumMechanics.SpectralTheory.FunctionalCalc
 
 namespace PaulDirac
 open  MeasureTheory InnerProductSpace Complex StonesTheorem.Cayley SpectralBridge Stone.Generators
