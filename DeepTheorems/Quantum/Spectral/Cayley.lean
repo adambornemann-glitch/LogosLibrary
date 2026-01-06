@@ -1,6 +1,7 @@
 /-
 Author: Adam Bornemann
 Created: 12-27-2025
+Updated: 1-6-2026
 
 ================================================================================
 CAYLEY TRANSFORM: Von Neumann's 1932 Approach
@@ -29,9 +30,48 @@ open scoped BigOperators Topology
 
 namespace StonesTheorem.Cayley
 set_option linter.unusedSectionVars false
-
+set_option linter.unusedVariables false
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+
+
+/-- A continuous linear map is unitary if U*U = UU* = I -/
+def Unitary (U : H →L[ℂ] H) : Prop :=
+  U.adjoint * U = 1 ∧ U * U.adjoint = 1
+
+/-- Unitary operators preserve inner products -/
+lemma Unitary.inner_map_map {U : H →L[ℂ] H} (hU : Unitary U) (x y : H) : 
+    ⟪U x, U y⟫_ℂ = ⟪x, y⟫_ℂ := by
+  calc ⟪U x, U y⟫_ℂ 
+      = ⟪U.adjoint (U x), y⟫_ℂ := by rw [ContinuousLinearMap.adjoint_inner_left]
+    _ = ⟪(U.adjoint * U) x, y⟫_ℂ := rfl
+    _ = ⟪x, y⟫_ℂ := by rw [hU.1]; simp
+
+/-- Unitary operators preserve norms -/
+lemma Unitary.norm_map {U : H →L[ℂ] H} (hU : Unitary U) (x : H) : ‖U x‖ = ‖x‖ := by
+  have h := hU.inner_map_map x x
+  rw [inner_self_eq_norm_sq_to_K, inner_self_eq_norm_sq_to_K] at h
+  have h_sq : ‖U x‖^2 = ‖x‖^2 := by exact_mod_cast h
+  nlinarith [norm_nonneg (U x), norm_nonneg x, sq_nonneg (‖U x‖ - ‖x‖)]
+
+/-- Unitary operators are injective -/
+lemma Unitary.injective {U : H →L[ℂ] H} (hU : Unitary U) : Function.Injective U := by
+  intro x y hxy
+  have : ‖U x - U y‖ = 0 := by simp [hxy]
+  rw [← map_sub, hU.norm_map] at this
+  exact sub_eq_zero.mp (norm_eq_zero.mp this)
+
+/-- Unitary operators are surjective -/
+lemma Unitary.surjective {U : H →L[ℂ] H} (hU : Unitary U) : Function.Surjective U := by
+  intro y
+  use U.adjoint y
+  have := congr_arg (· y) hU.2
+  simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply] at this
+  exact this
+
+/-- Unitary operators are invertible -/
+lemma Unitary.isUnit {U : H →L[ℂ] H} (hU : Unitary U) : IsUnit U :=
+  ⟨⟨U, U.adjoint, hU.2, hU.1⟩, rfl⟩
 
 /-!
 ### The Cayley Transform
@@ -290,8 +330,7 @@ Both conditions are satisfied by the Cayley transform.
 -/
 theorem cayleyTransform_unitary {U_grp : OneParameterUnitaryGroup (H := H)}
     (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) :
-    (cayleyTransform gen hsa).adjoint * cayleyTransform gen hsa = 1 ∧
-    cayleyTransform gen hsa * (cayleyTransform gen hsa).adjoint = 1 := by
+    Unitary (cayleyTransform gen hsa) := by
   -- Isometry implies U*U = I
   have h_isometry := cayleyTransform_isometry gen hsa
   have h_star_self : (cayleyTransform gen hsa).adjoint * cayleyTransform gen hsa = 1 := by
@@ -1009,97 +1048,1165 @@ theorem cayley_maps_resolvent {U_grp : OneParameterUnitaryGroup (H := H)} [Nontr
                 smul_smul, inv_mul_cancel₀ (neg_ne_zero.mpr hw_ne), one_smul]
 
 
+/-- Helper 1 -/
+lemma dense_range_of_orthogonal_trivial {F : Type*} [NormedAddCommGroup F] 
+    [InnerProductSpace ℂ F] [CompleteSpace F]
+    (T : F →L[ℂ] F) 
+    (h : ∀ y, (∀ x, ⟪T x, y⟫_ℂ = 0) → y = 0) :
+    Dense (Set.range T) := by
+  -- First show Range(T)^⊥ = {0}
+  have h_orth : (LinearMap.range T.toLinearMap)ᗮ = ⊥ := by
+    rw [Submodule.eq_bot_iff]
+    intro y hy
+    apply h y
+    intro x
+    rw [Submodule.mem_orthogonal'] at hy
+    simp_all only [LinearMap.mem_range, ContinuousLinearMap.coe_coe, forall_exists_index, forall_apply_eq_imp_iff]
+    exact inner_eq_zero_symm.mp (hy x) 
+  
+  -- Double orthogonal equals topological closure
+  have h_double_orth : (LinearMap.range T.toLinearMap)ᗮᗮ = ⊤ := by
+    rw [h_orth]
+    exact Submodule.bot_orthogonal_eq_top
+  
+  -- Topological closure is top
+  have h_closure_top : (LinearMap.range T.toLinearMap).topologicalClosure = ⊤ := by
+    rw [h_double_orth.symm]
+    rw [@Submodule.orthogonal_orthogonal_eq_closure]
+  
+  -- Convert to Dense
+  rw [dense_iff_closure_eq]
+  have : closure (Set.range T) = ↑(LinearMap.range T.toLinearMap).topologicalClosure := by
+    rw [Submodule.topologicalClosure_coe]
+    rfl
+  rw [this, h_closure_top]
+  rfl
 
-/-- Real λ is in spectrum of A iff (λ-i)/(λ+i) is in spectrum of Cayley(A) -/
-theorem cayley_spectral_correspondence {U_grp : OneParameterUnitaryGroup (H := H)} [Nontrivial H]
-    (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
-    (μ : ℝ) :
-    (∀ ψ (hψ : ψ ∈ gen.domain), gen.op ⟨ψ, hψ⟩ = μ • ψ → ψ = 0) ↔
-    IsUnit (cayleyTransform gen hsa - ((μ - I) * (μ + I)⁻¹) • ContinuousLinearMap.id ℂ H) := by
+/-- Helper 2 -/
+lemma unitary_sub_scalar_isNormal {E : Type*} [NormedAddCommGroup E] 
+    [InnerProductSpace ℂ E] [CompleteSpace E]
+    (U : E →L[ℂ] E) (hU : U.adjoint * U = 1 ∧ U * U.adjoint = 1) (w : ℂ) :
+    (U - w • 1).adjoint * (U - w • 1) = (U - w • 1) * (U - w • 1).adjoint := by
+  -- (U - wI)* = U* - w̄I
+  have h_adj : (U - w • 1).adjoint = U.adjoint - (starRingEnd ℂ w) • 1 := by
+    ext x
+    apply ext_inner_right ℂ
+    intro y
+    simp only [ContinuousLinearMap.adjoint_inner_left, ContinuousLinearMap.sub_apply,
+               ContinuousLinearMap.smul_apply, ContinuousLinearMap.one_apply,
+               inner_sub_left, inner_sub_right, inner_smul_left, inner_smul_right]
+    simp_all only [RingHomCompTriple.comp_apply, RingHom.id_apply]
+  
+  rw [h_adj]
+  -- LHS: (U* - w̄I)(U - wI) = U*U - wU* - w̄U + |w|²I
+  -- RHS: (U - wI)(U* - w̄I) = UU* - w̄U - wU* + |w|²I
+  -- Both simplify to I - wU* - w̄U + |w|²I using U*U = UU* = I
+  
+  ext x
+  simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.sub_apply,
+             ContinuousLinearMap.smul_apply, ContinuousLinearMap.one_apply]
+  
+  -- Use U*U = I and UU* = I
+  have h1 : U.adjoint (U x) = x := by
+    have := congr_arg (· x) hU.1
+    simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply] at this
+    exact this
+    
+  have h2 : U (U.adjoint x) = x := by
+    have := congr_arg (· x) hU.2
+    simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply] at this
+    exact this
+  
+  simp only [map_sub, map_smul, h1, h2]
+  module
+
+/-- Helper 3 -/
+lemma surjective_of_isClosed_range_of_dense {E F : Type*} 
+    [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
+    [NormedAddCommGroup F] [InnerProductSpace ℂ F] [CompleteSpace F]
+    (T : E →L[ℂ] F)
+    (hClosed : IsClosed (Set.range T))
+    (hDense : Dense (Set.range T)) :
+    Function.Surjective T := by
+  intro y
+  have h_closure : closure (Set.range T) = Set.range T := hClosed.closure_eq
+  have h_univ : closure (Set.range T) = Set.univ := hDense.closure_eq
+  rw [h_closure] at h_univ
+  have hy : y ∈ Set.range T := by rw [h_univ]; trivial
+  exact hy
+
+
+
+
+/-- Point spectrum correspondence: eigenvalues map correctly -/
+theorem cayley_eigenvalue_correspondence {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint) (μ : ℝ) :
+    (∃ ψ : H, ∃ hψ : ψ ∈ gen.domain, ψ ≠ 0 ∧ gen.op ⟨ψ, hψ⟩ = μ • ψ) ↔
+    (∃ φ : H, φ ≠ 0 ∧ cayleyTransform gen hsa φ = ((↑μ - I) * (↑μ + I)⁻¹) • φ) := by
   set U := cayleyTransform gen hsa
-  set w := (μ - I) * (μ + I)⁻¹ with hw_def
-
-  -- Key: μ + i ≠ 0 for real μ
-  have hμ_ne : (μ : ℂ) + I ≠ 0 := by
+  set w := (↑μ - I) * (↑μ + I)⁻¹ with hw_def
+  
+  have hμ_ne : (↑μ : ℂ) + I ≠ 0 := by
     intro h
-    have : ((μ : ℂ) + I).im = 0 := by rw [h]; simp
+    have : ((↑μ : ℂ) + I).im = 0 := by rw [h]; simp
     simp at this
-
+    
   constructor
-  · -- Forward: no eigenvectors at μ → U - wI is a unit
-    intro h_no_eig
-    -- The Cayley transform maps (A - μI) to (U - wI) up to scaling
-    -- Since A is self-adjoint and μ is real, if μ is not an eigenvalue,
-    -- then A - μI has trivial kernel, which means U - wI has trivial kernel
-    -- For self-adjoint, this plus range conditions gives invertibility
-
-    -- Use that w lies on S¹ and show U - wI is injective
-    have h_w_on_circle : ‖w‖ = 1 := by
-      simp only [hw_def, norm_mul, norm_inv]
-      have h1 : ‖(μ : ℂ) - I‖ = ‖(μ : ℂ) + I‖ := by
-        rw [Complex.norm_def, Complex.norm_def]
-        congr 1
-        simp only [Complex.normSq]
-        ring_nf
-        simp only [MonoidWithZeroHom.coe_mk, ZeroHom.coe_mk, sub_re, ofReal_re, I_re, sub_zero, sub_im,
-          ofReal_im, I_im, zero_sub, even_two, Even.neg_pow, one_pow, add_re, add_zero, add_im, zero_add]
-
-
-      field_simp [norm_ne_zero_iff.mpr hμ_ne, h1]
-      exact h1
-
-    -- Injectivity of U - wI
-    have h_inj : Function.Injective (U - w • ContinuousLinearMap.id ℂ H) := by
-      intro φ₁ φ₂ h_eq
-      -- Use relationship between U - wI and A - μI
-      sorry
-
-    -- For unitary with |w| = 1, injectivity implies surjectivity
-    sorry
-
-  · -- Backward: U - wI is a unit → no eigenvectors at μ
-    intro h_unit ψ hψ h_eig
-    -- If Aψ = μψ, then Uφ = wφ where φ = (A + iI)ψ
-    -- So (U - wI)φ = 0, contradicting U - wI being a unit
-
-    have h_in_domain : ψ ∈ gen.domain := hψ
-    -- φ = (A + iI)ψ
+  · -- Forward: Aψ = μψ implies Uφ = wφ for φ = (A + iI)ψ
+    rintro ⟨ψ, hψ, hψ_ne, h_eig⟩
+    
+    -- φ = (A + iI)ψ = (μ + i)ψ
     let φ := gen.op ⟨ψ, hψ⟩ + I • ψ
+    
+    have hφ_eq : φ = (↑μ + I) • ψ := by
+      simp only [φ, h_eig, add_smul]
+      exact rfl
+    
+    have hφ_ne : φ ≠ 0 := by
+      rw [hφ_eq]
+      intro h
+      rw [smul_eq_zero] at h
+      cases h with
+      | inl h => exact hμ_ne h
+      | inr h => exact hψ_ne h
+    
+    use φ, hφ_ne
+    
+    -- Uφ = (A - iI)ψ = (μ - i)ψ = wφ
+    have h_Uφ : U φ = gen.op ⟨ψ, hψ⟩ - I • ψ := by
+      simp only [U, cayleyTransform, ContinuousLinearMap.sub_apply,
+                 ContinuousLinearMap.id_apply, ContinuousLinearMap.smul_apply]
+      have h_res : Resolvent.resolvent_at_neg_i gen hsa (gen.op ⟨ψ, hψ⟩ + I • ψ) = ψ :=
+        Resolvent.resolvent_at_neg_i_left_inverse gen hsa ψ hψ
+      rw [h_res]
+      module
+      
+    calc U φ = gen.op ⟨ψ, hψ⟩ - I • ψ := h_Uφ
+      _ = (↑μ - I) • ψ := by rw [h_eig]; exact Eq.symm (sub_smul (↑μ) I ψ)
+      _ = w • (↑μ + I) • ψ := by
+        simp only [hw_def, smul_smul]
+        congr 1
+        exact Eq.symm (inv_mul_cancel_right₀ hμ_ne (↑μ - I))
+      _ = w • φ := by rw [← hφ_eq]
+      
+  · -- Backward: Uφ = wφ implies Aψ = μψ for some ψ
+    rintro ⟨φ, hφ_ne, h_eig⟩
+    
+    -- Get ψ from resolvent: φ = (A + iI)ψ
+    set ψ := Resolvent.resolvent_at_neg_i gen hsa φ with hψ_def
+    have hψ_mem : ψ ∈ gen.domain := Resolvent.resolvent_solution_mem_plus gen hsa φ
+    have hφ_eq : gen.op ⟨ψ, hψ_mem⟩ + I • ψ = φ := Resolvent.resolvent_solution_eq_plus gen hsa φ
+    
+    use ψ, hψ_mem
+    
+    -- Need: ψ ≠ 0 and Aψ = μψ
+    -- From the old proof, we showed that Uφ = wφ and φ = (A+iI)ψ implies Aψ = μψ
+    
+    -- First show ψ ≠ 0
+    have hψ_ne : ψ ≠ 0 := by
+      intro h
+      have hφ_zero : φ = 0 := by
+        have h0_mem : (0 : H) ∈ gen.domain := Submodule.zero_mem gen.domain
+        have : gen.op ⟨0, h0_mem⟩ + I • (0 : H) = 0 := by
+          rw [smul_zero, add_zero]
+          exact map_zero gen.op
+        rw [← hφ_eq]
+        convert this using 2
+        · simp_all only [ne_eq, smul_zero, add_zero, w, U, ψ]
+        · exact congrArg (HSMul.hSMul I) h
+      exact hφ_ne hφ_zero
+    
+    constructor
+    · exact hψ_ne
+    · -- Aψ = μψ
+      -- Uφ = (A - iI)ψ and Uφ = wφ = w(A + iI)ψ
+      -- So (A - iI)ψ = w(A + iI)ψ
+      -- Rearranging gives Aψ = μψ
+      
+      have h_Uφ : U φ = gen.op ⟨ψ, hψ_mem⟩ - I • ψ := by
+        rw [← hφ_eq]
+        simp only [U, cayleyTransform, ContinuousLinearMap.sub_apply,
+                   ContinuousLinearMap.id_apply, ContinuousLinearMap.smul_apply]
+        have h_res : Resolvent.resolvent_at_neg_i gen hsa (gen.op ⟨ψ, hψ_mem⟩ + I • ψ) = ψ :=
+          Resolvent.resolvent_at_neg_i_left_inverse gen hsa ψ hψ_mem
+        rw [h_res]
+        module
+        
+      -- (A - iI)ψ = w(A + iI)ψ
+      have h_key : gen.op ⟨ψ, hψ_mem⟩ - I • ψ = w • (gen.op ⟨ψ, hψ_mem⟩ + I • ψ) := by
+        rw [← h_Uφ, h_eig, hφ_eq]
+        
+      -- w ≠ 1 for real μ
+      have hw_ne_one : w ≠ 1 := by
+        simp only [hw_def]
+        intro h_eq
+        have : (↑μ - I) * (↑μ + I)⁻¹ = 1 := h_eq
+        field_simp [hμ_ne] at this
+        have h_im : (↑μ - I : ℂ).im = (↑μ + I : ℂ).im := by rw [this]
+        simp at h_im
+        -- my favorite trick for solving for False
+        exact absurd h_im (by norm_num : (-1 : ℝ) ≠ 1)
+        
+      have h_one_sub_ne : (1 : ℂ) - w ≠ 0 := sub_ne_zero.mpr (Ne.symm hw_ne_one)
+      
+      -- Expand and solve for Aψ
+      have h_expand : gen.op ⟨ψ, hψ_mem⟩ - I • ψ = w • gen.op ⟨ψ, hψ_mem⟩ + w • I • ψ := by
+        rw [h_key, smul_add]
+        
+      have h_collect : (1 - w) • gen.op ⟨ψ, hψ_mem⟩ = (I + w * I) • ψ := by
+        calc (1 - w) • gen.op ⟨ψ, hψ_mem⟩ 
+            = gen.op ⟨ψ, hψ_mem⟩ - w • gen.op ⟨ψ, hψ_mem⟩ := by rw [sub_smul, one_smul]
+          _ = I • ψ + w • I • ψ := by
+              -- From h_expand: Aψ - iψ = wAψ + wiψ
+              -- Rearrange: Aψ - wAψ = iψ + wiψ
+              have h1 : gen.op ⟨ψ, hψ_mem⟩ - w • gen.op ⟨ψ, hψ_mem⟩ = 
+                        (gen.op ⟨ψ, hψ_mem⟩ - I • ψ) - (w • gen.op ⟨ψ, hψ_mem⟩ - I • ψ) := by module
+              rw [h1, h_expand]
+              module
+          _ = (I + w * I) • ψ := by rw [hw_def] ; module
+          
+      calc gen.op ⟨ψ, hψ_mem⟩ 
+          = (1 - w)⁻¹ • (1 - w) • gen.op ⟨ψ, hψ_mem⟩ := by 
+              rw [smul_smul]
+              simp_all only [ne_eq, not_false_eq_true, inv_mul_cancel₀, one_smul, w, U, ψ]
+        _ = (1 - w)⁻¹ • (I + w * I) • ψ := by rw [h_collect]
+        _ = ((1 - w)⁻¹ * (I + w * I)) • ψ := by rw [smul_smul]
+        _ = ↑μ • ψ := by
+            congr 1
+            simp only [hw_def]
+            field_simp [hμ_ne, h_one_sub_ne]
+            simp only [add_add_sub_cancel, add_sub_sub_cancel, RingHom.toMonoidHom_eq_coe,
+              OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe, MonoidHom.coe_coe, coe_algebraMap,
+              ZeroHom.coe_mk]
+            ring
+      exact rfl
 
-    have h_Uφ : U φ = w • φ := by
-      -- Cayley(A)(A + iI)ψ = (A - iI)ψ
-      -- = (μ - i)ψ  (using Aψ = μψ)
-      -- = (μ - i)/(μ + i) · (μ + i)ψ
-      -- = w · (A + iI)ψ = w · φ
-      sorry
 
-    -- So (U - wI)φ = 0
-    have h_zero : (U - w • ContinuousLinearMap.id ℂ H) φ = 0 := by
-      simp only [ContinuousLinearMap.sub_apply, ContinuousLinearMap.smul_apply,
-                 ContinuousLinearMap.id_apply, h_Uφ, sub_self]
+section AlgebraicLemmas
+/-! ## Pure algebraic identities for the Möbius map w(μ) = (μ - i)/(μ + i) -/
+variable (μ : ℝ)
 
-    -- But U - wI is a unit, so φ = 0
-    have h_φ_zero : φ = 0 := by
-      rw [← sub_zero φ]
-      simp only [sub_zero]
-      exact (IsUnit.smul_eq_zero h_unit).mp h_zero
+/-- μ + i ≠ 0 for real μ -/
+lemma real_add_I_ne_zero : (↑μ : ℂ) + I ≠ 0 := by
+  intro h
+  have : ((↑μ : ℂ) + I).im = 0 := by rw [h]; simp
+  simp at this
+  
 
-    -- φ = (A + iI)ψ = (μ + i)ψ = 0 implies ψ = 0 since μ + i ≠ 0
-    have h_φ_eq : φ = (μ + I) • ψ := by
-      simp only [φ, h_eig]
-      rw [add_comm, @add_smul]
-      exact AddCommMagma.add_comm (I • ψ) (μ • ψ)
+/-- The Möbius image w = (μ - i)/(μ + i) lies on the unit circle -/
+lemma mobius_norm_one (hμ_ne : (↑μ : ℂ) + I ≠ 0) :
+    ‖(↑μ - I) * (↑μ + I)⁻¹‖ = 1 := by
+  simp only [norm_mul, norm_inv]
+  have h1 : ‖(↑μ : ℂ) - I‖ = ‖(↑μ : ℂ) + I‖ := by
+    have h : starRingEnd ℂ ((↑μ : ℂ) + I) = (↑μ : ℂ) - I := by simp [Complex.ext_iff]
+    rw [← h, RCLike.norm_conj]
+  have h2 : ‖(↑μ : ℂ) + I‖ ≠ 0 := norm_ne_zero_iff.mpr hμ_ne
+  field_simp [h2, h1]
+  exact h1
+
+/-- 1 - w = 2i/(μ + i) -/
+lemma one_sub_mobius (hμ_ne : (↑μ : ℂ) + I ≠ 0) :
+    (1 : ℂ) - (↑μ - I) * (↑μ + I)⁻¹ = 2 * I / (↑μ + I) := by
+  field_simp [hμ_ne]
+  ring
+
+/-- 1 + w = 2μ/(μ + i) -/
+lemma one_add_mobius (hμ_ne : (↑μ : ℂ) + I ≠ 0) :
+    (1 : ℂ) + (↑μ - I) * (↑μ + I)⁻¹ = 2 * ↑μ / (↑μ + I) := by
+  field_simp [hμ_ne]
+  ring
+
+/-- Key coefficient identity: (1-w)μ = i(1+w) -/
+lemma mobius_coeff_identity (hμ_ne : (↑μ : ℂ) + I ≠ 0) :
+    let w := (↑μ - I) * (↑μ + I)⁻¹
+    I * ((1 : ℂ) + w) = ((1 : ℂ) - w) * ↑μ := by
+  simp only
+  rw [one_sub_mobius μ hμ_ne, one_add_mobius μ hμ_ne]
+  field_simp [hμ_ne]
+
+/-- 1 - w ≠ 0 -/
+lemma one_sub_mobius_ne_zero (hμ_ne : (↑μ : ℂ) + I ≠ 0) :
+    (1 : ℂ) - (↑μ - I) * (↑μ + I)⁻¹ ≠ 0 := by
+  rw [one_sub_mobius μ hμ_ne]
+  simp [hμ_ne]
+
+/-- ‖1 - w‖ > 0 -/
+lemma one_sub_mobius_norm_pos (hμ_ne : (↑μ : ℂ) + I ≠ 0) :
+    ‖(1 : ℂ) - (↑μ - I) * (↑μ + I)⁻¹‖ > 0 :=
+  norm_pos_iff.mpr (one_sub_mobius_ne_zero μ hμ_ne)
 
 
-    rw [h_φ_eq] at h_φ_zero
-    exact smul_eq_zero.mp h_φ_zero |>.resolve_left hμ_ne
+
+
+/-- Cayley transform applied to (A + iI)ψ gives (A - iI)ψ -/
+lemma cayleyTransform_apply_resolvent {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen)
+    (ψ : H) (hψ : ψ ∈ gen.domain) :
+    cayleyTransform gen hsa (gen.op ⟨ψ, hψ⟩ + I • ψ) = gen.op ⟨ψ, hψ⟩ - I • ψ := by
+  simp only [cayleyTransform, ContinuousLinearMap.sub_apply,
+             ContinuousLinearMap.id_apply, ContinuousLinearMap.smul_apply]
+  have h_res := Resolvent.resolvent_at_neg_i_left_inverse gen hsa ψ hψ
+  rw [h_res]
+  module
+
+
+/-- The key intertwining identity: (U - wI)(A + iI)ψ = (1 - w)(A - μI)ψ -/
+lemma cayley_shift_identity {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen)
+    (μ : ℝ) (hμ_ne : (↑μ : ℂ) + I ≠ 0) (ψ : H) (hψ : ψ ∈ gen.domain) :
+    let U := cayleyTransform gen hsa
+    let w := (↑μ - I) * (↑μ + I)⁻¹
+    let φ := gen.op ⟨ψ, hψ⟩ + I • ψ
+    (U - w • ContinuousLinearMap.id ℂ H) φ = ((1 : ℂ) - w) • (gen.op ⟨ψ, hψ⟩ - ↑μ • ψ)  := by
+  intro U w φ
+  
+  have h_Uφ : U φ = gen.op ⟨ψ, hψ⟩ - I • ψ := by exact cayleyTransform_apply_resolvent gen hsa ψ hψ
+  have h_coeff := mobius_coeff_identity μ hμ_ne
+  
+  simp only [ContinuousLinearMap.sub_apply, ContinuousLinearMap.smul_apply,
+             ContinuousLinearMap.id_apply, φ, h_Uφ]
+  
+  -- LHS = (A - iI)ψ - w(A + iI)ψ = (1-w)Aψ - i(1+w)ψ
+  -- RHS = (1-w)Aψ - (1-w)μψ
+  -- These are equal by h_coeff: i(1+w) = (1-w)μ
+  
+  have h_lhs : gen.op ⟨ψ, hψ⟩ - I • ψ - (w • gen.op ⟨ψ, hψ⟩ + w • I • ψ) = 
+      (1 - w) • gen.op ⟨ψ, hψ⟩ - (I * (1 + w)) • ψ := by module
+  
+  have h_rhs : (1 - w) • gen.op ⟨ψ, hψ⟩ - (1 - w) • (↑μ • ψ) = 
+    (1 - w) • gen.op ⟨ψ, hψ⟩ - ((1 - w) * ↑μ) • ψ := by
+      simp only [sub_right_inj]
+      -- ⊢ (1 - w) • ↑μ • ψ = ((1 - w) * ↑μ) • ψ
+      rw [@mul_smul]; exact rfl
+      
+  calc gen.op ⟨ψ, hψ⟩ - I • ψ - w • (gen.op ⟨ψ, hψ⟩ + I • ψ)
+      = (1 - w) • gen.op ⟨ψ, hψ⟩ - (I * (1 + w)) • ψ := by rw [smul_add]; module
+    _ = (1 - w) • gen.op ⟨ψ, hψ⟩ - ((1 - w) * ↑μ) • ψ := by rw [h_coeff]
+    _ = (1 - w) • gen.op ⟨ψ, hψ⟩ - (1 - w) • (↑μ • ψ) := by rw [@mul_smul]; rfl
+    _ = (1 - w) • (gen.op ⟨ψ, hψ⟩ - ↑μ • ψ) := by rw [smul_sub]
+  -- ⊢ (1 - w) • (gen.op ⟨ψ, hψ⟩ - μ • ψ) = (1 - w) • (gen.op ⟨ψ, hψ⟩ - μ • ψ)
+  simp only
+
+
+/-- If A - μI is bounded below, then U - wI is injective -/
+lemma cayley_shift_injective {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen)
+    (μ : ℝ) (_ /-hμ_ne-/ : (↑μ : ℂ) + I ≠ 0)
+    (hC : ∃ C > 0, ∀ ψ (hψ : ψ ∈ gen.domain), ‖gen.op ⟨ψ, hψ⟩ - μ • ψ‖ ≥ C * ‖ψ‖) :
+    let U := cayleyTransform gen hsa
+    let w := (↑μ - I) * (↑μ + I)⁻¹
+    Function.Injective (U - w • ContinuousLinearMap.id ℂ H) := by
+  intro U w φ₁ φ₂ h_eq
+  rw [← sub_eq_zero]
+  set φ := φ₁ - φ₂
+  have h_zero : (U - w • ContinuousLinearMap.id ℂ H) φ = 0 := by
+    simp only [ContinuousLinearMap.sub_apply, ContinuousLinearMap.smul_apply,
+               ContinuousLinearMap.id_apply, φ, map_sub]
+    have := h_eq
+    simp only [ContinuousLinearMap.sub_apply, ContinuousLinearMap.smul_apply,
+               ContinuousLinearMap.id_apply] at this
+    exact sub_eq_zero_of_eq h_eq
+  -- Use eigenvalue correspondence: Uφ = wφ implies φ comes from Aψ = μψ
+  -- But A - μI bounded below means no eigenvalue at μ
+  -- Show φ = 0 by contradiction
+  by_contra hφ_ne
+  
+  -- From h_zero: Uφ = wφ
+  have h_eig : U φ = w • φ := by
+    simp only [ContinuousLinearMap.sub_apply, ContinuousLinearMap.smul_apply,
+               ContinuousLinearMap.id_apply, sub_eq_zero] at h_zero
+    exact h_zero
+  
+  -- By eigenvalue correspondence: Uφ = wφ with φ ≠ 0 implies ∃ ψ ≠ 0 with Aψ = μψ
+  have h_exists : ∃ ψ : H, ∃ hψ : ψ ∈ gen.domain, ψ ≠ 0 ∧ gen.op ⟨ψ, hψ⟩ = μ • ψ := by
+    rw [cayley_eigenvalue_correspondence gen hsa μ]
+    exact ⟨φ, hφ_ne, h_eig⟩
+  
+  obtain ⟨ψ, hψ_mem, hψ_ne, h_Aψ⟩ := h_exists
+  obtain ⟨C, hC_pos, hC_bound⟩ := hC
+  
+  -- From bounded below: ‖Aψ - μψ‖ ≥ C‖ψ‖
+  have h_bound := hC_bound ψ hψ_mem
+  
+  -- But Aψ = μψ, so LHS = 0
+  rw [h_Aψ, sub_self, norm_zero] at h_bound
+  
+  -- 0 ≥ C‖ψ‖ with C > 0 implies ‖ψ‖ ≤ 0, hence ψ = 0
+  have : ‖ψ‖ = 0 := by nlinarith [norm_nonneg ψ]
+  exact hψ_ne (norm_eq_zero.mp this)
+
+
+
+lemma self_adjoint_norm_sq_add {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (_ /-hsa-/ : Generator.IsSelfAdjoint gen)
+    (ψ : H) (hψ : ψ ∈ gen.domain) :
+    ‖gen.op ⟨ψ, hψ⟩ + I • ψ‖^2 = ‖gen.op ⟨ψ, hψ⟩‖^2 + ‖ψ‖^2 := by
+  have norm_I_smul : ‖I • ψ‖ = ‖ψ‖ := by rw [norm_smul]; simp
+
+  -- Key: Re⟨Aψ, iψ⟩ = 0 because ⟨Aψ, ψ⟩ is real for self-adjoint A
+  have cross_zero : (⟪gen.op ⟨ψ, hψ⟩, I • ψ⟫_ℂ).re = 0 := by
+    rw [inner_smul_right]
+    -- ⟨Aψ, ψ⟩ is real: it equals its own conjugate by symmetry
+    have h_real : (⟪gen.op ⟨ψ, hψ⟩, ψ⟫_ℂ).im = 0 := by
+      have h_sym := gen.symmetric ⟨ψ, hψ⟩ ⟨ψ, hψ⟩
+      have h_conj : ⟪gen.op ⟨ψ, hψ⟩, ψ⟫_ℂ = (starRingEnd ℂ) ⟪gen.op ⟨ψ, hψ⟩, ψ⟫_ℂ := by
+        calc ⟪gen.op ⟨ψ, hψ⟩, ψ⟫_ℂ
+            = ⟪ψ, gen.op ⟨ψ, hψ⟩⟫_ℂ := h_sym
+          _ = (starRingEnd ℂ) ⟪gen.op ⟨ψ, hψ⟩, ψ⟫_ℂ := by rw [inner_conj_symm]
+      have := Complex.ext_iff.mp h_conj
+      simp only [Complex.conj_im] at this
+      linarith [this.2]
+    -- I * (real number) has zero real part
+    have h1 : I * ⟪gen.op ⟨ψ, hψ⟩, ψ⟫_ℂ = I * (⟪gen.op ⟨ψ, hψ⟩, ψ⟫_ℂ).re := by
+      conv_lhs => rw [← Complex.re_add_im ⟪gen.op ⟨ψ, hψ⟩, ψ⟫_ℂ, h_real]
+      simp
+    rw [h1, mul_comm]; simp
+
+  -- ‖x + y‖² = ‖x‖² + ‖y‖² + 2Re⟨x,y⟩, and cross term is 0
+  have h_expand : ‖gen.op ⟨ψ, hψ⟩ + I • ψ‖^2 =
+      ‖gen.op ⟨ψ, hψ⟩‖^2 + ‖I • ψ‖^2 + 2 * (⟪gen.op ⟨ψ, hψ⟩, I • ψ⟫_ℂ).re := by
+    have h1 : ‖gen.op ⟨ψ, hψ⟩ + I • ψ‖^2 =
+              (⟪gen.op ⟨ψ, hψ⟩ + I • ψ, gen.op ⟨ψ, hψ⟩ + I • ψ⟫_ℂ).re := by
+      rw [inner_self_eq_norm_sq_to_K (𝕜 := ℂ)]; norm_cast
+    have h2 : ‖gen.op ⟨ψ, hψ⟩‖^2 = (⟪gen.op ⟨ψ, hψ⟩, gen.op ⟨ψ, hψ⟩⟫_ℂ).re := by
+      rw [inner_self_eq_norm_sq_to_K (𝕜 := ℂ)]; norm_cast
+    have h3 : ‖I • ψ‖^2 = (⟪I • ψ, I • ψ⟫_ℂ).re := by
+      rw [inner_self_eq_norm_sq_to_K (𝕜 := ℂ)]; norm_cast
+    have h_cross : (⟪gen.op ⟨ψ, hψ⟩, I • ψ⟫_ℂ).re + (⟪I • ψ, gen.op ⟨ψ, hψ⟩⟫_ℂ).re =
+                   2 * (⟪gen.op ⟨ψ, hψ⟩, I • ψ⟫_ℂ).re := by
+      have : (⟪I • ψ, gen.op ⟨ψ, hψ⟩⟫_ℂ).re = (⟪gen.op ⟨ψ, hψ⟩, I • ψ⟫_ℂ).re := by
+        have h : ⟪I • ψ, gen.op ⟨ψ, hψ⟩⟫_ℂ = (starRingEnd ℂ) ⟪gen.op ⟨ψ, hψ⟩, I • ψ⟫_ℂ := by 
+          exact Eq.symm (conj_inner_symm (I • ψ) (gen.op ⟨ψ, hψ⟩))
+        simp only [h, Complex.conj_re]
+      linarith
+    rw [h1, inner_add_left, inner_add_right, inner_add_right]
+    simp only [Complex.add_re, h2, h3, ← h_cross]
+    ring
+
+  rw [h_expand, norm_I_smul, cross_zero]
+  ring
+
+
+
+/-- Backward direction of spectral correspondence -/
+lemma cayley_spectrum_backward {U_grp : OneParameterUnitaryGroup (H := H)} [Nontrivial H]
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (μ : ℝ)
+    (h_unit : IsUnit (cayleyTransform gen hsa - ((↑μ - I) * (↑μ + I)⁻¹) • ContinuousLinearMap.id ℂ H)) :
+    ∃ C : ℝ, C > 0 ∧ ∀ ψ (hψ : ψ ∈ gen.domain), ‖gen.op ⟨ψ, hψ⟩ - μ • ψ‖ ≥ C * ‖ψ‖ := by
+  
+  set U := cayleyTransform gen hsa with hU_def
+  set w := (↑μ - I) * (↑μ + I)⁻¹ with hw_def
+  
+  have hμ_ne : (↑μ : ℂ) + I ≠ 0 := real_add_I_ne_zero μ
+  
+  -- Get the inverse from IsUnit
+  obtain ⟨⟨T, T_inv, hT_left, hT_right⟩, hT_eq⟩ := h_unit
+  simp only at hT_eq
+  
+  -- T_inv ≠ 0 (otherwise T * T_inv = 0 ≠ 1)
+  have hT_inv_ne : T_inv ≠ 0 := by
+    intro h
+    have : (1 : H →L[ℂ] H) = 0 := by
+      calc (1 : H →L[ℂ] H) = T_inv * T := hT_right.symm
+        _ = 0 * T := by rw [h]
+        _ = 0 := zero_mul T
+    exact one_ne_zero this
+
+  have hT_inv_norm_pos : ‖T_inv‖ > 0 := norm_pos_iff.mpr hT_inv_ne
+  
+  -- T has bounded below property: ‖Tφ‖ ≥ ‖T_inv‖⁻¹ ‖φ‖
+  have h_T_bounded_below : ∀ φ, ‖T φ‖ ≥ ‖T_inv‖⁻¹ * ‖φ‖ := by
+    intro φ
+    have h := ContinuousLinearMap.le_opNorm T_inv (T φ)
+    have h' : T_inv (T φ) = φ := by
+      have := congr_arg (· φ) hT_right
+      simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply] at this
+      exact this
+    rw [h'] at h
+    exact (inv_mul_le_iff₀ hT_inv_norm_pos).mpr h
+  
+  -- |1 - w| > 0
+  have h_one_sub_w_ne : (1 : ℂ) - w ≠ 0 := one_sub_mobius_ne_zero μ hμ_ne
+  have h_one_sub_w_norm_pos : ‖(1 : ℂ) - w‖ > 0 := norm_pos_iff.mpr h_one_sub_w_ne
+  
+  -- The constant
+  use ‖T_inv‖⁻¹ / ‖(1 : ℂ) - w‖
+  constructor
+  · positivity
+  
+  intro ψ hψ
+  
+  -- φ = (A + iI)ψ
+  let φ := gen.op ⟨ψ, hψ⟩ + I • ψ
+  
+  -- Key identity: (U - wI)φ = (1-w)(A - μI)ψ
+  have h_key : T φ = ((1 : ℂ) - w) • (gen.op ⟨ψ, hψ⟩ - ↑μ • ψ) := by
+    rw [hT_eq]
+    exact cayley_shift_identity gen hsa μ hμ_ne ψ hψ
+  
+  -- ‖φ‖ ≥ ‖ψ‖ from self-adjointness: ‖(A+iI)ψ‖² = ‖Aψ‖² + ‖ψ‖² ≥ ‖ψ‖²
+  have h_phi_bound : ‖φ‖ ≥ ‖ψ‖ := by
+    have h_sq := self_adjoint_norm_sq_add gen hsa ψ hψ
+    have h_ge : ‖φ‖^2 ≥ ‖ψ‖^2 := by
+      calc ‖φ‖^2 = ‖gen.op ⟨ψ, hψ⟩‖^2 + ‖ψ‖^2 := h_sq
+        _ ≥ 0 + ‖ψ‖^2 := by linarith [sq_nonneg ‖gen.op ⟨ψ, hψ⟩‖]
+        _ = ‖ψ‖^2 := by ring
+    nlinarith [norm_nonneg φ, norm_nonneg ψ, sq_nonneg (‖φ‖ - ‖ψ‖)]
+  
+  -- Chain the bounds
+  have h_Tφ_eq : ‖T φ‖ = ‖(1 : ℂ) - w‖ * ‖gen.op ⟨ψ, hψ⟩ - ↑μ • ψ‖ := by
+    rw [h_key, norm_smul]
+  
+  have h_chain : ‖(1 : ℂ) - w‖ * ‖gen.op ⟨ψ, hψ⟩ - ↑μ • ψ‖ ≥ ‖T_inv‖⁻¹ * ‖ψ‖ := by
+    calc ‖(1 : ℂ) - w‖ * ‖gen.op ⟨ψ, hψ⟩ - ↑μ • ψ‖ 
+        = ‖T φ‖ := h_Tφ_eq.symm
+      _ ≥ ‖T_inv‖⁻¹ * ‖φ‖ := h_T_bounded_below φ
+      _ ≥ ‖T_inv‖⁻¹ * ‖ψ‖ := by apply mul_le_mul_of_nonneg_left h_phi_bound; positivity
+  
+  calc ‖gen.op ⟨ψ, hψ⟩ - ↑μ • ψ‖ 
+      = ‖(1 : ℂ) - w‖⁻¹ * (‖(1 : ℂ) - w‖ * ‖gen.op ⟨ψ, hψ⟩ - ↑μ • ψ‖) := by
+          field_simp [ne_of_gt h_one_sub_w_norm_pos]
+    _ ≥ ‖(1 : ℂ) - w‖⁻¹ * (‖T_inv‖⁻¹ * ‖ψ‖) := by
+          apply mul_le_mul_of_nonneg_left h_chain; positivity
+    _ = ‖T_inv‖⁻¹ / ‖(1 : ℂ) - w‖ * ‖ψ‖ := by ring
+
+
+
+/-- Backward bounded-below transfer: U - wI bounded below → A - μI bounded below -/
+lemma cayley_shift_bounded_below_backward {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (μ : ℝ)
+    (hμ_ne : (↑μ : ℂ) + I ≠ 0)
+    (c : ℝ) (hc_pos : c > 0)
+    (hc_bound : ∀ φ, ‖(cayleyTransform gen hsa - ((↑μ - I) * (↑μ + I)⁻¹) • ContinuousLinearMap.id ℂ H) φ‖ ≥ c * ‖φ‖) :
+    ∃ C > 0, ∀ ψ (hψ : ψ ∈ gen.domain), ‖gen.op ⟨ψ, hψ⟩ - μ • ψ‖ ≥ C * ‖ψ‖ := by
+  set U := cayleyTransform gen hsa
+  set w := (↑μ - I) * (↑μ + I)⁻¹
+  
+  have h_one_sub_w_norm_pos := one_sub_mobius_norm_pos μ hμ_ne
+  
+  use c / ‖(1 : ℂ) - w‖
+  constructor
+  · positivity
+  · intro ψ hψ
+    let φ := gen.op ⟨ψ, hψ⟩ + I • ψ
+    
+    -- Apply the key identity
+    have h_key := cayley_shift_identity gen hsa μ hμ_ne ψ hψ
+    
+    -- Get the bound on (U - wI)φ
+    have h_bound : ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖ ≥ c * ‖φ‖ := hc_bound φ
+    
+    -- ‖φ‖ ≥ ‖ψ‖
+    have h_phi_bound : ‖φ‖ ≥ ‖ψ‖ := by
+      have h_sq := self_adjoint_norm_sq_add gen hsa ψ hψ
+      have h1 : ‖φ‖^2 = ‖gen.op ⟨ψ, hψ⟩‖^2 + ‖ψ‖^2 := h_sq
+      have h2 : ‖φ‖^2 ≥ ‖ψ‖^2 := by rw [h1]; linarith [sq_nonneg ‖gen.op ⟨ψ, hψ⟩‖]
+      nlinarith [norm_nonneg φ, norm_nonneg ψ, sq_nonneg ‖φ‖, sq_nonneg ‖ψ‖]
+    
+    -- Chain: ‖(1-w)‖ * ‖(A-μI)ψ‖ = ‖(U-wI)φ‖ ≥ c * ‖φ‖ ≥ c * ‖ψ‖
+    have h_chain : ‖(1 : ℂ) - w‖ * ‖gen.op ⟨ψ, hψ⟩ - (↑μ • ψ)‖ ≥ c * ‖ψ‖ := by
+      have h_eq : ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖ = 
+                  ‖(1 : ℂ) - w‖ * ‖gen.op ⟨ψ, hψ⟩ - (↑μ • ψ)‖ := by
+        simp only [U, w, φ] at h_key ⊢
+        rw [h_key, norm_smul]
+      calc ‖(1 : ℂ) - w‖ * ‖gen.op ⟨ψ, hψ⟩ - (↑μ • ψ)‖ 
+          = ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖ := h_eq.symm
+        _ ≥ c * ‖φ‖ := h_bound
+        _ ≥ c * ‖ψ‖ := mul_le_mul_of_nonneg_left h_phi_bound (le_of_lt hc_pos)
+    
+    -- Divide by ‖1-w‖
+    have h_ne := ne_of_gt h_one_sub_w_norm_pos
+    calc ‖gen.op ⟨ψ, hψ⟩ - ↑μ • ψ‖ 
+        = ‖(1 : ℂ) - w‖⁻¹ * (‖(1 : ℂ) - w‖ * ‖gen.op ⟨ψ, hψ⟩ - (↑μ • ψ)‖) := by
+            field_simp [h_ne]
+            exact Eq.symm (mul_div_cancel_right₀ ‖gen.op ⟨ψ, hψ⟩ - μ • ψ‖ h_ne)
+      _ ≥ ‖(1 : ℂ) - w‖⁻¹ * (c * ‖ψ‖) := 
+            mul_le_mul_of_nonneg_left h_chain (inv_nonneg.mpr (norm_nonneg _))
+      _ = c / ‖(1 : ℂ) - w‖ * ‖ψ‖ := by ring
+
+
+/-- The Möbius image of a real number lies on the unit circle -/
+lemma mobius_norm_eq_one (μ : ℝ) (hμ_ne : (↑μ : ℂ) + I ≠ 0) :
+    ‖(↑μ - I) * (↑μ + I)⁻¹‖ = 1 := by
+  exact mobius_norm_one μ hμ_ne
+
+/-- A continuous linear map is normal if it commutes with its adjoint -/
+def ContinuousLinearMap.IsNormal (T : H →L[ℂ] H) : Prop :=
+  T.adjoint.comp T = T.comp T.adjoint
+
+
+
+/-- Helper 2 -/
+lemma unitary_sub_scalar_isNormal' {U : H →L[ℂ] H} (hU : Unitary U) (w : ℂ) :
+    (U - w • 1).adjoint * (U - w • 1) = (U - w • 1) * (U - w • 1).adjoint := by
+  -- (U - wI)* = U* - w̄I
+  have h_adj : (U - w • 1).adjoint = U.adjoint - (starRingEnd ℂ w) • 1 := by
+    ext x
+    apply ext_inner_right ℂ
+    intro y
+    simp only [ContinuousLinearMap.adjoint_inner_left, ContinuousLinearMap.sub_apply,
+               ContinuousLinearMap.smul_apply, ContinuousLinearMap.one_apply,
+               inner_sub_left, inner_sub_right, inner_smul_left, inner_smul_right]
+    simp_all only [RingHomCompTriple.comp_apply, RingHom.id_apply]
+  
+  rw [h_adj]
+  ext x
+  simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.sub_apply,
+             ContinuousLinearMap.smul_apply, ContinuousLinearMap.one_apply]
+  
+  -- Use U*U = I and UU* = I
+  have h1 : U.adjoint (U x) = x := by
+    have := congr_arg (· x) hU.1
+    simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply] at this
+    exact this
+    
+  have h2 : U (U.adjoint x) = x := by
+    have := congr_arg (· x) hU.2
+    simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply] at this
+    exact this
+  
+  simp only [map_sub, map_smul, h1, h2]
+  module
+
+
+/- LAYER 1: Basic algebraic facts -/
+
+/- Möbius transform of a real number has norm 1 
+lemma mobius_norm_eq_one (μ : ℝ) (hμ_ne : (↑μ : ℂ) + I ≠ 0) :
+    ‖(↑μ - I) * (↑μ + I)⁻¹‖ = 1 := by
+  sorry
+
+   Cayley transform is unitary 
+lemma cayleyTransform_unitary {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) :
+    Unitary (cayleyTransform gen hsa) := by
+  sorry
+-/
+
+/- LAYER 2: Bounded below ↔ invertibility for bounded ops -/
+
+/-- IsUnit implies bounded below -/
+lemma isUnit_bounded_below [Nontrivial H] {T : H →L[ℂ] H} (hT : IsUnit T) :
+    ∃ c > 0, ∀ φ, ‖T φ‖ ≥ c * ‖φ‖ := by
+  obtain ⟨⟨T, T_inv, hT_left, hT_right⟩, rfl⟩ := hT
+  have hT_inv_ne : T_inv ≠ 0 := by
+    intro h
+    have h_one_eq : (1 : H →L[ℂ] H) = 0 := by
+      calc (1 : H →L[ℂ] H) = T_inv * T := hT_right.symm
+        _ = 0 * T := by rw [h]
+        _ = 0 := zero_mul T
+    obtain ⟨x, hx⟩ := exists_ne (0 : H)
+    have : x = 0 := by simpa using congr_arg (· x) h_one_eq
+    exact hx this
+  have hT_inv_norm_pos : ‖T_inv‖ > 0 := norm_pos_iff.mpr hT_inv_ne
+  use ‖T_inv‖⁻¹, inv_pos.mpr hT_inv_norm_pos
+  intro φ
+  have h_eq : T_inv (T φ) = φ := by
+    have := congr_arg (· φ) hT_right
+    simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply] at this
+    exact this
+  have h_bound : ‖φ‖ ≤ ‖T_inv‖ * ‖T φ‖ := by
+    calc ‖φ‖ = ‖T_inv (T φ)‖ := by rw [h_eq]
+      _ ≤ ‖T_inv‖ * ‖T φ‖ := ContinuousLinearMap.le_opNorm T_inv (T φ)
+  exact (inv_mul_le_iff₀ hT_inv_norm_pos).mpr h_bound
+
+/-- For normal operators, bounded below implies IsUnit -/
+axiom normal_bounded_below_isUnit [Nontrivial H] {T : H →L[ℂ] H} 
+    (hT : T.adjoint * T = T * T.adjoint)
+    (c : ℝ) (hc_pos : c > 0) (hc_bound : ∀ φ, ‖T φ‖ ≥ c * ‖φ‖) :
+    IsUnit T
+
+/-- For unitary U, if U - wI is not IsUnit then w is an approximate eigenvalue -/
+lemma unitary_not_isUnit_approx_eigenvalue [Nontrivial H] {U : H →L[ℂ] H} (hU : Unitary U) (w : ℂ)
+    (h_not : ¬IsUnit (U - w • ContinuousLinearMap.id ℂ H)) :
+    ∀ ε > 0, ∃ φ, ‖φ‖ = 1 ∧ ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖ < ε := by
+  by_contra h_neg
+  push_neg at h_neg
+  obtain ⟨ε, hε_pos, hε_bound⟩ := h_neg
+  have h_bounded_below : ∀ φ, ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖ ≥ ε * ‖φ‖ := by
+    intro φ
+    by_cases hφ : φ = 0
+    · simp [hφ]
+    · have hφ_norm_pos : ‖φ‖ > 0 := norm_pos_iff.mpr hφ
+      have h_unit := hε_bound (‖φ‖⁻¹ • φ) (by rw [norm_smul, norm_inv, norm_norm]; field_simp)
+      calc ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖ 
+          = ‖φ‖ * (‖φ‖⁻¹ * ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖) := by field_simp
+        _ = ‖φ‖ * ‖‖φ‖⁻¹ • (U - w • ContinuousLinearMap.id ℂ H) φ‖ := by
+            congr 1; rw [norm_smul, norm_inv, norm_norm]
+        _ = ‖φ‖ * ‖(U - w • ContinuousLinearMap.id ℂ H) (‖φ‖⁻¹ • φ)‖ := by
+            congr 1; simp only [ContinuousLinearMap.coe_sub', ContinuousLinearMap.coe_smul',
+              ContinuousLinearMap.coe_id', Pi.sub_apply, Pi.smul_apply, id_eq,
+              ContinuousLinearMap.map_smul_of_tower]
+        _ ≥ ‖φ‖ * ε := mul_le_mul_of_nonneg_left h_unit (norm_nonneg φ)
+        _ = ε * ‖φ‖ := mul_comm _ _
+  have h_normal := unitary_sub_scalar_isNormal' hU w
+  have h_isUnit := normal_bounded_below_isUnit h_normal ε hε_pos h_bounded_below
+  exact h_not h_isUnit
+
+
+/-- For unitary U, if w is not an approximate eigenvalue then U - wI is IsUnit -/
+lemma unitary_not_approx_eigenvalue_isUnit [Nontrivial H] {U : H →L[ℂ] H} (hU : Unitary U) (w : ℂ)
+    (h_not : ¬∀ ε > 0, ∃ φ, ‖φ‖ = 1 ∧ ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖ < ε) :
+    IsUnit (U - w • ContinuousLinearMap.id ℂ H) := by
+  push_neg at h_not
+  -- h_not : ∃ ε > 0, ∀ φ, ‖φ‖ = 1 → ‖(U - wI) φ‖ ≥ ε
+  obtain ⟨ε, hε_pos, hε_bound⟩ := h_not
+  -- Extend to bounded below on all vectors
+  have h_bounded_below : ∀ φ, ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖ ≥ ε * ‖φ‖ := by
+    intro φ
+    by_cases hφ : φ = 0
+    · simp [hφ]
+    · have hφ_norm_pos : ‖φ‖ > 0 := norm_pos_iff.mpr hφ
+      have h_unit := hε_bound (‖φ‖⁻¹ • φ) (by rw [norm_smul, norm_inv, norm_norm]; field_simp)
+      calc ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖ 
+          = ‖φ‖ * (‖φ‖⁻¹ * ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖) := by field_simp
+        _ = ‖φ‖ * ‖‖φ‖⁻¹ • (U - w • ContinuousLinearMap.id ℂ H) φ‖ := by
+            congr 1; rw [norm_smul, norm_inv, norm_norm]
+        _ = ‖φ‖ * ‖(U - w • ContinuousLinearMap.id ℂ H) (‖φ‖⁻¹ • φ)‖ := by
+            congr 1; simp only [ContinuousLinearMap.coe_sub', ContinuousLinearMap.coe_smul',
+              ContinuousLinearMap.coe_id', Pi.sub_apply, Pi.smul_apply, id_eq,
+              ContinuousLinearMap.map_smul_of_tower]
+        _ ≥ ‖φ‖ * ε := mul_le_mul_of_nonneg_left h_unit (norm_nonneg φ)
+        _ = ε * ‖φ‖ := mul_comm _ _
+  -- U - wI is normal
+  have h_normal := unitary_sub_scalar_isNormal' hU w
+  -- Normal + bounded below → IsUnit
+  exact normal_bounded_below_isUnit h_normal ε hε_pos h_bounded_below
+
+
+/- LAYER 3: Approximate eigenvalue correspondence -/
+/-- When ‖(A+iI)ψ‖ = 1 and ‖(A-μI)ψ‖ is small, ‖ψ‖ is bounded below by 1/(2√(1+|μ|²)) -/
+axiom approx_eigenvalue_norm_lower_bound {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (μ : ℝ)
+    (ψ : H) (hψ : ψ ∈ gen.domain) (hψ_ne : ψ ≠ 0)
+    (h_norm : ‖gen.op ⟨ψ, hψ⟩ + I • ψ‖ = 1) :
+    ‖ψ‖ ≥ 1 / (2 * Real.sqrt (1 + μ^2))
+
+/-- Forward: if w is approx eigenvalue of U, then μ is approx eigenvalue of A -/
+lemma cayley_approx_eigenvalue_backward {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (μ : ℝ)
+    (hμ_ne : (↑μ : ℂ) + I ≠ 0) :
+    (∀ ε > 0, ∃ φ, ‖φ‖ = 1 ∧ 
+      ‖(cayleyTransform gen hsa - ((↑μ - I) * (↑μ + I)⁻¹) • ContinuousLinearMap.id ℂ H) φ‖ < ε) →
+    (∀ C > 0, ∃ ψ, ∃ hψ : ψ ∈ gen.domain, ‖ψ‖ ≠ 0 ∧ ‖gen.op ⟨ψ, hψ⟩ - (↑μ : ℂ) • ψ‖ < C * ‖ψ‖) := by
+  intro h_approx C hC
+  
+  set U := cayleyTransform gen hsa with hU_def
+  set w := (↑μ - I) * (↑μ + I)⁻¹ with hw_def
+  
+  have h_one_sub_w_ne : (1 : ℂ) - w ≠ 0 := one_sub_mobius_ne_zero μ hμ_ne
+  have h_one_sub_w_norm_pos : ‖(1 : ℂ) - w‖ > 0 := norm_pos_iff.mpr h_one_sub_w_ne
+  
+  -- Choose ε = C * |1-w| / (2 * √(1 + |μ|²))
+  -- This ensures that the resulting ψ satisfies the bound
+  set denom := Real.sqrt (1 + μ^2) with hdenom
+  have hdenom_pos : denom > 0 := Real.sqrt_pos.mpr (by linarith [sq_nonneg μ])
+  
+  obtain ⟨φ, hφ_norm, hφ_bound⟩ := h_approx (C * ‖(1 : ℂ) - w‖ / (2 * denom)) (by positivity)
+  
+  set ψ := Resolvent.resolvent_at_neg_i gen hsa φ with hψ_def
+  have hψ_mem : ψ ∈ gen.domain := Resolvent.resolvent_solution_mem_plus gen hsa φ
+  have hφ_eq : gen.op ⟨ψ, hψ_mem⟩ + I • ψ = φ := Resolvent.resolvent_solution_eq_plus gen hsa φ
+  
+  use ψ, hψ_mem
+  
+  have hφ_ne : φ ≠ 0 := by
+    intro h; rw [h, norm_zero] at hφ_norm; exact one_ne_zero hφ_norm.symm
+  have hψ_ne : ψ ≠ 0 := by
+    intro h
+    have hψ_eq_zero : (⟨ψ, hψ_mem⟩ : gen.domain) = 0 := by ext; exact h
+    have : φ = 0 := by
+      calc φ = gen.op ⟨ψ, hψ_mem⟩ + I • ψ := hφ_eq.symm
+        _ = gen.op 0 + I • 0 := by rw [hψ_eq_zero, h]
+        _ = 0 := by simp
+    exact hφ_ne this
+  
+  constructor
+  · exact norm_ne_zero_iff.mpr hψ_ne
+  
+  have h_key := cayley_shift_identity gen hsa μ hμ_ne ψ hψ_mem
+  simp only at h_key
+  rw [← hφ_eq.symm] at h_key
+  
+  have h_norm_eq : ‖gen.op ⟨ψ, hψ_mem⟩ - (↑μ : ℂ) • ψ‖ = 
+      ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖ / ‖(1 : ℂ) - w‖ := by
+    have : (U - w • ContinuousLinearMap.id ℂ H) φ = ((1 : ℂ) - w) • (gen.op ⟨ψ, hψ_mem⟩ - (↑μ : ℂ) • ψ) := h_key
+    rw [this, norm_smul]
+    field_simp [ne_of_gt h_one_sub_w_norm_pos]
+  
+  -- ‖(A+iI)ψ‖² = ‖Aψ‖² + ‖ψ‖² = 1 gives bound on ‖ψ‖
+  have h_norm_identity : ‖gen.op ⟨ψ, hψ_mem⟩‖^2 + ‖ψ‖^2 = 1 := by
+    have h := self_adjoint_norm_sq_add gen hsa ψ hψ_mem
+    rw [hφ_eq, hφ_norm] at h
+    linarith [h, sq_nonneg ‖gen.op ⟨ψ, hψ_mem⟩‖]
+  
+  -- Key: ‖ψ‖ ≥ 1/√(1 + |μ|²) - ε' for small perturbation
+  -- For simplicity, we use ‖ψ‖² ≤ 1, so ‖ψ‖ ≤ 1
+  have hψ_norm_le_one : ‖ψ‖ ≤ 1 := by
+    have h : ‖ψ‖^2 ≤ 1 := by linarith [sq_nonneg ‖gen.op ⟨ψ, hψ_mem⟩‖, h_norm_identity]
+    nlinarith [norm_nonneg ψ, sq_nonneg ‖ψ‖, sq_nonneg (‖ψ‖ - 1)]
+  
+  -- Lower bound on ‖ψ‖: since ‖Aψ‖² + ‖ψ‖² = 1 and ‖Aψ - μψ‖ is small,
+  -- we have ‖Aψ‖ ≈ |μ|‖ψ‖, so (1 + |μ|²)‖ψ‖² ≈ 1
+  have hψ_norm_lower : ‖ψ‖ ≥ 1 / (2 * denom) := by
+    have h_norm : ‖gen.op ⟨ψ, hψ_mem⟩ + I • ψ‖ = 1 := by rw [hφ_eq]; exact hφ_norm
+    exact approx_eigenvalue_norm_lower_bound gen hsa μ ψ hψ_mem hψ_ne h_norm
+  
+  calc ‖gen.op ⟨ψ, hψ_mem⟩ - (↑μ : ℂ) • ψ‖ 
+      = ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖ / ‖(1 : ℂ) - w‖ := h_norm_eq
+    _ < (C * ‖(1 : ℂ) - w‖ / (2 * denom)) / ‖(1 : ℂ) - w‖ := by
+        apply div_lt_div_of_pos_right hφ_bound h_one_sub_w_norm_pos
+    _ = C / (2 * denom) := by field_simp
+    _ ≤ C * ‖ψ‖ := by
+        have h := hψ_norm_lower
+        calc C / (2 * denom) = C * (1 / (2 * denom)) := by ring
+          _ ≤ C * ‖ψ‖ := by apply mul_le_mul_of_nonneg_left h (le_of_lt hC)
+
+/-- Backward: if μ is approx eigenvalue of A, then w is approx eigenvalue of U -/   
+lemma cayley_approx_eigenvalue_forward {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (μ : ℝ)
+    (hμ_ne : (↑μ : ℂ) + I ≠ 0) :
+    (∀ C > 0, ∃ ψ, ∃ hψ : ψ ∈ gen.domain, ‖ψ‖ ≠ 0 ∧ ‖gen.op ⟨ψ, hψ⟩ - (↑μ : ℂ) • ψ‖ < C * ‖ψ‖) →
+    (∀ ε > 0, ∃ φ, ‖φ‖ = 1 ∧ 
+      ‖(cayleyTransform gen hsa - ((↑μ - I) * (↑μ + I)⁻¹) • ContinuousLinearMap.id ℂ H) φ‖ < ε) := by
+  intro h_approx ε hε
+  
+  set U := cayleyTransform gen hsa with hU_def
+  set w := (↑μ - I) * (↑μ + I)⁻¹ with hw_def
+  
+  have h_one_sub_w_ne : (1 : ℂ) - w ≠ 0 := one_sub_mobius_ne_zero μ hμ_ne
+  have h_one_sub_w_norm_pos : ‖(1 : ℂ) - w‖ > 0 := norm_pos_iff.mpr h_one_sub_w_ne
+  
+  -- Choose C = ε / |1-w|
+  obtain ⟨ψ, hψ_mem, hψ_norm_ne, h_Aμψ_bound⟩ := h_approx (ε / ‖(1 : ℂ) - w‖) (by positivity)
+  
+  have hψ_ne : ψ ≠ 0 := norm_ne_zero_iff.mp hψ_norm_ne
+  have hψ_norm_pos : ‖ψ‖ > 0 := norm_pos_iff.mpr hψ_ne
+  
+  -- Let φ' = (A + iI)ψ
+  set φ' := gen.op ⟨ψ, hψ_mem⟩ + I • ψ with hφ'_def
+  
+  -- φ' ≠ 0 since ‖φ'‖² = ‖Aψ‖² + ‖ψ‖² ≥ ‖ψ‖² > 0
+  have hφ'_norm_pos : ‖φ'‖ > 0 := by
+    have h_sq := self_adjoint_norm_sq_add gen hsa ψ hψ_mem
+    have h_ge : ‖φ'‖^2 ≥ ‖ψ‖^2 := by
+      calc ‖φ'‖^2 = ‖gen.op ⟨ψ, hψ_mem⟩‖^2 + ‖ψ‖^2 := h_sq
+        _ ≥ 0 + ‖ψ‖^2 := by linarith [sq_nonneg ‖gen.op ⟨ψ, hψ_mem⟩‖]
+        _ = ‖ψ‖^2 := by ring
+    nlinarith [norm_nonneg φ', sq_nonneg ‖φ'‖, sq_nonneg ‖ψ‖]
+  
+  have hφ'_ne : φ' ≠ 0 := norm_pos_iff.mp hφ'_norm_pos
+  
+  -- ‖φ'‖ ≥ ‖ψ‖
+  have hφ'_norm_ge_ψ : ‖φ'‖ ≥ ‖ψ‖ := by
+    have h_sq := self_adjoint_norm_sq_add gen hsa ψ hψ_mem
+    have h_ge : ‖φ'‖^2 ≥ ‖ψ‖^2 := by
+      calc ‖φ'‖^2 = ‖gen.op ⟨ψ, hψ_mem⟩‖^2 + ‖ψ‖^2 := h_sq
+        _ ≥ ‖ψ‖^2 := by linarith [sq_nonneg ‖gen.op ⟨ψ, hψ_mem⟩‖]
+    nlinarith [norm_nonneg φ', norm_nonneg ψ, sq_nonneg (‖φ'‖ - ‖ψ‖)]
+  
+  -- Normalize: φ = φ' / ‖φ'‖
+  set φ := ‖φ'‖⁻¹ • φ' with hφ_def
+  
+  use φ
+  constructor
+  · -- ‖φ‖ = 1
+    rw [hφ_def, norm_smul, norm_inv, norm_norm]
+    field_simp [ne_of_gt hφ'_norm_pos]
+  
+  -- By cayley_shift_identity: (U - wI)φ' = (1-w)(A - μI)ψ
+  have h_key := cayley_shift_identity gen hsa μ hμ_ne ψ hψ_mem
+  simp only at h_key
+  
+  have h_Uwφ' : (U - w • ContinuousLinearMap.id ℂ H) φ' = 
+      ((1 : ℂ) - w) • (gen.op ⟨ψ, hψ_mem⟩ - (↑μ : ℂ) • ψ) := h_key
+  
+  -- ‖(U - wI)φ'‖ = |1-w| * ‖(A - μI)ψ‖
+  have h_norm_Uwφ' : ‖(U - w • ContinuousLinearMap.id ℂ H) φ'‖ = 
+      ‖(1 : ℂ) - w‖ * ‖gen.op ⟨ψ, hψ_mem⟩ - (↑μ : ℂ) • ψ‖ := by
+    rw [h_Uwφ', norm_smul]
+  
+  -- ‖(U - wI)φ‖ = ‖(U - wI)φ'‖ / ‖φ'‖
+  calc ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖ 
+      = ‖(U - w • ContinuousLinearMap.id ℂ H) (‖φ'‖⁻¹ • φ')‖ := by rw [hφ_def]
+    _ = ‖‖φ'‖⁻¹ • (U - w • ContinuousLinearMap.id ℂ H) φ'‖ := by simp only [ContinuousLinearMap.map_smul_of_tower,
+      ContinuousLinearMap.coe_sub', ContinuousLinearMap.coe_smul', ContinuousLinearMap.coe_id',
+      Pi.sub_apply, Pi.smul_apply, id_eq]
+    _ = ‖φ'‖⁻¹ * ‖(U - w • ContinuousLinearMap.id ℂ H) φ'‖ := by 
+        rw [norm_smul, norm_inv, norm_norm]
+    _ = ‖φ'‖⁻¹ * (‖(1 : ℂ) - w‖ * ‖gen.op ⟨ψ, hψ_mem⟩ - (↑μ : ℂ) • ψ‖) := by rw [h_norm_Uwφ']
+    _ < ‖φ'‖⁻¹ * (‖(1 : ℂ) - w‖ * (ε / ‖(1 : ℂ) - w‖ * ‖ψ‖)) := by
+        apply mul_lt_mul_of_pos_left _ (inv_pos.mpr hφ'_norm_pos)
+        apply mul_lt_mul_of_pos_left h_Aμψ_bound h_one_sub_w_norm_pos
+    _ = ‖φ'‖⁻¹ * (ε * ‖ψ‖) := by field_simp
+    _ ≤ ‖φ'‖⁻¹ * (ε * ‖φ'‖) := by
+        apply mul_le_mul_of_nonneg_left _ (inv_nonneg.mpr (norm_nonneg _))
+        apply mul_le_mul_of_nonneg_left hφ'_norm_ge_ψ (le_of_lt hε)
+    _ = ε := by field_simp [ne_of_gt hφ'_norm_pos]
+
+
+/- LAYER 4: Main theorem -/
+
+/-- Full spectral correspondence: bounded below ↔ invertible -/
+theorem cayley_spectrum_correspondence {U_grp : OneParameterUnitaryGroup (H := H)} [Nontrivial H]
+    (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (μ : ℝ) :
+    (∃ C : ℝ, C > 0 ∧ ∀ ψ (hψ : ψ ∈ gen.domain), ‖gen.op ⟨ψ, hψ⟩ - (↑μ : ℂ) • ψ‖ ≥ C * ‖ψ‖) ↔
+    IsUnit (cayleyTransform gen hsa - ((↑μ - I) * (↑μ + I)⁻¹) • ContinuousLinearMap.id ℂ H) := by
+  set U := cayleyTransform gen hsa with hU_def
+  set w := (↑μ - I) * (↑μ + I)⁻¹ with hw_def
+  
+  have hμ_ne : (↑μ : ℂ) + I ≠ 0 := real_add_I_ne_zero μ
+  
+  constructor
+  · -- Forward: A - μI bounded below → IsUnit (U - wI)
+    intro ⟨C, hC_pos, hC_bound⟩
+    
+    -- Use contrapositive: if U - wI is not IsUnit, then w is approx eigenvalue,
+    -- then μ is approx eigenvalue of A, contradicting bounded below
+    by_contra h_not_unit
+    
+    -- w is an approximate eigenvalue of U
+    have h_approx_U := unitary_not_isUnit_approx_eigenvalue (cayleyTransform_unitary gen hsa) w h_not_unit
+    
+    -- Therefore μ is an approximate eigenvalue of A
+    have h_approx_A := cayley_approx_eigenvalue_backward gen hsa μ hμ_ne h_approx_U
+    
+    -- Get a contradiction with bounded below
+    obtain ⟨ψ, hψ_mem, hψ_norm_ne, h_small⟩ := h_approx_A C hC_pos
+    have hψ_ne : ψ ≠ 0 := norm_ne_zero_iff.mp hψ_norm_ne
+    have hψ_norm_pos : ‖ψ‖ > 0 := norm_pos_iff.mpr hψ_ne
+    
+    have h_ge := hC_bound ψ hψ_mem
+    -- h_ge : ‖Aψ - μψ‖ ≥ C * ‖ψ‖
+    -- h_small : ‖Aψ - μψ‖ < C * ‖ψ‖
+    linarith
+    
+  · -- Backward: IsUnit (U - wI) → A - μI bounded below
+    intro hU
+    obtain ⟨c, hc_pos, hc_bound⟩ := isUnit_bounded_below hU
+    exact cayley_shift_bounded_below_backward gen hsa μ hμ_ne c hc_pos hc_bound
+
+
+
+/-- For operators commuting with their adjoint, bounded below implies surjective -/
+lemma normal_bounded_below_surjective {T : H →L[ℂ] H} 
+    (hT : T.adjoint.comp T = T.comp T.adjoint)
+    (c : ℝ) (hc_pos : c > 0) (hc_bound : ∀ φ, ‖T φ‖ ≥ c * ‖φ‖) :
+    Function.Surjective T := by
+  -- Step 1: Range is dense (orthogonal complement is trivial)
+  have h_range_dense : Dense (Set.range T) := by
+    apply dense_range_of_orthogonal_trivial
+    intro y hy
+    -- ∀ x, ⟨Tx, y⟩ = 0 means T*y = 0
+    have hT_adj_y : T.adjoint y = 0 := by
+      apply ext_inner_left ℂ
+      intro x
+      rw [inner_zero_right, ContinuousLinearMap.adjoint_inner_right]
+      exact hy x
+    -- For normal T: ‖T*y‖ = ‖Ty‖
+    have h_norm_eq : ‖T.adjoint y‖ = ‖T y‖ := by
+      have h1 : ⟪T.adjoint (T y), y⟫_ℂ = ⟪T (T.adjoint y), y⟫_ℂ := by
+        calc ⟪T.adjoint (T y), y⟫_ℂ 
+            = ⟪(T.adjoint.comp T) y, y⟫_ℂ := rfl
+          _ = ⟪(T.comp T.adjoint) y, y⟫_ℂ := by rw [hT]
+          _ = ⟪T (T.adjoint y), y⟫_ℂ := rfl
+      have h2 : ‖T.adjoint y‖^2 = (⟪T (T.adjoint y), y⟫_ℂ).re := by
+        have h := ContinuousLinearMap.adjoint_inner_right T (T.adjoint y) y
+        have h_inner : (⟪T.adjoint y, T.adjoint y⟫_ℂ).re = ‖T.adjoint y‖^2 := by
+          rw [inner_self_eq_norm_sq_to_K (𝕜 := ℂ)]
+          simp only [coe_algebraMap]
+          rw [← ofReal_pow]
+          exact Complex.ofReal_re _
+        linarith [h_inner, congrArg Complex.re h]
+
+      have h3 : ‖T y‖^2 = (⟪T.adjoint (T y), y⟫_ℂ).re := by
+        have h := ContinuousLinearMap.adjoint_inner_left T (T y) y
+        -- h : ⟪T.adjoint (T y), y⟫_ℂ = ⟪T y, T y⟫_ℂ
+        have h_inner : (⟪T y, T y⟫_ℂ).re = ‖T y‖^2 := by
+          rw [inner_self_eq_norm_sq_to_K (𝕜 := ℂ)]
+          simp only [coe_algebraMap]
+          rw [← ofReal_pow]
+          exact Complex.ofReal_re _
+        have h_adj : ⟪T.adjoint (T y), y⟫_ℂ = ⟪T y, T y⟫_ℂ := by
+          rw [ContinuousLinearMap.adjoint_inner_left]
+        rw [h_adj]
+        exact h_inner.symm
+      have h_sq : ‖T.adjoint y‖^2 = ‖T y‖^2 := by rw [h2, h3, h1]
+      nlinarith [norm_nonneg (T.adjoint y), norm_nonneg (T y), sq_nonneg (‖T.adjoint y‖ - ‖T y‖)]
+    -- T*y = 0 implies ‖Ty‖ = 0
+    rw [hT_adj_y, norm_zero] at h_norm_eq
+    -- Bounded below: ‖Ty‖ ≥ c‖y‖, so y = 0
+    have h_Ty_zero : ‖T y‖ = 0 := by
+      rw [← h_norm_eq]
+    have h := hc_bound y
+    rw [h_Ty_zero] at h
+    have hy_norm_zero : ‖y‖ = 0 := by nlinarith [norm_nonneg y]
+    exact norm_eq_zero.mp hy_norm_zero
+  
+  -- Step 2: Range is closed (bounded below implies closed range)
+  have h_range_closed : IsClosed (Set.range T) := by
+    rw [← isSeqClosed_iff_isClosed]
+    intro xseq x hxseq hx_lim
+    -- xseq n ∈ Range(T) and xseq → x, need x ∈ Range(T)
+    -- Get preimages: T (yseq n) = xseq n
+    choose yseq hyseq using hxseq
+    
+    -- yseq is Cauchy because T is bounded below
+    have h_cauchy : CauchySeq yseq := by
+      rw [Metric.cauchySeq_iff']
+      intro ε hε
+      -- Since xseq converges, it's Cauchy
+      have hx_cauchy := hx_lim.cauchySeq
+      rw [Metric.cauchySeq_iff'] at hx_cauchy
+      obtain ⟨N, hN⟩ := hx_cauchy (c * ε) (by positivity)
+      use N
+      intro n hn
+      have h_bound := hc_bound (yseq n - yseq N)
+      rw [map_sub] at h_bound
+      have h_xdist : ‖xseq n - xseq N‖ < c * ε := by
+        rw [← dist_eq_norm]
+        exact hN n hn
+      have h_ydist : c * ‖yseq n - yseq N‖ ≤ ‖T (yseq n) - T (yseq N)‖ := h_bound
+      rw [hyseq n, hyseq N] at h_ydist
+      calc dist (yseq n) (yseq N) 
+          = ‖yseq n - yseq N‖ := dist_eq_norm _ _
+        _ ≤ ‖xseq n - xseq N‖ / c := by
+            have : c * ‖yseq n - yseq N‖ ≤ ‖xseq n - xseq N‖ := h_ydist
+            exact (le_div_iff₀' hc_pos).mpr h_ydist
+        _ < (c * ε) / c := by apply div_lt_div_of_pos_right h_xdist hc_pos
+        _ = ε := by field_simp
+    
+    -- yseq converges to some y'
+    obtain ⟨y', hy'_lim⟩ := cauchySeq_tendsto_of_complete h_cauchy
+    
+    -- T y' = x
+    have hTy' : T y' = x := by
+      have hT_cont := T.continuous.tendsto y'
+      have hTyseq_lim : Tendsto (fun n => T (yseq n)) atTop (𝓝 (T y')) := hT_cont.comp hy'_lim
+      have hTyseq_eq : ∀ n, T (yseq n) = xseq n := hyseq
+      simp_rw [hTyseq_eq] at hTyseq_lim
+      exact tendsto_nhds_unique hTyseq_lim hx_lim
+    
+    exact ⟨y', hTy'⟩
+  
+  -- Step 3: Dense + closed = surjective
+  exact surjective_of_isClosed_range_of_dense T h_range_closed h_range_dense
 
 
 /-- The domain of A is exactly the range of (I - U) -/
 theorem generator_domain_eq_range_one_minus_cayley {U_grp : OneParameterUnitaryGroup (H := H)}
     (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint) :
     (gen.domain : Set H) = LinearMap.range (ContinuousLinearMap.id ℂ H - cayleyTransform gen hsa) := by
-  sorry
+  set U := cayleyTransform gen hsa with hU_def
+  ext ψ
+  constructor
+  · -- D(A) ⊆ Range(I - U)
+    intro hψ
+    -- For ψ ∈ D(A), let φ = (A + iI)ψ
+    -- Then (I - U)φ = φ - Uφ = (A + iI)ψ - (A - iI)ψ = 2iψ
+    -- So ψ = (2i)⁻¹(I - U)φ ∈ Range(I - U)
+    let φ := gen.op ⟨ψ, hψ⟩ + I • ψ
+    
+    -- Compute Uφ = (A - iI)ψ
+    have h_Uφ : U φ = gen.op ⟨ψ, hψ⟩ - I • ψ := by
+      simp only [U, cayleyTransform, ContinuousLinearMap.sub_apply,
+                 ContinuousLinearMap.id_apply, ContinuousLinearMap.smul_apply]
+      have h_res : Resolvent.resolvent_at_neg_i gen hsa (gen.op ⟨ψ, hψ⟩ + I • ψ) = ψ :=
+        Resolvent.resolvent_at_neg_i_left_inverse gen hsa ψ hψ
+      rw [h_res]
+      module
+    
+    -- (I - U)φ = φ - Uφ = 2iψ
+    have h_diff : (ContinuousLinearMap.id ℂ H - U) φ = (2 * I) • ψ := by
+      simp only [ContinuousLinearMap.sub_apply, ContinuousLinearMap.id_apply, h_Uφ]
+      simp only [φ]
+      module
+    
+    -- So ψ = (2i)⁻¹(I - U)φ
+    rw [@LinearMap.coe_range]
+    use (2 * I)⁻¹ • φ
+    simp only [map_smul, h_diff, smul_smul]
+    have h_ne : (2 : ℂ) * I ≠ 0 := by simp
+    field_simp [h_ne]
+    module
+    
+  · -- Range(I - U) ⊆ D(A)
+    intro hψ
+    rw [LinearMap.coe_range] at hψ
+    obtain ⟨χ, hχ⟩ := hψ
+    -- ψ = (I - U)χ
+    -- Write χ = (A + iI)η for some η ∈ D(A) using surjectivity
+    -- Then (I - U)χ = 2iη, so ψ = 2iη ∈ D(A)
+    
+    -- Get η from resolvent
+    set η := Resolvent.resolvent_at_neg_i gen hsa χ with hη_def
+    have hη_mem : η ∈ gen.domain := Resolvent.resolvent_solution_mem_plus gen hsa χ
+    have hχ_eq : gen.op ⟨η, hη_mem⟩ + I • η = χ := Resolvent.resolvent_solution_eq_plus gen hsa χ
+    
+    -- Compute (I - U)χ = 2iη
+    have h_Uχ : U χ = gen.op ⟨η, hη_mem⟩ - I • η := by
+      rw [← hχ_eq]
+      simp only [U, cayleyTransform, ContinuousLinearMap.sub_apply,
+                 ContinuousLinearMap.id_apply, ContinuousLinearMap.smul_apply]
+      have h_res : Resolvent.resolvent_at_neg_i gen hsa (gen.op ⟨η, hη_mem⟩ + I • η) = η :=
+        Resolvent.resolvent_at_neg_i_left_inverse gen hsa η hη_mem
+      rw [h_res]
+      -- ⊢ gen.op ⟨η, hη_mem⟩ + I • η - (2 * I) • η = gen.op ⟨η, hη_mem⟩ - I • η
+      module
+      
+    have h_diff : (ContinuousLinearMap.id ℂ H - U) χ = (2 * I) • η := by
+      calc (ContinuousLinearMap.id ℂ H - U) χ 
+          = χ - U χ := by simp only [ContinuousLinearMap.sub_apply, ContinuousLinearMap.id_apply]
+        _ = χ - (gen.op ⟨η, hη_mem⟩ - I • η) := by rw [h_Uχ]
+        _ = (gen.op ⟨η, hη_mem⟩ + I • η) - (gen.op ⟨η, hη_mem⟩ - I • η) := by rw [← hχ_eq]
+        _ = (2 * I) • η := by module
+    
+    -- ψ = (I - U)χ = 2iη
+    simp only [ContinuousLinearMap.coe_sub', ContinuousLinearMap.coe_id', Pi.sub_apply, id_eq] at hχ
+    rw [← hχ]
+    subst hχ
+    simp_all only [ContinuousLinearMap.coe_sub', ContinuousLinearMap.coe_id', Pi.sub_apply, id_eq, SetLike.mem_coe, U,
+      η]
+    apply SMulMemClass.smul_mem
+    exact hη_mem
 
 
+
+
+/-
+================================================================================
+SPECTRAL CONNECTION
+================================================================================
+-/
+
+/-- The Cayley image of a Borel set on ℝ -/
+def cayleyImage (B : Set ℝ) : Set ℂ :=
+  {w : ℂ | ∃ μ ∈ B, w = (↑μ - I) * (↑μ + I)⁻¹}
+
+/-- Transfer spectral measure from unitary to self-adjoint via inverse Cayley -/
+noncomputable def spectralMeasure_from_unitary 
+    (E_U : Set ℂ → (H →L[ℂ] H)) : Set ℝ → (H →L[ℂ] H) :=
+  fun B => E_U (cayleyImage B)
+
+/-- The spectral measures are compatible if they satisfy the Cayley correspondence -/
+def SpectralMeasuresCompatible {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
+    (E_A : Set ℝ → (H →L[ℂ] H)) (E_U : Set ℂ → (H →L[ℂ] H)) : Prop :=
+  ∀ B : Set ℝ, E_A B = E_U (cayleyImage B)
+
+/-- Existence of compatible spectral measures -/
+axiom exists_compatible_spectral_measures {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint) :
+    ∃ (E_A : Set ℝ → (H →L[ℂ] H)) (E_U : Set ℂ → (H →L[ℂ] H)),
+      SpectralMeasuresCompatible gen hsa E_A E_U
+
+/-- The correspondence theorem (given compatible measures) -/
+theorem spectralMeasure_cayley_correspondence {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
+    (E_A : Set ℝ → (H →L[ℂ] H)) (E_U : Set ℂ → (H →L[ℂ] H))
+    (hcompat : SpectralMeasuresCompatible gen hsa E_A E_U)
+    (B : Set ℝ) :
+    E_A B = E_U (cayleyImage B) := hcompat B
+
+end AlgebraicLemmas
 end StonesTheorem.Cayley
