@@ -24,8 +24,8 @@ References:
   - Hall, B.C. "Quantum Theory for Mathematicians" Ch. 9-10
 -/
 
-import LogosLibrary.DeepTheorems.Quantum.Evolution.Yosida
-import LogosLibrary.DeepTheorems.Quantum.Evolution.Resolvent
+import LogosLibrary.QuantumMechanics.Evolution.Yosida
+import LogosLibrary.QuantumMechanics.Evolution.Resolvent
 namespace StonesTheorem
 
 open InnerProductSpace Complex Filter Topology
