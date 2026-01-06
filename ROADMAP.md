@@ -1,5 +1,5 @@
 # The Map
-Welcome to insanity.
+Welcome to insanity.  Also, the map and the current directory don't match up?  I blame me.
 
 **Plan**
 - Formalize the Meta, Core and QM files as completely as possible. 
