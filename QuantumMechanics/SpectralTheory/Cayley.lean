@@ -24,7 +24,7 @@ References:
   - Reed & Simon, Vol. 1, Section VIII.3
 -/
 
-import LogosLibrary.DeepTheorems.Quantum.Evolution.Resolvent
+import LogosLibrary.QuantumMechanics.Evolution.Resolvent
 open InnerProductSpace MeasureTheory Complex Filter Topology  StonesTheorem.Bochner Stone.Generators
 open scoped BigOperators Topology
 
