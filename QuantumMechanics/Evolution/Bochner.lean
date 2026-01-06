@@ -24,7 +24,7 @@ References:
   - Engel & Nagel, "One-Parameter Semigroups for Linear Evolution Equations"
   - Mathlib Bochner integration: MeasureTheory.Integral.Bochner
 -/
-import LogosLibrary.DeepTheorems.Quantum.Evolution.Generator
+import LogosLibrary.QuantumMechanics.Evolution.Generator
 
 namespace StonesTheorem.Bochner
 
