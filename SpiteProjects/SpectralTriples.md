@@ -180,9 +180,5 @@ SpectralAction/
 
 Estimated: ~60 lemmas.
 
----
-
-*sets down pen*
-
 **Total for finite spectral Standard Model: ~340 lemmas.**
 
