@@ -13,7 +13,7 @@
 |---------|--------|-------|-------|
 | Ott-Landsberg Resolution | ✅ Complete | ~2,500 | 7 independent proofs; 60-year debate settled |
 | Thermal Time Uniqueness | ✅ Complete | ~2,000 | Connes-Rovelli form τ/T forced by Lorentz covariance |
-| Robertson Uncertainty Principle | ✅ Complete | ~1,200 | Unbounded operators, not the bounded simplification |
+| Robertson Uncertainty Principle | 🚧 Updating | ~1,200 | Unbounded operators, not the bounded simplification |
 | Stone's Theorem | ✅ Complete | ~11,000 | 1932 approach via Bochner-Yosida, both directions |
 | Resolvent Theory (Unbounded) | ✅ Complete | ~2,500 | Full theory with spectral-ready infrastructure |
 
@@ -139,18 +139,16 @@ Key results:
 ```
 LogosLibrary/
 ├── Units/                    # Physical units with type safety
-├── Classes/                  # Pedagogical material (QM, Relativity, etc.)
-├── DeepTheorems/
-│   ├── Quantum/
-│   │   ├── Uncertainty/      # Robertson (complete)
-│   │   └── Evolution/        # Stone (complete)
-│   ├── Relativity/
-│   │   ├── LorentzBoost/     # Ott-Landsberg (complete)
-│   │   └── ThermalTime/      # Connes-Rovelli (complete)
-│   ├── Gravity/              # GR formalization (in progress)
-│   └── Holography/           # AdS/CFT, entropy bounds (in progress)
-└── Applications/
-    └── Detectors/            # Claim validators
+└── DeepTheorems/
+   ├── Quantum/
+   │   ├── Uncertainty/      # Robertson (complete) 🚧 needs touch ups
+   │   ├── Spectral/         # Functional Calc (in progress)
+   │   └── Evolution/        # Stone (complete)
+   ├── Relativity/
+   │   ├── SR/               # MinkowskiSpacetime (complete)
+   │   ├── LorentzBoost/     # Ott-Landsberg (complete), Connes-Rovelli (complete)
+   │   └── GR/               # KerrMetric (complete)
+   └── Holography/           # AdS/CFT, entropy bounds (in progress)
 ```
 
 ---
