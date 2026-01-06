@@ -1,6 +1,6 @@
 # Logos Library
 
-**Formally Verified Foundations for Mathematical Physics**
+**Formally Verified Foundations for Quantum Mechanics**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Lean 4](https://img.shields.io/badge/Lean-4-blue.svg)](https://leanprover.github.io/lean4/doc/)
