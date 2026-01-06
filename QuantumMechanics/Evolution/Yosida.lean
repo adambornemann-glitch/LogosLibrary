@@ -78,7 +78,7 @@ References:
 -/
 
 -- Import Completed Resolvent file which has the Generator and Bochner machinery as well
-import LogosLibrary.DeepTheorems.Quantum.Evolution.Resolvent
+import LogosLibrary.QuantumMechanics.Evolution.Resolvent
 
 namespace StonesTheorem.Yosida
 open InnerProductSpace MeasureTheory Complex Filter Topology StonesTheorem.Resolvent StonesTheorem.Bochner Stone.Generators
