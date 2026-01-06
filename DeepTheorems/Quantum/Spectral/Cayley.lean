@@ -1710,11 +1710,139 @@ lemma isUnit_bounded_below [Nontrivial H] {T : H →L[ℂ] H} (hT : IsUnit T) :
       _ ≤ ‖T_inv‖ * ‖T φ‖ := ContinuousLinearMap.le_opNorm T_inv (T φ)
   exact (inv_mul_le_iff₀ hT_inv_norm_pos).mpr h_bound
 
-/-- For normal operators, bounded below implies IsUnit -/
-axiom normal_bounded_below_isUnit [Nontrivial H] {T : H →L[ℂ] H} 
+
+/-- For operators commuting with their adjoint, bounded below implies surjective -/
+lemma normal_bounded_below_surjective {T : H →L[ℂ] H} 
+    (hT : T.adjoint.comp T = T.comp T.adjoint)
+    (c : ℝ) (hc_pos : c > 0) (hc_bound : ∀ φ, ‖T φ‖ ≥ c * ‖φ‖) :
+    Function.Surjective T := by
+  -- Step 1: Range is dense (orthogonal complement is trivial)
+  have h_range_dense : Dense (Set.range T) := by
+    apply dense_range_of_orthogonal_trivial
+    intro y hy
+    -- ∀ x, ⟨Tx, y⟩ = 0 means T*y = 0
+    have hT_adj_y : T.adjoint y = 0 := by
+      apply ext_inner_left ℂ
+      intro x
+      rw [inner_zero_right, ContinuousLinearMap.adjoint_inner_right]
+      exact hy x
+    -- For normal T: ‖T*y‖ = ‖Ty‖
+    have h_norm_eq : ‖T.adjoint y‖ = ‖T y‖ := by
+      have h1 : ⟪T.adjoint (T y), y⟫_ℂ = ⟪T (T.adjoint y), y⟫_ℂ := by
+        calc ⟪T.adjoint (T y), y⟫_ℂ 
+            = ⟪(T.adjoint.comp T) y, y⟫_ℂ := rfl
+          _ = ⟪(T.comp T.adjoint) y, y⟫_ℂ := by rw [hT]
+          _ = ⟪T (T.adjoint y), y⟫_ℂ := rfl
+      have h2 : ‖T.adjoint y‖^2 = (⟪T (T.adjoint y), y⟫_ℂ).re := by
+        have h := ContinuousLinearMap.adjoint_inner_right T (T.adjoint y) y
+        have h_inner : (⟪T.adjoint y, T.adjoint y⟫_ℂ).re = ‖T.adjoint y‖^2 := by
+          rw [inner_self_eq_norm_sq_to_K (𝕜 := ℂ)]
+          simp only [coe_algebraMap]
+          rw [← ofReal_pow]
+          exact Complex.ofReal_re _
+        linarith [h_inner, congrArg Complex.re h]
+
+      have h3 : ‖T y‖^2 = (⟪T.adjoint (T y), y⟫_ℂ).re := by
+        have h := ContinuousLinearMap.adjoint_inner_left T (T y) y
+        -- h : ⟪T.adjoint (T y), y⟫_ℂ = ⟪T y, T y⟫_ℂ
+        have h_inner : (⟪T y, T y⟫_ℂ).re = ‖T y‖^2 := by
+          rw [inner_self_eq_norm_sq_to_K (𝕜 := ℂ)]
+          simp only [coe_algebraMap]
+          rw [← ofReal_pow]
+          exact Complex.ofReal_re _
+        have h_adj : ⟪T.adjoint (T y), y⟫_ℂ = ⟪T y, T y⟫_ℂ := by
+          rw [ContinuousLinearMap.adjoint_inner_left]
+        rw [h_adj]
+        exact h_inner.symm
+      have h_sq : ‖T.adjoint y‖^2 = ‖T y‖^2 := by rw [h2, h3, h1]
+      nlinarith [norm_nonneg (T.adjoint y), norm_nonneg (T y), sq_nonneg (‖T.adjoint y‖ - ‖T y‖)]
+    -- T*y = 0 implies ‖Ty‖ = 0
+    rw [hT_adj_y, norm_zero] at h_norm_eq
+    -- Bounded below: ‖Ty‖ ≥ c‖y‖, so y = 0
+    have h_Ty_zero : ‖T y‖ = 0 := by
+      rw [← h_norm_eq]
+    have h := hc_bound y
+    rw [h_Ty_zero] at h
+    have hy_norm_zero : ‖y‖ = 0 := by nlinarith [norm_nonneg y]
+    exact norm_eq_zero.mp hy_norm_zero
+  
+  -- Step 2: Range is closed (bounded below implies closed range)
+  have h_range_closed : IsClosed (Set.range T) := by
+    rw [← isSeqClosed_iff_isClosed]
+    intro xseq x hxseq hx_lim
+    -- xseq n ∈ Range(T) and xseq → x, need x ∈ Range(T)
+    -- Get preimages: T (yseq n) = xseq n
+    choose yseq hyseq using hxseq
+    
+    -- yseq is Cauchy because T is bounded below
+    have h_cauchy : CauchySeq yseq := by
+      rw [Metric.cauchySeq_iff']
+      intro ε hε
+      -- Since xseq converges, it's Cauchy
+      have hx_cauchy := hx_lim.cauchySeq
+      rw [Metric.cauchySeq_iff'] at hx_cauchy
+      obtain ⟨N, hN⟩ := hx_cauchy (c * ε) (by positivity)
+      use N
+      intro n hn
+      have h_bound := hc_bound (yseq n - yseq N)
+      rw [map_sub] at h_bound
+      have h_xdist : ‖xseq n - xseq N‖ < c * ε := by
+        rw [← dist_eq_norm]
+        exact hN n hn
+      have h_ydist : c * ‖yseq n - yseq N‖ ≤ ‖T (yseq n) - T (yseq N)‖ := h_bound
+      rw [hyseq n, hyseq N] at h_ydist
+      calc dist (yseq n) (yseq N) 
+          = ‖yseq n - yseq N‖ := dist_eq_norm _ _
+        _ ≤ ‖xseq n - xseq N‖ / c := by
+            have : c * ‖yseq n - yseq N‖ ≤ ‖xseq n - xseq N‖ := h_ydist
+            exact (le_div_iff₀' hc_pos).mpr h_ydist
+        _ < (c * ε) / c := by apply div_lt_div_of_pos_right h_xdist hc_pos
+        _ = ε := by field_simp
+    
+    -- yseq converges to some y'
+    obtain ⟨y', hy'_lim⟩ := cauchySeq_tendsto_of_complete h_cauchy
+    
+    -- T y' = x
+    have hTy' : T y' = x := by
+      have hT_cont := T.continuous.tendsto y'
+      have hTyseq_lim : Tendsto (fun n => T (yseq n)) atTop (𝓝 (T y')) := hT_cont.comp hy'_lim
+      have hTyseq_eq : ∀ n, T (yseq n) = xseq n := hyseq
+      simp_rw [hTyseq_eq] at hTyseq_lim
+      exact tendsto_nhds_unique hTyseq_lim hx_lim
+    
+    exact ⟨y', hTy'⟩
+  
+  -- Step 3: Dense + closed = surjective
+  exact surjective_of_isClosed_range_of_dense T h_range_closed h_range_dense
+
+lemma normal_bounded_below_isUnit [Nontrivial H] {T : H →L[ℂ] H} 
     (hT : T.adjoint * T = T * T.adjoint)
     (c : ℝ) (hc_pos : c > 0) (hc_bound : ∀ φ, ‖T φ‖ ≥ c * ‖φ‖) :
-    IsUnit T
+    IsUnit T := by
+  have h_inj : Function.Injective T := by
+    intro x y hxy
+    have : ‖T (x - y)‖ = 0 := by simp [hxy]
+    have h := hc_bound (x - y)
+    rw [this] at h
+    have : ‖x - y‖ = 0 := by nlinarith [norm_nonneg (x - y)]
+    exact sub_eq_zero.mp (norm_eq_zero.mp this)
+  have h_surj := normal_bounded_below_surjective hT c hc_pos hc_bound
+  -- Convert to ker/range form
+  have h_ker : LinearMap.ker T = ⊥ := LinearMap.ker_eq_bot.mpr h_inj
+  have h_range : LinearMap.range T = ⊤ := LinearMap.range_eq_top.mpr h_surj
+  let e := ContinuousLinearEquiv.ofBijective T h_ker h_range
+  exact ⟨⟨T, e.symm.toContinuousLinearMap, 
+         by ext x; 
+            simp only [ContinuousLinearMap.coe_mul, ContinuousLinearEquiv.coe_coe,
+              Function.comp_apply, ContinuousLinearMap.one_apply]
+            exact ContinuousLinearEquiv.ofBijective_apply_symm_apply T h_ker h_range x,
+         by ext x; 
+            simp only [ContinuousLinearMap.coe_mul, ContinuousLinearEquiv.coe_coe,
+              Function.comp_apply, ContinuousLinearMap.one_apply]
+            exact ContinuousLinearEquiv.ofBijective_symm_apply_apply T h_ker h_range x⟩, 
+            rfl⟩ 
+
+
 
 /-- For unitary U, if U - wI is not IsUnit then w is an approximate eigenvalue -/
 lemma unitary_not_isUnit_approx_eigenvalue [Nontrivial H] {U : H →L[ℂ] H} (hU : Unitary U) (w : ℂ)
@@ -1988,109 +2116,7 @@ theorem cayley_spectrum_correspondence {U_grp : OneParameterUnitaryGroup (H := H
 
 
 
-/-- For operators commuting with their adjoint, bounded below implies surjective -/
-lemma normal_bounded_below_surjective {T : H →L[ℂ] H} 
-    (hT : T.adjoint.comp T = T.comp T.adjoint)
-    (c : ℝ) (hc_pos : c > 0) (hc_bound : ∀ φ, ‖T φ‖ ≥ c * ‖φ‖) :
-    Function.Surjective T := by
-  -- Step 1: Range is dense (orthogonal complement is trivial)
-  have h_range_dense : Dense (Set.range T) := by
-    apply dense_range_of_orthogonal_trivial
-    intro y hy
-    -- ∀ x, ⟨Tx, y⟩ = 0 means T*y = 0
-    have hT_adj_y : T.adjoint y = 0 := by
-      apply ext_inner_left ℂ
-      intro x
-      rw [inner_zero_right, ContinuousLinearMap.adjoint_inner_right]
-      exact hy x
-    -- For normal T: ‖T*y‖ = ‖Ty‖
-    have h_norm_eq : ‖T.adjoint y‖ = ‖T y‖ := by
-      have h1 : ⟪T.adjoint (T y), y⟫_ℂ = ⟪T (T.adjoint y), y⟫_ℂ := by
-        calc ⟪T.adjoint (T y), y⟫_ℂ 
-            = ⟪(T.adjoint.comp T) y, y⟫_ℂ := rfl
-          _ = ⟪(T.comp T.adjoint) y, y⟫_ℂ := by rw [hT]
-          _ = ⟪T (T.adjoint y), y⟫_ℂ := rfl
-      have h2 : ‖T.adjoint y‖^2 = (⟪T (T.adjoint y), y⟫_ℂ).re := by
-        have h := ContinuousLinearMap.adjoint_inner_right T (T.adjoint y) y
-        have h_inner : (⟪T.adjoint y, T.adjoint y⟫_ℂ).re = ‖T.adjoint y‖^2 := by
-          rw [inner_self_eq_norm_sq_to_K (𝕜 := ℂ)]
-          simp only [coe_algebraMap]
-          rw [← ofReal_pow]
-          exact Complex.ofReal_re _
-        linarith [h_inner, congrArg Complex.re h]
 
-      have h3 : ‖T y‖^2 = (⟪T.adjoint (T y), y⟫_ℂ).re := by
-        have h := ContinuousLinearMap.adjoint_inner_left T (T y) y
-        -- h : ⟪T.adjoint (T y), y⟫_ℂ = ⟪T y, T y⟫_ℂ
-        have h_inner : (⟪T y, T y⟫_ℂ).re = ‖T y‖^2 := by
-          rw [inner_self_eq_norm_sq_to_K (𝕜 := ℂ)]
-          simp only [coe_algebraMap]
-          rw [← ofReal_pow]
-          exact Complex.ofReal_re _
-        have h_adj : ⟪T.adjoint (T y), y⟫_ℂ = ⟪T y, T y⟫_ℂ := by
-          rw [ContinuousLinearMap.adjoint_inner_left]
-        rw [h_adj]
-        exact h_inner.symm
-      have h_sq : ‖T.adjoint y‖^2 = ‖T y‖^2 := by rw [h2, h3, h1]
-      nlinarith [norm_nonneg (T.adjoint y), norm_nonneg (T y), sq_nonneg (‖T.adjoint y‖ - ‖T y‖)]
-    -- T*y = 0 implies ‖Ty‖ = 0
-    rw [hT_adj_y, norm_zero] at h_norm_eq
-    -- Bounded below: ‖Ty‖ ≥ c‖y‖, so y = 0
-    have h_Ty_zero : ‖T y‖ = 0 := by
-      rw [← h_norm_eq]
-    have h := hc_bound y
-    rw [h_Ty_zero] at h
-    have hy_norm_zero : ‖y‖ = 0 := by nlinarith [norm_nonneg y]
-    exact norm_eq_zero.mp hy_norm_zero
-  
-  -- Step 2: Range is closed (bounded below implies closed range)
-  have h_range_closed : IsClosed (Set.range T) := by
-    rw [← isSeqClosed_iff_isClosed]
-    intro xseq x hxseq hx_lim
-    -- xseq n ∈ Range(T) and xseq → x, need x ∈ Range(T)
-    -- Get preimages: T (yseq n) = xseq n
-    choose yseq hyseq using hxseq
-    
-    -- yseq is Cauchy because T is bounded below
-    have h_cauchy : CauchySeq yseq := by
-      rw [Metric.cauchySeq_iff']
-      intro ε hε
-      -- Since xseq converges, it's Cauchy
-      have hx_cauchy := hx_lim.cauchySeq
-      rw [Metric.cauchySeq_iff'] at hx_cauchy
-      obtain ⟨N, hN⟩ := hx_cauchy (c * ε) (by positivity)
-      use N
-      intro n hn
-      have h_bound := hc_bound (yseq n - yseq N)
-      rw [map_sub] at h_bound
-      have h_xdist : ‖xseq n - xseq N‖ < c * ε := by
-        rw [← dist_eq_norm]
-        exact hN n hn
-      have h_ydist : c * ‖yseq n - yseq N‖ ≤ ‖T (yseq n) - T (yseq N)‖ := h_bound
-      rw [hyseq n, hyseq N] at h_ydist
-      calc dist (yseq n) (yseq N) 
-          = ‖yseq n - yseq N‖ := dist_eq_norm _ _
-        _ ≤ ‖xseq n - xseq N‖ / c := by
-            have : c * ‖yseq n - yseq N‖ ≤ ‖xseq n - xseq N‖ := h_ydist
-            exact (le_div_iff₀' hc_pos).mpr h_ydist
-        _ < (c * ε) / c := by apply div_lt_div_of_pos_right h_xdist hc_pos
-        _ = ε := by field_simp
-    
-    -- yseq converges to some y'
-    obtain ⟨y', hy'_lim⟩ := cauchySeq_tendsto_of_complete h_cauchy
-    
-    -- T y' = x
-    have hTy' : T y' = x := by
-      have hT_cont := T.continuous.tendsto y'
-      have hTyseq_lim : Tendsto (fun n => T (yseq n)) atTop (𝓝 (T y')) := hT_cont.comp hy'_lim
-      have hTyseq_eq : ∀ n, T (yseq n) = xseq n := hyseq
-      simp_rw [hTyseq_eq] at hTyseq_lim
-      exact tendsto_nhds_unique hTyseq_lim hx_lim
-    
-    exact ⟨y', hTy'⟩
-  
-  -- Step 3: Dense + closed = surjective
-  exact surjective_of_isClosed_range_of_dense T h_range_closed h_range_dense
 
 
 /-- The domain of A is exactly the range of (I - U) -/
