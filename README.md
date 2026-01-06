@@ -200,8 +200,8 @@ lake build DeepTheorems.Relativity.ThermalTime.ConnesRovelli
 | Phase | Target |
 |-------|--------|
 | ✅ Complete | Robertson, Stone, Resolvent theory, Ott-Landsberg, Thermal Time |
-| 🔄 Current | Spectral theory for unbounded operators |
-| Planned | Functional calculus, Dirac equation |
+| ✅ Complete | Spectral theory for unbounded operators |
+| 🔄 Current | Functional calculus, Dirac equation |
 | Future | Tomita-Takesaki, algebraic QFT foundations |
 
 ---
