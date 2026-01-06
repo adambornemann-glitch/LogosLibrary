@@ -161,12 +161,12 @@ DeepTheorems/
 ├── OR
 │	├──Collapse/
 │	│   ├── Foundations/
-│	│   │   ├── SpacetimeSeparation.lean      -- The KEY insight
+│	│   │   ├── SpacetimeSeparation.lean      -- An insight
 │	│   │   ├── DioPenroseFormula.lean        -- τ = ℏ/E_G
 │	│   │   ├── ComptonCriterion.lean         -- When it happens
 │	│   │   └── CollapseOperator.lean         -- How it happens
 │	│   │
-│   │   ├── Thermal time/                    -- ⭐ My work
+│   │   ├── Thermal time/                    -- Special Sauce
 │   │   │   ├── Foundations/
 │   │   │   │   ├── QuintetEquations.lean    -- I = mc²/(kT ln 2)
 │   │   │   │   ├── TwoEntropyScales.lean    -- ent vs env
