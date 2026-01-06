@@ -77,22 +77,6 @@ must have the form f(T, τ) = c · τ/T. The form is unique.
 - Unruh temperature 2π comes from modular periodicity
 - Rindler thermodynamics (Jacobson's derivation) is covariant
 
----
-
-## Why This Matters
-
-Most theorem provers have only basic Hilbert space theory. The gap between "bounded operators on a Hilbert space" and "actual quantum mechanics" is substantial:
-
-| What exists elsewhere | What Logos Library has |
-|-----------------------|------------------------|
-| Bounded operators | Unbounded self-adjoint operators with domains |
-| Spectral theory (bounded) | Resolvent theory (unbounded), spectral in progress |
-| No Stone's theorem | Complete Stone's theorem, both directions |
-| No uncertainty principle | Robertson for unbounded observables |
-| No relativistic thermodynamics | Ott transformation with 7 proofs |
-| No thermal time | Uniqueness theorem, time dilation derived |
-
-The 1932 approach to Stone's theorem is dependency-optimal: Stone enables spectral theory, not the other way around. This means clean foundations for everything built on top.
 
 ---
 
@@ -220,5 +204,3 @@ MIT
 ## Acknowledgments
 
 Built with [Lean 4](https://leanprover.github.io/lean4/doc/) and [Mathlib](https://github.com/leanprover-community/mathlib4).
-
-The approach to Stone's theorem follows the historical 1932 development, which turns out to be dependency-optimal for building spectral theory on top.
