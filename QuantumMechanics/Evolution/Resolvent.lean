@@ -23,7 +23,7 @@ References:
 -/
 
 -- Import Completed Bochner file which has the Generator machinery as well
-import LogosLibrary.DeepTheorems.Quantum.Evolution.Bochner
+import LogosLibrary.QuantumMechanics.Evolution.Bochner
 
 namespace StonesTheorem.Resolvent
 
