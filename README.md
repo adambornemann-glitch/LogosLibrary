@@ -183,7 +183,7 @@ lake build DeepTheorems.Relativity.ThermalTime.ConnesRovelli
 |-------|--------|
 | ✅ Complete | Robertson, Stone, Resolvent theory, Ott-Landsberg, Thermal Time |
 | ✅ Complete | Spectral theory for unbounded operators |
-| 🔄 Current | Functional calculus, Dirac equation |
+| ✅ Complete | Functional calculus, Dirac equation |
 | Future | Tomita-Takesaki, algebraic QFT foundations |
 
 ---
