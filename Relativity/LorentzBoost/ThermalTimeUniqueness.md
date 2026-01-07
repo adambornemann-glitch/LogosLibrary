@@ -17,10 +17,8 @@ This document presents a machine-verified proof that this form is **unique**. An
 must have the form f(T, τ) = c · τ/T for some constant c > 0.
 **There is no alternative.**
 
-**Author:** Adam Bornemann  
-**Formalization:** Lean 4  
-**Date:** January 2026  
-**Status:** Core theorems proven; modular theory axiomatized pending full Tomita-Takesaki formalization
+Author: Adam Bornemann  
+
 ---
 
 ## Part I: Foundations
