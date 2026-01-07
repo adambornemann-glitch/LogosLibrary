@@ -10,7 +10,7 @@ PHYSICAL INTERPRETATION OF STONE'S THEOREM
 In quantum mechanics, Stone's theorem is the mathematical foundation for
 the time evolution of quantum states.
 -/
-import LogosLibrary.QuantumMechanics.Evolution.MarshallStone
+import LogosLibrary.QuantumMechanics.Evolution.Stone
 
 namespace Schrödinger
 
