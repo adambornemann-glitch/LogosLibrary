@@ -1,5 +1,70 @@
 # Connes' Spectral Triples.  The skelington.
 
+# The axioms for a real spectral triple (A, H, D, J, γ) 
+These characterize when such a structure encodes a spin geometry.
+
+**Axiom 1: Dimension (Spectral Dimension)**
+
+The operator D has compact resolvent, and the eigenvalues λ_n of |D| grow as:
+
+λ_n ~ n^(1/p)
+
+The number p is the dimension. Technically: |D|^(-p) is in the Dixmier trace class. This replaces "the manifold is p-dimensional."
+
+**Axiom 2: Regularity**
+
+The algebra A and all commutators [D, a] belong to the smooth domain:
+
+A ∪ [D, A] ⊂ ∩_k Dom(δ^k)
+
+where δ(T) = [|D|, T]. This replaces "the functions are smooth."
+
+**Axiom 3: Finiteness**
+
+The space of smooth vectors H^∞ = ∩_k Dom(D^k) is a finite projective module over A. This replaces "the spinor bundle is a vector bundle of finite rank."
+
+**Axiom 4: Reality**
+
+There exists an antilinear isometry J: H → H satisfying:
+
+- J² = ε
+- JD = ε' DJ  
+- Jγ = ε'' γJ (in even dimensions)
+
+The signs (ε, ε', ε'') depend on the dimension mod 8. This is the KO-dimension. J is the charge conjugation operator — it encodes real structure.
+
+**Axiom 5: First Order**
+
+For all a, b ∈ A:
+
+[[D, a], b°] = 0
+
+where b° = Jb*J⁻¹. This says D is a first-order differential operator. The commutator [D, a] plays the role of the gradient of a. The double commutator vanishing says this gradient commutes with "functions from the other side."
+
+**Axiom 6: Orientation**
+
+There exists a Hochschild cycle c that gives the chirality:
+
+γ = π_D(c)
+
+with γ² = 1 and γD = -Dγ in even dimensions. This replaces "the manifold is oriented."
+
+**Axiom 7: Poincaré Duality**
+
+The Fredholm index pairing between K-theory K_*(A) and K-homology K^*(A) is non-degenerate. The spectral triple defines a K-homology class via:
+
+(A, H, D) ↦ [D] ∈ K^p(A)
+
+and this class implements Poincaré duality.
+
+The miracle — the reconstruction theorem — is that for A commutative, these seven axioms *force* the structure to be a spin manifold. The abstract axioms recover concrete geometry.
+
+For A noncommutative, these axioms define what "geometry" means when there is no underlying point set.
+
+
+The finite spectral triple A_F = ℂ ⊕ ℍ ⊕ M₃(ℂ) that gives the Standard Model satisfies all seven. It is a zero-dimensional geometry — but a geometry nonetheless.
+
+## A rough sketch for the architecture + lemma estimates
 **Layer 0: Algebraic Foundations**
 
 ```
@@ -182,69 +247,4 @@ Estimated: ~60 lemmas.
 
 **Total for finite spectral Standard Model: ~340 lemmas.**
 
----
-
-# The axioms for a real spectral triple (A, H, D, J, γ) 
-These characterize when such a structure encodes a spin geometry.
-
-**Axiom 1: Dimension (Spectral Dimension)**
-
-The operator D has compact resolvent, and the eigenvalues λ_n of |D| grow as:
-
-λ_n ~ n^(1/p)
-
-The number p is the dimension. Technically: |D|^(-p) is in the Dixmier trace class. This replaces "the manifold is p-dimensional."
-
-**Axiom 2: Regularity**
-
-The algebra A and all commutators [D, a] belong to the smooth domain:
-
-A ∪ [D, A] ⊂ ∩_k Dom(δ^k)
-
-where δ(T) = [|D|, T]. This replaces "the functions are smooth."
-
-**Axiom 3: Finiteness**
-
-The space of smooth vectors H^∞ = ∩_k Dom(D^k) is a finite projective module over A. This replaces "the spinor bundle is a vector bundle of finite rank."
-
-**Axiom 4: Reality**
-
-There exists an antilinear isometry J: H → H satisfying:
-
-- J² = ε
-- JD = ε' DJ  
-- Jγ = ε'' γJ (in even dimensions)
-
-The signs (ε, ε', ε'') depend on the dimension mod 8. This is the KO-dimension. J is the charge conjugation operator — it encodes real structure.
-
-**Axiom 5: First Order**
-
-For all a, b ∈ A:
-
-[[D, a], b°] = 0
-
-where b° = Jb*J⁻¹. This says D is a first-order differential operator. The commutator [D, a] plays the role of the gradient of a. The double commutator vanishing says this gradient commutes with "functions from the other side."
-
-**Axiom 6: Orientation**
-
-There exists a Hochschild cycle c that gives the chirality:
-
-γ = π_D(c)
-
-with γ² = 1 and γD = -Dγ in even dimensions. This replaces "the manifold is oriented."
-
-**Axiom 7: Poincaré Duality**
-
-The Fredholm index pairing between K-theory K_*(A) and K-homology K^*(A) is non-degenerate. The spectral triple defines a K-homology class via:
-
-(A, H, D) ↦ [D] ∈ K^p(A)
-
-and this class implements Poincaré duality.
-
-The miracle — the reconstruction theorem — is that for A commutative, these seven axioms *force* the structure to be a spin manifold. The abstract axioms recover concrete geometry.
-
-For A noncommutative, these axioms define what "geometry" means when there is no underlying point set.
-
-
-The finite spectral triple A_F = ℂ ⊕ ℍ ⊕ M₃(ℂ) that gives the Standard Model satisfies all seven. It is a zero-dimensional geometry — but a geometry nonetheless.
 
