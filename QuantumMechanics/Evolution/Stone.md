@@ -200,7 +200,7 @@ theorem stone_existence (U_grp : OneParameterUnitaryGroup (H := H)) :
 **The Construction:**
 
 1. **Define the domain:**
-$$D(A) = \left\{\psi \in H \,\Big|\, \lim_{t \to 0} \frac{U(t)\psi - \psi}{it} \text{ exists in } H\right\}$$
+$$D(A) = left\{\psi \in H \,\Big|\, \lim_{t \to 0} \frac{U(t)\psi - \psi}{it} \text{ exists in } H right\}$$
 
 2. **Define the operator:**
 $$A\psi = \lim_{t \to 0} \frac{U(t)\psi - \psi}{it}$$
