@@ -1,6 +1,6 @@
 # Stone's Theorem: Bochner Integration Machinery
 
-## A Natural Language Companion to the Lean 4 Formalization
+ **A Natural Language Companion to the Lean 4 Formalization**
 
 ---
 
