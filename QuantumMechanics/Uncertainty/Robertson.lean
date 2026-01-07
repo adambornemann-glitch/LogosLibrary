@@ -1,27 +1,174 @@
 /-
 ================================================================================
-ROBERTSON'S UNCERTAINTY PRINCIPLE - COMPLETE PROOF
+ROBERTSON'S UNCERTAINTY PRINCIPLE — A LEAN 4 FORMALIZATION
 ================================================================================
 
-This file contains the complete proof of Robertson's generalized uncertainty
-relation for unbounded self-adjoint operators on a Hilbert space:
+Author: Adam Bornemann
+Mathematical Content: H.P. Robertson's generalized uncertainty relation (1929)
 
-  σ_A · σ_B ≥ (1/2)|⟨[A,B]⟩|
+────────────────────────────────────────────────────────────────────────────────
+MAIN RESULT
+────────────────────────────────────────────────────────────────────────────────
 
-The proof strategy:
-  Step 1: Shift operators by expectation values
-  Step 2: Apply Cauchy-Schwarz: |⟨Ãψ, B̃ψ⟩|² ≤ ‖Ãψ‖² · ‖B̃ψ‖²
-  Step 3: Decompose inner product into commutator/anticommutator
-  Step 4: Extract imaginary part (commutator contribution)
-  Step 5: Prove Commutator invariance under shifting
-  Step 6: Combine and take square roots to get final inequality
+For symmetric operators A and B on a Hilbert space H, and any normalized
+state ψ in the appropriate domain:
 
-This generalizes Heisenberg's position-momentum uncertainty to any pair
-of non-commuting observables, showing uncertainty is intrinsic to QM.
+                    σ_A · σ_B  ≥  (1/2) |⟨ψ, [A,B] ψ⟩|
 
-References:
-  - Robertson, H.P. (1929). Phys. Rev. 34, 163
-  - Schrödinger, E. (1930). Sitzungsber. Preuss. Akad. Wiss. 14, 296
+where:
+  • σ_A = √⟨(A - ⟨A⟩)²⟩   is the standard deviation (uncertainty) of A
+  • σ_B = √⟨(B - ⟨B⟩)²⟩   is the standard deviation (uncertainty) of B
+  • [A,B] = AB - BA        is the commutator
+  • ⟨·⟩ denotes expectation value in state ψ
+
+This inequality is saturated (equality holds) for Gaussian wave packets in
+the position-momentum case, and more generally for states satisfying
+(A - ⟨A⟩)ψ = iλ(B - ⟨B⟩)ψ for some real λ.
+
+────────────────────────────────────────────────────────────────────────────────
+MATHEMATICAL SIGNIFICANCE: SYMMETRY SUFFICES
+────────────────────────────────────────────────────────────────────────────────
+
+A key insight of this formalization is that Robertson's inequality requires
+only SYMMETRIC operators, not the stronger condition of SELF-ADJOINTNESS.
+
+An operator A is symmetric on domain D if:
+
+    ∀ ψ, φ ∈ D,  ⟨Aψ, φ⟩ = ⟨ψ, Aφ⟩
+
+An operator A is self-adjoint if it is symmetric AND Dom(A) = Dom(A†).
+
+The distinction matters for unbounded operators:
+  • Momentum P = -iℏ(d/dx) on L²[0,1] is symmetric for many boundary
+    conditions, but self-adjoint only for specific choices (e.g., periodic).
+  • Symmetric-but-not-self-adjoint operators may have complex eigenvalues,
+    no complete eigenbasis, and no spectral decomposition.
+
+Yet the uncertainty relation holds regardless. The proof requires only:
+  1. Moving operators across inner products: ⟨Aψ, φ⟩ = ⟨ψ, Aφ⟩
+  2. The Cauchy-Schwarz inequality
+  3. Algebraic properties of commutators
+
+Self-adjointness provides the spectral theorem and Born rule interpretation,
+but the uncertainty bound itself is purely a consequence of symmetry and
+Hilbert space geometry.
+
+────────────────────────────────────────────────────────────────────────────────
+PROOF STRATEGY
+────────────────────────────────────────────────────────────────────────────────
+
+Step 1: SHIFT BY EXPECTATIONS
+    Define Ã = A - ⟨A⟩I and B̃ = B - ⟨B⟩I.
+    These satisfy ⟨Ã⟩ = ⟨B̃⟩ = 0 and [Ã,B̃] = [A,B].
+    Crucially: symmetry is preserved under real affine shifts.
+
+Step 2: CAUCHY-SCHWARZ
+    |⟨Ãψ, B̃ψ⟩|² ≤ ‖Ãψ‖² · ‖B̃ψ‖² = Var(A) · Var(B)
+
+Step 3: DECOMPOSE THE INNER PRODUCT
+    2⟨Ãψ, B̃ψ⟩ = ⟨ψ, {Ã,B̃}ψ⟩ + ⟨ψ, [Ã,B̃]ψ⟩
+
+    For symmetric operators:
+      • Anticommutator {Ã,B̃} has REAL expectation
+      • Commutator [Ã,B̃] has PURELY IMAGINARY expectation
+
+Step 4: EXTRACT THE BOUND
+    |⟨Ãψ, B̃ψ⟩|² ≥ |Im⟨Ãψ, B̃ψ⟩|² = (1/4)|⟨[A,B]⟩|²
+
+Step 5: TAKE SQUARE ROOTS
+    σ_A · σ_B ≥ (1/2)|⟨[A,B]⟩|
+
+────────────────────────────────────────────────────────────────────────────────
+DOMAIN REQUIREMENTS
+────────────────────────────────────────────────────────────────────────────────
+
+For unbounded operators, we require ψ to lie in:
+  • Dom(A) ∩ Dom(B)           — so Aψ and Bψ are defined
+  • Such that Bψ ∈ Dom(A)     — so ABψ is defined
+  • Such that Aψ ∈ Dom(B)     — so BAψ is defined
+
+These conditions ensure the commutator [A,B]ψ is well-defined. In practice,
+this is satisfied by Schwartz space S(ℝ) for position and momentum, or by
+smooth functions with compact support for more general differential operators.
+
+────────────────────────────────────────────────────────────────────────────────
+PHYSICAL CONSEQUENCES
+────────────────────────────────────────────────────────────────────────────────
+
+Position-Momentum (Heisenberg 1927, Kennard 1927):
+    [X, P] = iℏ  ⟹  σ_x · σ_p ≥ ℏ/2
+
+Energy-Time:
+    For time-independent H and any observable A:
+    σ_E · σ_A ≥ (ℏ/2)|d⟨A⟩/dt|
+
+Angular Momentum Components:
+    [Jₓ, Jᵧ] = iℏJᵤ  ⟹  σ_Jₓ · σ_Jᵧ ≥ (ℏ/2)|⟨Jᵤ⟩|
+
+The state-dependence of the bound (via ⟨[A,B]⟩) means uncertainty can vanish
+for eigenstates of one observable, but the Maccone-Pati relations (2014)
+provide state-independent improvements using variance sums.
+
+────────────────────────────────────────────────────────────────────────────────
+HISTORICAL CONTEXT
+────────────────────────────────────────────────────────────────────────────────
+
+1927: Heisenberg's uncertainty paper introduces the principle heuristically,
+      with the gamma-ray microscope thought experiment.
+
+1927: Kennard provides the first rigorous proof for position-momentum,
+      establishing σ_x σ_p ≥ ℏ/2.
+
+1929: Robertson generalizes to arbitrary observables A, B with the
+      commutator-based bound. (Phys. Rev. 34, 163-164)
+
+1930: Schrödinger strengthens Robertson's bound by including the
+      anticommutator covariance term:
+      σ_A² σ_B² ≥ (1/4)|⟨[A,B]⟩|² + (1/4)|⟨{Ã,B̃}⟩|²
+
+2014: Maccone-Pati provide sum-based uncertainty relations that remain
+      non-trivial even when ⟨[A,B]⟩ = 0.
+
+────────────────────────────────────────────────────────────────────────────────
+REFERENCES
+────────────────────────────────────────────────────────────────────────────────
+
+[1] Robertson, H.P. (1929). "The Uncertainty Principle".
+    Physical Review 34(2): 163-164. doi:10.1103/PhysRev.34.163
+
+[2] Kennard, E.H. (1927). "Zur Quantenmechanik einfacher Bewegungstypen".
+    Zeitschrift für Physik 44(4-5): 326-352.
+
+[3] Schrödinger, E. (1930). "Zum Heisenbergschen Unschärfeprinzip".
+    Sitzungsberichte der Preussischen Akademie der Wissenschaften,
+    Physikalisch-mathematische Klasse 14: 296-303.
+
+[4] Von Neumann, J. (1932). Mathematische Grundlagen der Quantenmechanik.
+    Springer. [For rigorous treatment of unbounded operators]
+
+[5] Reed, M. & Simon, B. (1980). Methods of Modern Mathematical Physics I:
+    Functional Analysis. Academic Press. [For symmetric vs self-adjoint]
+
+[6] Hall, B.C. (2013). Quantum Theory for Mathematicians. Springer.
+    Chapter 9. [Modern treatment of uncertainty relations]
+
+────────────────────────────────────────────────────────────────────────────────
+LEAN 4 / MATHLIB NOTES
+────────────────────────────────────────────────────────────────────────────────
+
+This formalization uses Mathlib's:
+  • `InnerProductSpace` for Hilbert space structure
+  • `LinearMap` for unbounded operators (vs `ContinuousLinearMap` for bounded)
+  • `Submodule` for operator domains
+  • `Complex.normSq` and `norm` for magnitude computations
+
+Key design decisions:
+  • Operators are `H →ₗ[ℂ] H` (linear maps) rather than `H →L[ℂ] H`
+    (continuous/bounded linear maps) to handle unbounded observables.
+  • Symmetry is encoded as a predicate on the domain, not as `IsSelfAdjoint`.
+  • Domain conditions are made explicit in theorem hypotheses.
+
+────────────────────────────────────────────────────────────────────────────────
 -/
 import LogosLibrary.QuantumMechanics.Uncertainty.Core
 namespace Robertson.Theorem
@@ -87,11 +234,11 @@ Define Ã = A - ⟨A⟩I and B̃ = B - ⟨B⟩I. These shifted operators have:
   set B' := B.op - B_exp • (1 : H →ₗ[ℂ] H)
 
   -- Prove shifted operators remain self-adjoint (real scalars preserve self-adjointness)
-  have h_A'_sa : ∀ v w, v ∈ A.domain → w ∈ A.domain → ⟪A' v, w⟫_ℂ = ⟪v, A' w⟫_ℂ :=
-    isSelfAdjoint_sub_smul_of_real A.op A_exp A.domain A.self_adjoint
+  have h_A'_symmOp : ∀ v w, v ∈ A.domain → w ∈ A.domain → ⟪A' v, w⟫_ℂ = ⟪v, A' w⟫_ℂ :=
+    isSymmetric_sub_smul_of_real A.op A_exp A.domain A.SymmetricOperator
 
-  have h_B'_sa : ∀ v w, v ∈ B.domain → w ∈ B.domain → ⟪B' v, w⟫_ℂ = ⟪v, B' w⟫_ℂ :=
-    isSelfAdjoint_sub_smul_of_real B.op B_exp B.domain B.self_adjoint
+  have h_B'_symmOp : ∀ v w, v ∈ B.domain → w ∈ B.domain → ⟪B' v, w⟫_ℂ = ⟪v, B' w⟫_ℂ :=
+    isSymmetric_sub_smul_of_real B.op B_exp B.domain B.SymmetricOperator
 
 /-
 STEP 2: APPLY CAUCHY-SCHWARZ INEQUALITY
@@ -146,7 +293,7 @@ The commutator [Ã,B̃] has imaginary expectation (antisymmetric)
     -- Use self-adjointness to move A' across the inner product
     have h1 : ⟪A' ψ, B' ψ⟫_ℂ = ⟪ψ, (A' ∘ₗ B') ψ⟫_ℂ := by
       rw [LinearMap.comp_apply]
-      rw [← h_A'_sa ψ (B' ψ) h_domain_A h_dom_B'ψ_A]
+      rw [← h_A'_symmOp ψ (B' ψ) h_domain_A h_dom_B'ψ_A]
 
     -- Expand as (AB + AB)/2 = AB, then rearrange
     rw [h1]
@@ -174,12 +321,12 @@ Therefore: |⟨Ãψ, B̃ψ⟩|² ≥ |Im⟨Ãψ, B̃ψ⟩|² = (1/4)|⟨[Ã,B̃]
     -- Prove C is purely imaginary (Re(C) = 0)
     have h_C_imaginary : C.re = 0 := by
       apply expectation_commutator_re_eq_zero A' B' ψ A.domain B.domain
-            h_A'_sa h_B'_sa h_domain_A h_domain_B h_dom_B'ψ_A h_dom_A'ψ_B
+            h_A'_symmOp h_B'_symmOp h_domain_A h_domain_B h_dom_B'ψ_A h_dom_A'ψ_B
 
     -- Prove D is purely real (Im(D) = 0)
     have h_D_real : D.im = 0 := by
       apply expectation_anticommutator_im_eq_zero A' B' ψ A.domain B.domain
-            h_A'_sa h_B'_sa h_domain_A h_domain_B h_dom_B'ψ_A h_dom_A'ψ_B
+            h_A'_symmOp h_B'_symmOp h_domain_A h_domain_B h_dom_B'ψ_A h_dom_A'ψ_B
 
     -- Calculate the bound using |z|² = Re(z)² + Im(z)²
     calc ‖⟪A' ψ, B' ψ⟫_ℂ‖^2
