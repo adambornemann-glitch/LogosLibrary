@@ -203,4 +203,11 @@ MIT
 
 ## Acknowledgments
 
-Built with [Lean 4](https://leanprover.github.io/lean4/doc/) and [Mathlib](https://github.com/leanprover-community/mathlib4).
+Built with [Lean 4](https://leanprover.github.io/lean4/doc/) and [Mathlib](https://github.com/leanprover-community/mathlib4) as they are, unquestionably...
+
+███████╗██╗   ██╗██████╗ ███████╗██████╗ ██╗ ██████╗ ██████╗ 
+██╔════╝██║   ██║██╔══██╗██╔════╝██╔══██╗██║██╔═══██╗██╔══██╗
+███████╗██║   ██║██████╔╝█████╗  ██████╔╝██║██║   ██║██████╔╝
+╚════██║██║   ██║██╔═══╝ ██╔══╝  ██╔══██╗██║██║   ██║██╔══██╗
+███████║╚██████╔╝██║     ███████╗██║  ██║██║╚██████╔╝██║  ██║
+╚══════╝ ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝  ╚═╝
