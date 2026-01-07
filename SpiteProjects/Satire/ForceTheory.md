@@ -639,5 +639,5 @@ This requires:
 
 OR cooperation of ~10^24 Force users simultaneously.
 
-Palpatine can't do this alone. The Force is powerful, but not _that_ powerful. Physics wins. 😄
+Palpatine can't do this alone. The Force is powerful, but not _that_ powerful. Physics wins.
 
