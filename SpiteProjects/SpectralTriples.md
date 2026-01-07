@@ -1,6 +1,6 @@
 # Connes' Spectral Triples.  The skelington.
 
-# The axioms for a real spectral triple (A, H, D, J, γ) 
+ **The axioms for a real spectral triple (A, H, D, J, γ)**
 These characterize when such a structure encodes a spin geometry.
 
 **Axiom 1: Dimension (Spectral Dimension)**
