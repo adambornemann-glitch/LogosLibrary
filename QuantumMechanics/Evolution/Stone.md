@@ -24,12 +24,13 @@ The formalization spans approximately 10,000 lines of Lean 4 code across five fi
 2. [The Mathematical Revolution](#section-2)
 3. [Statement of Stone's Theorem](#section-3)
 4. [Part I: Group → Generator](#section-4)
-5. [Part II: Generator → Group](#section-5)
-6. [Part III: The Bijection](#section-6)
-7. [Significance to Spectral Theory](#section-7)
-8. [The Complete Proof Architecture](#section-8)
-9. [What This Formalization Achieves](#section-9)
-10. [Epilogue: The Legacy](#section-10)
+5. [The Resolvent Bridge](#section-5)
+6. [Part II: Generator → Group](#section-6)
+7. [Part III: The Bijection](#section-7)
+8. [Significance to Spectral Theory](#section-8)
+9. [The Complete Proof Architecture](#section-9)
+10. [What This Formalization Achieves](#section-10)
+11. [Epilogue: The Legacy](#section-11)
 
 ---
 
@@ -122,17 +123,19 @@ The unitary operators $U(t)$ are bounded (in fact, isometries), so the analytic 
 
 Stone's theorem says this passage is *reversible*: every strongly continuous unitary group arises from a unique self-adjoint operator.
 
-#### The Yosida Approximation
+#### The Resolvent Philosophy
 
-The Yosida approximation, developed by Kōsaku Yosida in 1948 (building on ideas implicit in Stone's work), provides a constructive approach:
+The unbounded operator $A$ is difficult to work with directly, but it generates a family of *bounded* operators—the resolvents:
 
-Given a self-adjoint operator $A$:
-1. Form the resolvent $R(z) = (A - zI)^{-1}$ for $z \notin \mathbb{R}$
-2. Define bounded approximants $A_n = n^2 R(in) - in \cdot I$
-3. Show $A_n \to A$ strongly on the domain
-4. Define $e^{itA} = \text{s-lim}_{n \to \infty} e^{itA_n}$
+$$R_z = (A - zI)^{-1}, \quad \text{Im}(z) \neq 0$$
 
-This is the approach taken in Yosida.lean, and it avoids the spectral theorem entirely.
+For each $z$ off the real axis, $R_z$ is a bounded operator defined on all of $H$. The family $\{R_z\}$ encodes complete information about $A$:
+
+- The spectrum $\sigma(A)$ is where the resolvent fails to exist
+- The spectral measure can be recovered from boundary values of $R_z$
+- The exponential $e^{itA}$ can be constructed from resolvent approximations
+
+This is the approach taken in this formalization: use the resolvent to bridge unbounded and bounded operator theory.
 
 #### Connection to the Spectral Theorem
 
@@ -141,7 +144,7 @@ Von Neumann's spectral theorem provides an alternative construction:
 If $A = \int_{\mathbb{R}} \lambda \, dE(\lambda)$ where $E$ is the spectral measure, then:
 $$e^{itA} = \int_{\mathbb{R}} e^{it\lambda} \, dE(\lambda)$$
 
-This is more conceptual but requires developing the full machinery of spectral measures. The Yosida approach is more elementary and generalizes to $C_0$-semigroups (the Hille-Yosida theorem).
+This is more conceptual but requires developing the full machinery of spectral measures. The resolvent/Yosida approach is more elementary and generalizes to $C_0$-semigroups (the Hille-Yosida theorem).
 
 ---
 
@@ -244,9 +247,189 @@ theorem stone_part_one (U_grp : OneParameterUnitaryGroup (H := H)) :
 ---
 
 <a name="section-5"></a>
-### Section 5: Part II: Generator → Group
+### Section 5: The Resolvent Bridge
 
-This direction is established in **Yosida.lean** using the Yosida approximation.
+To construct the exponential $e^{itA}$ from a self-adjoint operator $A$, we need the **resolvent**—the bridge between unbounded and bounded operator theory. This material is developed in **Resolvent.lean**.
+
+#### 5.1 The Lower Bound Estimate
+
+The foundation of all resolvent theory is a single inequality.
+
+**Theorem** (`lower_bound_estimate`): For any $z \in \mathbb{C}$ with $\text{Im}(z) \neq 0$ and any $\psi \in D(A)$:
+
+$$\|(A - zI)\psi\| \geq |\text{Im}(z)| \cdot \|\psi\|$$
+
+**Proof:**
+
+Write $z = x + iy$ where $y = \text{Im}(z) \neq 0$. Then:
+
+$$(A - zI)\psi = (A - xI)\psi - iy\psi$$
+
+Expanding the norm squared:
+
+$$\|(A - zI)\psi\|^2 = \|(A-xI)\psi\|^2 + |y|^2\|\psi\|^2 + 2\text{Re}\langle (A-xI)\psi, -iy\psi \rangle$$
+
+The cross term is:
+
+$$2\text{Re}\langle (A-xI)\psi, -iy\psi \rangle = -2y \cdot \text{Im}\langle (A-xI)\psi, \psi \rangle$$
+
+But $(A - xI)$ is symmetric (since $A$ is symmetric and $xI$ is self-adjoint), so $\langle (A-xI)\psi, \psi \rangle \in \mathbb{R}$. Therefore the imaginary part vanishes, and the cross term is zero.
+
+We conclude:
+
+$$\|(A - zI)\psi\|^2 = \|(A-xI)\psi\|^2 + |y|^2\|\psi\|^2 \geq |y|^2\|\psi\|^2$$
+
+Taking square roots gives the result. $\blacksquare$
+
+**Consequences:**
+
+1. **Injectivity:** $(A - zI)$ has trivial kernel for $\text{Im}(z) \neq 0$
+2. **No complex eigenvalues:** Self-adjoint operators have only real spectrum
+3. **Resolvent bound:** If $R_z$ exists, then $\|R_z\| \leq 1/|\text{Im}(z)|$
+4. **Closed range:** Operators bounded below have closed range
+
+#### 5.2 Surjectivity: Range$(A - zI) = H$
+
+**Theorem** (`self_adjoint_range_all_z`): For any $z \in \mathbb{C}$ with $\text{Im}(z) \neq 0$ and any $\phi \in H$:
+
+$$\exists! \psi \in D(A): (A - zI)\psi = \phi$$
+
+**Proof Architecture:**
+
+The proof proceeds in three steps:
+
+**Step 1: Orthogonal complement is trivial.**
+
+Suppose $\chi \perp \text{Range}(A - zI)$, meaning $\langle (A - zI)\psi, \chi \rangle = 0$ for all $\psi \in D(A)$.
+
+This implies $\langle A\psi, \chi \rangle = \bar{z} \langle \psi, \chi \rangle$ for all $\psi \in D(A)$.
+
+Using the self-adjointness criterion (specifically, Range$(A \pm iI) = H$ which we have from Part I), one shows this forces $\chi = 0$ unless $z \in \mathbb{R}$.
+
+Since $\text{Im}(z) \neq 0$, we have $\chi = 0$.
+
+**Step 2: Range is closed.**
+
+Suppose $\{u_n\} \subset \text{Range}(A - zI)$ with $u_n \to \phi$. Write $u_n = (A - zI)\psi_n$.
+
+By the lower bound estimate:
+
+$$\|\psi_m - \psi_n\| \leq \frac{1}{|\text{Im}(z)|} \|u_m - u_n\|$$
+
+So $\{\psi_n\}$ is Cauchy whenever $\{u_n\}$ is Cauchy. By completeness of $H$, $\psi_n \to \psi_\infty$.
+
+The key technical step: show $\psi_\infty \in D(A)$. This uses the resolvent $R_i$ (which exists by self-adjointness):
+
+$$\psi_n = R_i(u_n + (z-i)\psi_n)$$
+
+Taking limits and using continuity of $R_i$:
+
+$$\psi_\infty = R_i(\phi + (z-i)\psi_\infty) \in D(A)$$
+
+since Range$(R_i) = D(A)$.
+
+**Step 3: Dense + Closed = Everything.**
+
+From Steps 1 and 2:
+- Range$(A - zI)^\perp = \{0\}$, so Range$(A - zI)$ is dense
+- Range$(A - zI)$ is closed
+
+A closed dense subspace of $H$ is all of $H$. $\blacksquare$
+
+#### 5.3 The Resolvent Operator
+
+**Definition** (`resolvent`):
+```lean
+noncomputable def resolvent (gen : Generator U_grp) (z : ℂ)
+    (hz : z.im ≠ 0) (hsa : Generator.IsSelfAdjoint gen) : H →L[ℂ] H
+```
+
+For each $z$ with $\text{Im}(z) \neq 0$, the resolvent $R_z = (A - zI)^{-1}$ is:
+- A bounded linear operator on all of $H$
+- With bound $\|R_z\| \leq 1/|\text{Im}(z)|$
+- And range $D(A)$
+
+#### 5.4 The Resolvent Identity
+
+**Theorem** (`resolvent_identity`): For any $z, w$ with $\text{Im}(z), \text{Im}(w) \neq 0$:
+
+$$R_z - R_w = (z - w) R_z R_w$$
+
+**Proof:**
+
+Let $\psi_w = R_w \phi$, so $(A - wI)\psi_w = \phi$.
+
+Compute:
+$$(A - zI)\psi_w = (A - wI)\psi_w + (w - z)\psi_w = \phi + (w-z)\psi_w$$
+
+Therefore:
+$$\psi_w = R_z(\phi + (w-z)\psi_w) = R_z\phi + (w-z)R_z\psi_w = R_z\phi + (w-z)R_z R_w\phi$$
+
+Rearranging: $R_w\phi - R_z\phi = (w-z)R_z R_w\phi$, giving the identity. $\blacksquare$
+
+#### 5.5 The Resolvent Adjoint Identity
+
+**Theorem** (`resolvent_adjoint`): For any $z$ with $\text{Im}(z) \neq 0$:
+
+$$R_z^* = R_{\bar{z}}$$
+
+**Proof:**
+
+We must show $\langle \phi, R_z \psi \rangle = \langle R_{\bar{z}} \phi, \psi \rangle$ for all $\phi, \psi \in H$.
+
+Let $\xi = R_z \psi$ and $\eta = R_{\bar{z}} \phi$. Then:
+- $A\xi = \psi + z\xi$ (since $(A - zI)\xi = \psi$)
+- $A\eta = \phi + \bar{z}\eta$ (since $(A - \bar{z}I)\eta = \phi$)
+
+By symmetry of $A$:
+$$\langle A\eta, \xi \rangle = \langle \eta, A\xi \rangle$$
+
+Expanding the left side:
+$$\langle \phi + \bar{z}\eta, \xi \rangle = \langle \phi, \xi \rangle + z\langle \eta, \xi \rangle$$
+
+Expanding the right side:
+$$\langle \eta, \psi + z\xi \rangle = \langle \eta, \psi \rangle + z\langle \eta, \xi \rangle$$
+
+The $z\langle \eta, \xi \rangle$ terms cancel, leaving:
+$$\langle \phi, \xi \rangle = \langle \eta, \psi \rangle$$
+
+which is $\langle \phi, R_z\psi \rangle = \langle R_{\bar{z}}\phi, \psi \rangle$. $\blacksquare$
+
+#### 5.6 Why the Resolvent Enables Yosida
+
+The Yosida approximation requires bounded self-adjoint approximants to $A$. The resolvent provides exactly this.
+
+**The naive attempt** $A_n = nR_{in}$ fails: while bounded, it is *not* self-adjoint because $(R_{in})^* = R_{-in} \neq R_{in}$.
+
+**The symmetrization** fixes this:
+
+$$A_n^{\text{sym}} = \frac{n^2}{2}(R_{in} + R_{-in})$$
+
+**Theorem:** $A_n^{\text{sym}}$ is self-adjoint.
+
+**Proof:** Using the adjoint identity:
+$$(A_n^{\text{sym}})^* = \frac{n^2}{2}(R_{in}^* + R_{-in}^*) = \frac{n^2}{2}(R_{-in} + R_{in}) = A_n^{\text{sym}}$$
+
+$\blacksquare$
+
+This is why the resolvent adjoint identity is essential: it allows construction of bounded self-adjoint approximants to the unbounded self-adjoint operator $A$.
+
+#### 5.7 Summary of Resolvent Results
+
+| Theorem | Statement | Role in Stone's Theorem |
+|---------|-----------|------------------------|
+| `lower_bound_estimate` | $\|(A - zI)\psi\| \geq |\text{Im}(z)| \cdot \|\psi\|$ | Foundation of everything |
+| `self_adjoint_range_all_z` | Range$(A - zI) = H$ for Im$(z) \neq 0$ | Resolvent exists |
+| `resolvent_bound` | $\|R_z\| \leq 1/|\text{Im}(z)|$ | Yosida convergence |
+| `resolvent_identity` | $R_z - R_w = (z - w) R_z R_w$ | Analytic structure |
+| `resolvent_adjoint` | $R_z^* = R_{\bar{z}}$ | Yosida self-adjointness |
+
+---
+
+<a name="section-6"></a>
+### Section 6: Part II: Generator → Group
+
+This direction is established in **Yosida.lean** using the Yosida approximation, built on the resolvent theory of Section 5.
 
 #### The Exponential Map
 
@@ -265,19 +448,29 @@ theorem stone_exponential_eq_group
 
 **The Construction:**
 
-1. **Yosida approximants:** Define bounded self-adjoint operators
-$$A_n^{\text{sym}} = \frac{n^2}{2}(R(in) + R(-in))$$
-where $R(z) = (A - zI)^{-1}$ is the resolvent.
+1. **Yosida approximants:** Define bounded self-adjoint operators using the resolvent:
+$$A_n^{\text{sym}} = \frac{n^2}{2}(R_{in} + R_{-in})$$
 
-2. **Bounded exponentials:** For each $n$, $e^{it A_n^{\text{sym}}}$ is unitary (since $A_n^{\text{sym}}$ is self-adjoint).
+   These are self-adjoint by the resolvent adjoint identity (Section 5.5).
 
-3. **Convergence:** By the Duhamel estimate:
+2. **Bounded exponentials:** For each $n$, $e^{it A_n^{\text{sym}}}$ is unitary (since $A_n^{\text{sym}}$ is bounded and self-adjoint, the power series converges and unitarity follows from self-adjointness).
+
+3. **Convergence on the domain:** For $\psi \in D(A)$:
+$$A_n^{\text{sym}}\psi \to A\psi \quad \text{as } n \to \infty$$
+
+   This uses the resolvent bound and the identity $R_z(A - zI)\psi = \psi$.
+
+4. **The Duhamel estimate:** For $\psi \in D(A)$:
 $$\|U(t)\psi - e^{it A_n^{\text{sym}}}\psi\| \leq |t| \cdot \|A\psi - A_n^{\text{sym}}\psi\| \to 0$$
-for $\psi \in D(A)$.
 
-4. **Extension:** The Cauchy sequence property extends convergence to all of $H$.
+   This follows from the Duhamel formula (fundamental theorem of calculus for operator-valued functions).
 
-5. **Definition:**
+5. **Extension to all of $H$:** The approximations form a Cauchy sequence:
+$$\|e^{it A_m^{\text{sym}}}\psi - e^{it A_n^{\text{sym}}}\psi\| \to 0$$
+
+   By density of $D(A)$ and the $\varepsilon/3$ argument, convergence extends to all $\psi \in H$.
+
+6. **Definition:**
 $$e^{itA} := \text{s-lim}_{n \to \infty} e^{it A_n^{\text{sym}}}$$
 
 #### Properties of the Exponential
@@ -297,8 +490,8 @@ theorem stone_exponential_is_unitary_group
 
 *The exponential satisfies all the axioms of a strongly continuous unitary group.*
 
-| Property | Statement | Source |
-|----------|-----------|--------|
+| Property | Statement | Proof Method |
+|----------|-----------|--------------|
 | Unitarity | $\langle e^{itA}\psi, e^{itA}\phi \rangle = \langle \psi, \phi \rangle$ | Limit of unitary operators |
 | Group law | $e^{i(s+t)A} = e^{isA} e^{itA}$ | Limit of group law |
 | Identity | $e^{i \cdot 0 \cdot A} = I$ | Limit of $e^0 = I$ |
@@ -306,8 +499,8 @@ theorem stone_exponential_is_unitary_group
 
 ---
 
-<a name="section-6"></a>
-### Section 6: Part III: The Bijection
+<a name="section-7"></a>
+### Section 7: Part III: The Bijection
 
 #### Closing the Loop
 
@@ -368,29 +561,36 @@ theorem stone_bijection :
             ┌───────────────┐                           ┌───────────────┐
             │               │                           │               │
             │   A = lim     │                           │  U(t) = lim   │
-            │   U(t)ψ - ψ   │                           │  exp(itAₙ)    │
+            │   U(t)ψ - ψ   │                           │  exp(itAₙˢʸᵐ) 
             │   ─────────   │                           │               │
-            │      it       │                           │               │
-            │               │                           │               │
-            └───────┬───────┘                           └───────┬───────┘
+            │      it       │                           │  where        │
+            │               │                           │  Aₙˢʸᵐ = n²/2   
+            └───────┬───────┘                           │  (Rᵢₙ + R₋ᵢₙ)  
+                    │                                   └───────┬───────┘
                     │                                           │
-                    │                                           │
-                    └─────────────────┬─────────────────────────┘
-                                      │
-                                      ▼
-                            ┌─────────────────┐
-                            │                 │
-                            │   BIJECTION     │
-                            │                 │
-                            │  U(t) = e^{itA} │
-                            │                 │
-                            └─────────────────┘
+                    │              ┌─────────────┐              │
+                    │              │             │              │
+                    └──────────────│  RESOLVENT  │──────────────┘
+                                   │             │
+                                   │  Rz=(A-zI)⁻¹│
+                                   │             │
+                                   │ (Section 5) │
+                                   └──────┬──────┘
+                                          │
+                                          ▼
+                                ┌─────────────────┐
+                                │                 │
+                                │   BIJECTION     │
+                                │                 │
+                                │  U(t) = e^{itA} │
+                                │                 │
+                                └─────────────────┘
 ```
 
 ---
 
-<a name="section-7"></a>
-### Section 7: Significance to Spectral Theory
+<a name="section-8"></a>
+### Section 8: Significance to Spectral Theory
 
 #### The Bridge Between Dynamics and Spectrum
 
@@ -413,6 +613,16 @@ Stone's theorem then gives:
 $$e^{itA} = \int_{\mathbb{R}} e^{it\lambda} \, dE(\lambda)$$
 
 The spectral decomposition of $A$ directly determines the time evolution.
+
+**The Resolvent Connection:**
+
+The spectral measure can be recovered from the resolvent via the Stone formula:
+$$E((a,b]) = \text{s-}\lim_{\varepsilon \to 0^+} \frac{1}{2\pi i} \int_a^b [R_{\lambda+i\varepsilon} - R_{\lambda-i\varepsilon}] \, d\lambda$$
+
+The resolvent adjoint identity $R_z^* = R_{\bar{z}}$ ensures:
+$$[R_{\lambda+i\varepsilon} - R_{\lambda-i\varepsilon}]^* = R_{\lambda-i\varepsilon} - R_{\lambda+i\varepsilon} = -[R_{\lambda+i\varepsilon} - R_{\lambda-i\varepsilon}]$$
+
+so the integrand is skew-adjoint, making $E$ self-adjoint (in fact, a projection).
 
 **Physical Interpretation:**
 - The spectrum $\sigma(A)$ consists of possible measurement outcomes
@@ -456,8 +666,8 @@ For $G = \mathbb{R}$, we have $\hat{G} = \mathbb{R}$ and $\chi_\lambda(t) = e^{i
 
 ---
 
-<a name="section-8"></a>
-### Section 8: The Complete Proof Architecture
+<a name="section-9"></a>
+### Section 9: The Complete Proof Architecture
 
 #### File Structure
 
@@ -471,10 +681,13 @@ Stone's Theorem Formalization
 │   └── Uniqueness theorems
 │
 ├── Resolvent.lean (~2500 lines)
-│   ├── Resolvent definition and bounds
+│   ├── Lower bound estimate
+│   ├── Resolvent existence and bounds
 │   ├── Resolvent identity
-│   ├── Range surjectivity (A ± iI)
-│   └── Self-adjointness criterion
+│   ├── Resolvent adjoint identity
+│   ├── Range surjectivity (A - zI)
+│   ├── Neumann series machinery
+│   └── Analytic structure
 │
 ├── Bochner.lean (~2500 lines)
 │   ├── Bochner integration infrastructure
@@ -483,7 +696,8 @@ Stone's Theorem Formalization
 │   └── Domain density proofs
 │
 ├── Yosida.lean (~3500 lines)
-│   ├── Yosida operators (Aₙ, Jₙ, etc.)
+│   ├── Yosida operators (Aₙˢʸᵐ, Jₙ, etc.)
+│   ├── Self-adjointness of approximants
 │   ├── Norm bounds and convergence
 │   ├── Bounded exponential theory
 │   ├── Duhamel formula
@@ -510,25 +724,30 @@ Stone's Theorem Formalization
               │               │               │
               ▼               ▼               ▼
        Resolvent.lean    Bochner.lean    (shared)
-              │               │               │
-              │               │               │
-              │     ┌─────────┴───────────────┘
-              │     │
-              ▼     ▼
-           Yosida.lean
-              │
-              │ (Yosida approximation,
-              │  Duhamel formula,
-              │  exponential construction)
-              │
-              ▼
-          Theorem.lean
-              │
-              │ (assembly,
-              │  bijection theorem)
-              │
-              ▼
-        STONE'S THEOREM
+              │               │               
+              │  • lower_bound_estimate       
+              │  • resolvent construction     
+              │  • resolvent_identity         
+              │  • resolvent_adjoint          
+              │               │               
+              └───────┬───────┘
+                      │
+                      ▼
+                 Yosida.lean
+                      │
+                      │ (uses resolvent to build
+                      │  Yosida approximants,
+                      │  Duhamel formula,
+                      │  exponential construction)
+                      │
+                      ▼
+                 Theorem.lean
+                      │
+                      │ (assembly,
+                      │  bijection theorem)
+                      │
+                      ▼
+               STONE'S THEOREM
 ```
 
 #### Key Theorems by File
@@ -540,10 +759,11 @@ Stone's Theorem Formalization
 - `generator_op_eq_on_domain`: Generators agree on common domain
 
 **Resolvent.lean:**
-- `resolvent_bound`: $\|R(z)\| \leq 1/|\text{Im}(z)|$
-- `resolvent_identity`: $R(z_1) - R(z_2) = (z_1 - z_2)R(z_1)R(z_2)$
+- `lower_bound_estimate`: $\|(A-zI)\psi\| \geq |\text{Im}(z)| \cdot \|\psi\|$
+- `resolvent_bound`: $\|R_z\| \leq 1/|\text{Im}(z)|$
+- `resolvent_identity`: $R_z - R_w = (z - w)R_z R_w$
+- `resolvent_adjoint`: $R_z^* = R_{\bar{z}}$
 - `self_adjoint_range_all_z`: Range$(A - zI) = H$ for Im$(z) \neq 0$
-- `resolvent_adjoint`: $R(z)^* = R(\bar{z})$
 
 **Bochner.lean:**
 - `integrable_exp_neg_unitary`: $e^{-t}U(t)\psi$ is integrable
@@ -566,8 +786,8 @@ Stone's Theorem Formalization
 
 ---
 
-<a name="section-9"></a>
-### Section 9: What This Formalization Achieves
+<a name="section-10"></a>
+### Section 10: What This Formalization Achieves
 
 #### Technical Achievements
 
@@ -580,12 +800,18 @@ Stone's Theorem Formalization
    - Self-adjointness via Range$(A \pm iI) = H$ criterion
    - Resolvent theory for spectral analysis
 
-3. **The Duhamel formula** for comparing evolutions:
+3. **Complete resolvent theory:**
+   - Lower bound estimate with proof
+   - Surjectivity via orthogonal complement + closed range
+   - Resolvent identity and adjoint identity
+   - Neumann series for analytic structure
+
+4. **The Duhamel formula** for comparing evolutions:
    - Product rule for operator-valued functions
    - Fundamental theorem of calculus for the integral
    - Isometry simplification via norm constancy on orbits
 
-4. **Machine verification** of delicate analysis:
+5. **Machine verification** of delicate analysis:
    - ε/3 arguments for extending convergence
    - Interchange of limits and integrals
    - Uniform bounds enabling density arguments
@@ -616,14 +842,14 @@ To our knowledge, this is one of the most complete formalizations of Stone's the
 | Generator.lean | ~700 | Structures, uniqueness |
 | Resolvent.lean | ~2500 | Resolvent theory |
 | Bochner.lean | ~2500 | Resolvent integrals |
-| Yosida.lean | ~3500 | Yosida approximation |
+| Yosida.lean | ~4500 | Yosida approximation |
 | Theorem.lean | ~300 | Final assembly |
-| **Total** | **~10000** | Complete Stone's theorem |
+| **Total** | **~11000** | Complete Stone's theorem |
 
 ---
 
-<a name="section-10"></a>
-### Section 10: Epilogue: The Legacy
+<a name="section-11"></a>
+### Section 11: Epilogue: The Legacy
 
 #### The Impact of Stone's Theorem
 
@@ -704,33 +930,32 @@ PART I (Bochner.lean): GROUP → GENERATOR
 
 --------------------------------------------------------------------------------
 
-PART II (Resolvent.lean): SELF-ADJOINTNESS VIA RESOLVENT
+GLUE (Resolvent.lean): THE RESOLVENT BRIDGE
 
-  For self-adjoint A, the resolvent R_z = (A - zI)⁻¹ exists for all Im(z) ≠ 0.
+  For self-adjoint A, the resolvent Rz = (A - zI)⁻¹ exists for all Im(z) ≠ 0.
 
   Key results:
     • Lower bound: ‖(A - zI)ψ‖ ≥ |Im(z)| · ‖ψ‖
     • Surjectivity: Range(A - zI) = H for Im(z) ≠ 0
-    • Bound: ‖R_z‖ ≤ 1/|Im(z)|
-    • Resolvent identity: R_z - R_w = (z - w)R_z R_w
-    • Adjoint identity: R_z* = R_z̄
+    • Bound: ‖Rz‖ ≤ 1/|Im(z)|
+    • Resolvent identity: Rz - Rw = (z - w)Rz Rw
+    • Adjoint identity: Rz* = R_z̄
 
-  The criterion Range(A ± iI) = H completes the self-adjointness proof.
-  The resolvent R(in) enables the Yosida approximation in Part III.
+  The adjoint identity enables self-adjoint Yosida approximants.
 
 --------------------------------------------------------------------------------
 
-PART III (Yosida.lean): GENERATOR → GROUP
+PART II (Yosida.lean): GENERATOR → GROUP
 
   Given self-adjoint A, define:
-    Aₙ = n²R(in) - in·I  (Yosida approximants)
-    exp(itA) = s-lim_{n→∞} exp(itAₙ)
+    Aₙˢʸᵐ = (n²/2)(R_{in} + R_{-in})  (bounded, self-adjoint by adjoint identity)
+    exp(itA) = s-lim_{n→∞} exp(itAₙˢʸᵐ)
 
   Then exp(itA) is a strongly continuous unitary group.
 
 --------------------------------------------------------------------------------
 
-PART IV (Theorem.lean): THE BIJECTION
+PART III (Theorem.lean): THE BIJECTION
 
   • Generator of exp(itA) is A
   • exp(itA) of generator of U(t) is U(t)
@@ -739,9 +964,10 @@ PART IV (Theorem.lean): THE BIJECTION
 --------------------------------------------------------------------------------
 
 FORMALIZATION:
-  • ~10,000 lines of Lean 4 code
+  • ~11,000 lines of Lean 4 code
   • Machine-verified proofs
   • Complete treatment of unbounded operators
+  • Full resolvent theory with all identities
 
 ================================================================================
 ```
@@ -749,4 +975,5 @@ FORMALIZATION:
 ---
 
 *This is a natural language companion to Stone.lean*
+
 *Author: Adam Bornemann*
