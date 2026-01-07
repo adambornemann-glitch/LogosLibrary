@@ -1,5 +1,7 @@
 # Force Theory, this is.
 Adam Bornemann, the author is.
+
+
 **The Force as Type IIA String Theory on M₄ × K₆**
 
 ---
