@@ -155,7 +155,7 @@ This is more conceptual but requires developing the full machinery of spectral m
 
 **Stone's Theorem (1932):** Let $H$ be a complex Hilbert space. There is a bijective correspondence between:
 
-**(A)** Strongly continuous one-parameter unitary groups $\{U(t)\}_{t \in \mathbb{R}}$ on $H$
+**(A)** Strongly continuous one-parameter unitary groups $\{U(t)\}_{t \in \mathbb\{R\}}$ on $H$
 
 **(B)** Self-adjoint operators $A$ on $H$ (possibly unbounded)
 
