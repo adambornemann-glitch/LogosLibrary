@@ -175,7 +175,7 @@ The correspondence is given by $U(t) = e^{itA}$.
 - $D(A^*) = D(A)$ (domain of adjoint equals domain)
 
 **The Generator:** Given $U(t)$, the generator $A$ is defined by:
-$$D(A) = left\{\psi \in H \,\Big|\, \lim_{t \to 0} \frac{U(t)\psi - \psi}{it} \text{ exists}\right\}$$
+$$D(A) = left\{\psi \in H \,\Big|\, \lim_{t \to 0} \frac{U(t)\psi - \psi}{it} \text{ exists}right\}$$
 $$A\psi = \lim_{t \to 0} \frac{U(t)\psi - \psi}{it}$$
 
 This is the quantum mechanical momentum-from-translation principle: differentiate the group to get the generator.
