@@ -533,5 +533,5 @@ The Ott transformation T → γT is itself a proven theorem, not an assumption. 
 1. **Full Tomita-Takesaki formalization**: Replace axioms with theorems
 2. **Cocycle Radon-Nikodym theorem**: Prove state-independence of outer flow
 3. **Bisognano-Wichmann theorem**: Connect modular flow to Lorentz boosts geometrically
-4. **Connection to AugE³**: Prove isomorphism with entropic time framework
+4. **Spectral Triples**: Prove the standard model
    
