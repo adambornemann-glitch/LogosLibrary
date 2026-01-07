@@ -133,7 +133,7 @@ Examples: Spin operators, bounded potentials, projection operators
 structure Observable (H : Type*) [NormedAddCommGroup H] [InnerProductSpace ℂ H]
     [CompleteSpace H] where
   op : H →L[ℂ] H
-  self_adjoint : IsSelfAdjoint op
+  SymmetricOperator : IsSelfAdjoint op
 
 /--
 An unbounded observable (for position, momentum operators).
@@ -144,14 +144,16 @@ Many fundamental observables are unbounded:
   - Hamiltonian: Ĥ = P̂²/(2m) + V(X̂)
 
 Mathematical subtlety: For unbounded operators, symmetric ≠ self-adjoint.
-Self-adjointness requires careful domain specification.
+Self-adjointness requires careful domain specification... which I'm skipping.
+
+Why?  Because Robertson can be proven with symmetry.  Let me show you how it's done.
 -/
 structure UnboundedObservable (H : Type*) [NormedAddCommGroup H] [InnerProductSpace ℂ H]
     [CompleteSpace H] where
   op : H →ₗ[ℂ] H  -- Linear but not necessarily bounded
   domain : Submodule ℂ H  -- Dense domain where operator is defined
   dense : Dense (domain : Set H)
-  self_adjoint : ∀ (ψ φ : H), ψ ∈ domain → φ ∈ domain →
+  SymmetricOperator : ∀ (ψ φ : H), ψ ∈ domain → φ ∈ domain →
     ⟪op ψ, φ⟫_ℂ = ⟪ψ, op φ⟫_ℂ
 
 /-============================================================================
@@ -766,9 +768,9 @@ Technical note: The domain D must be preserved under both A and scalar
 multiplication. In practice, this is usually a dense subspace of the
 Hilbert space.
 -/
-lemma isSelfAdjoint_sub_smul_of_real {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
+lemma isSymmetric_sub_smul_of_real {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
     [IsScalarTower ℝ ℂ H] (A : H →ₗ[ℂ] H) (lambda : ℝ) (D : Submodule ℂ H)
-    (hA_sa : ∀ v w, v ∈ D → w ∈ D → ⟪A v, w⟫_ℂ = ⟪v, A w⟫_ℂ) :
+    (hA_sym : ∀ v w, v ∈ D → w ∈ D → ⟪A v, w⟫_ℂ = ⟪v, A w⟫_ℂ) :
     ∀ v w, v ∈ D → w ∈ D → ⟪(A - lambda • 1) v, w⟫_ℂ = ⟪v, (A - lambda • 1) w⟫_ℂ := by
   intros v w hv hw
   -- Expand (A - λI) as pointwise operations
@@ -778,7 +780,7 @@ lemma isSelfAdjoint_sub_smul_of_real {H : Type*} [NormedAddCommGroup H] [InnerPr
   simp only [inner_sub_left, inner_sub_right]
 
   -- Use self-adjointness of A
-  rw [hA_sa v w hv hw]
+  rw [hA_sym v w hv hw]
 
   -- The scalar terms need careful handling due to complex scalars
   ring_nf
