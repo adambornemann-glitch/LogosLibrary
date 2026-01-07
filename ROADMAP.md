@@ -574,7 +574,7 @@ ReducedDensity  Conditional   Mutual        Channels/
 │   │   │   ├── BouncingCosmology.lean         -- Big Bounce replaces Big Bang
 │   │   │   └── EffectiveEquations.lean        -- Modified Friedmann
 │   │   │
-│   │   └── EntropicInterpretation/       -- ⭐ My work
+│   │   └── EntropicInterpretation/       -- ⭐ Fever dreams of a mad-man.
 │   │       ├── QuaternionicStructure.lean     -- SU(2) = unit quaternions
 │   │       │   ├── SU(2) ≅ S³
 │   │       │   ├── Hopf fibration S¹ → S³ → S²
