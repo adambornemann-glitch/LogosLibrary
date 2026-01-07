@@ -85,7 +85,7 @@ theorem unboundedExpectation_conj_eq_self {H : Type*} [NormedAddCommGroup H]
     starRingEnd ℂ (unboundedExpectation A ψ) = unboundedExpectation A ψ := by
   unfold unboundedExpectation complexInner
   rw [inner_conj_symm]
-  have h_sa := A.self_adjoint ψ ψ hψ hψ
+  have h_sa := A.SymmetricOperator ψ ψ hψ hψ
   exact h_sa
 
 /-- Extract the real part of expectation (which equals the full value for self-adjoint) -/
