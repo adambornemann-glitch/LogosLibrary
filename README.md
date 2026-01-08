@@ -153,10 +153,10 @@ lake exe cache get
 lake build
 
 # Verify specific theorems
-lake build DeepTheorems.Quantum.Evolution.Stone.Theorem
-lake build DeepTheorems.Quantum.Uncertainty.Robertson.Core
-lake build DeepTheorems.Relativity.LorentzBoost.Ott
-lake build DeepTheorems.Relativity.ThermalTime.ConnesRovelli
+lake build LogosLibrary.QuantumMechanics.Evolution.Stone
+lake build LogosLibrary.QuantumMechanics.Robertson.Core
+lake build LogosLibrary.Relativity.LorentzBoost.Ott
+lake build LogosLibrary.Relativity.LorentzBoost.ConnesRovelli
 ```
 
 ---
