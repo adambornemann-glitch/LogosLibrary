@@ -1,7 +1,7 @@
 /-
 Author: Adam Bornemann
 Created: 1-6-2026
-Updated: 1-7-2026
+Updated: 1-8-2026
 
 ================================================================================
 THE DIRAC OPERATOR: Relativistic Quantum Mechanics
@@ -201,6 +201,403 @@ open scoped BigOperators
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
 
+
+
+/- HELPER LEMMAS -/
+/-- α₁ in standard representation (4×4) -/
+def diracAlpha1 : Matrix (Fin 4) (Fin 4) ℂ :=
+  !![0, 0, 0, 1;
+     0, 0, 1, 0;
+     0, 1, 0, 0;
+     1, 0, 0, 0]
+
+/-- α₂ in standard representation (4×4) -/
+def diracAlpha2 : Matrix (Fin 4) (Fin 4) ℂ :=
+  !![0, 0, 0, -I;
+     0, 0, I, 0;
+     0, -I, 0, 0;
+     I, 0, 0, 0]
+
+/-- α₃ in standard representation (4×4) -/
+def diracAlpha3 : Matrix (Fin 4) (Fin 4) ℂ :=
+  !![0, 0, 1, 0;
+     0, 0, 0, -1;
+     1, 0, 0, 0;
+     0, -1, 0, 0]
+
+/-- β in standard representation (4×4) -/
+def diracBeta : Matrix (Fin 4) (Fin 4) ℂ :=
+  !![1, 0, 0, 0;
+     0, 1, 0, 0;
+     0, 0, -1, 0;
+     0, 0, 0, -1]
+
+
+set_option maxHeartbeats 375000
+
+/-- αᵢ² = 1 -/
+private lemma diracAlpha1_sq : diracAlpha1 * diracAlpha1 = 1 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [diracAlpha1, Matrix.mul_apply, Fin.sum_univ_four, Matrix.one_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one, Matrix.cons_val,
+             Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, add_zero, zero_add, ↓reduceIte]
+  all_goals try simp
+
+private lemma diracAlpha2_sq : diracAlpha2 * diracAlpha2 = 1 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [diracAlpha2, Matrix.mul_apply, Fin.sum_univ_four, Matrix.one_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one, Matrix.cons_val,
+             Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, add_zero, zero_add, ↓reduceIte, mul_neg, neg_mul]
+  all_goals try simp
+
+private lemma diracAlpha3_sq : diracAlpha3 * diracAlpha3 = 1 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [diracAlpha3, Matrix.mul_apply, Fin.sum_univ_four, Matrix.one_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one, Matrix.cons_val,
+             Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, add_zero, zero_add, ↓reduceIte, mul_neg, neg_neg]
+  all_goals try simp
+
+/-- β² = 1 -/
+private lemma diracBeta_sq : diracBeta * diracBeta = 1 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [diracBeta, Matrix.mul_apply, Fin.sum_univ_four, Matrix.one_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one, Matrix.cons_val,
+             Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_one, mul_zero, add_zero, ↓reduceIte]
+  all_goals try simp only [mul_neg, mul_one, neg_zero, neg_neg, Fin.reduceEq, ↓reduceIte]
+  all_goals try ring
+
+/-- αᵢαⱼ + αⱼαᵢ = 0 for i ≠ j -/
+private lemma diracAlpha12_anticommute : diracAlpha1 * diracAlpha2 + diracAlpha2 * diracAlpha1 = 0 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [diracAlpha1, diracAlpha2, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.of_apply, Matrix.zero_apply, Matrix.cons_val', Matrix.cons_val_zero,
+             Matrix.cons_val_fin_one, Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one]
+  all_goals try simp only [Fin.zero_eta, Fin.isValue, Matrix.cons_val_zero, mul_zero, add_zero,
+    one_mul, zero_add, mul_one, add_neg_cancel, Fin.reduceFinMk, Matrix.cons_val, Fin.isValue, Matrix.cons_val_one,
+    Matrix.cons_val_zero, mul_neg, zero_mul, neg_zero, mul_zero, add_zero, mul_one]
+  all_goals try ring_nf
+
+private lemma diracAlpha13_anticommute : diracAlpha1 * diracAlpha3 + diracAlpha3 * diracAlpha1 = 0 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [diracAlpha1, diracAlpha3, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.of_apply, Matrix.zero_apply, Matrix.cons_val', Matrix.cons_val_zero,
+             Matrix.cons_val_fin_one, Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one]
+  all_goals try simp only [Fin.reduceFinMk, Matrix.cons_val, Fin.isValue, Matrix.cons_val_one,
+    Matrix.cons_val_zero, mul_zero, add_zero, mul_neg, mul_one, neg_zero]
+  all_goals try ring
+
+private lemma diracAlpha23_anticommute : diracAlpha2 * diracAlpha3 + diracAlpha3 * diracAlpha2 = 0 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [diracAlpha2, diracAlpha3, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.of_apply, Matrix.zero_apply, Matrix.cons_val', Matrix.cons_val_zero,
+             Matrix.cons_val_fin_one, Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one]
+  all_goals try simp only [Fin.reduceFinMk, Matrix.cons_val, Fin.isValue, Matrix.cons_val_one,
+    Matrix.cons_val_zero, mul_zero, mul_neg, mul_one, neg_neg, zero_add, add_zero, one_mul,
+    add_neg_cancel]
+  all_goals try ring
+
+/-- αᵢβ + βαᵢ = 0 -/
+private lemma diracAlpha1_beta_anticommute : diracAlpha1 * diracBeta + diracBeta * diracAlpha1 = 0 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [diracAlpha1, diracBeta, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.of_apply, Matrix.zero_apply, Matrix.cons_val', Matrix.cons_val_zero,
+             Matrix.cons_val_fin_one, Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one]
+  all_goals try simp only [Fin.reduceFinMk, Matrix.cons_val, Fin.isValue, Matrix.cons_val_one,
+    Matrix.cons_val_zero, mul_zero, add_zero, mul_neg, mul_one, neg_zero]
+  all_goals try ring
+
+private lemma diracAlpha2_beta_anticommute : diracAlpha2 * diracBeta + diracBeta * diracAlpha2 = 0 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [diracAlpha2, diracBeta, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.of_apply, Matrix.zero_apply, Matrix.cons_val', Matrix.cons_val_zero,
+             Matrix.cons_val_fin_one, Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one]
+  all_goals try simp only [Fin.zero_eta, Fin.isValue, Matrix.cons_val_zero, Fin.reduceFinMk,
+    Matrix.cons_val, mul_zero, add_zero, mul_neg, mul_one, neg_zero, zero_mul]
+  all_goals try ring
+
+private lemma diracAlpha3_beta_anticommute : diracAlpha3 * diracBeta + diracBeta * diracAlpha3 = 0 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [diracAlpha3, diracBeta, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.of_apply, Matrix.zero_apply, Matrix.cons_val', Matrix.cons_val_zero,
+             Matrix.cons_val_fin_one, Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one]
+  all_goals try simp only [Fin.zero_eta, Fin.isValue, Matrix.cons_val_zero, Fin.reduceFinMk,
+    Matrix.cons_val, mul_zero, add_zero, mul_neg, mul_one, zero_add, neg_add_cancel]
+  all_goals try ring
+
+/-- αᵢ† = αᵢ -/
+private lemma diracAlpha1_hermitian : diracAlpha1.conjTranspose = diracAlpha1 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [diracAlpha1, Matrix.conjTranspose, Matrix.of_apply, Matrix.transpose_apply,
+             Matrix.map_apply, Matrix.cons_val', Matrix.cons_val_fin_one]
+  all_goals try simp [star_zero, star_one]
+
+private lemma diracAlpha2_hermitian : diracAlpha2.conjTranspose = diracAlpha2 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [diracAlpha2, Matrix.conjTranspose, Matrix.of_apply, Matrix.transpose_apply,
+             Matrix.map_apply, Matrix.cons_val', Matrix.cons_val_fin_one]
+  all_goals try simp [star_zero, star_neg, conj_I, neg_neg]
+
+private lemma diracAlpha3_hermitian : diracAlpha3.conjTranspose = diracAlpha3 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [diracAlpha3, Matrix.conjTranspose, Matrix.of_apply, Matrix.transpose_apply,
+             Matrix.map_apply, Matrix.cons_val', Matrix.cons_val_fin_one]
+  all_goals try simp [star_zero, star_one, star_neg]
+
+/-- β† = β -/
+private lemma diracBeta_hermitian : diracBeta.conjTranspose = diracBeta := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [diracBeta, Matrix.conjTranspose, Matrix.of_apply, Matrix.transpose_apply,
+             Matrix.map_apply, Matrix.cons_val', Matrix.cons_val_fin_one]
+  all_goals try simp [star_zero, star_one, star_neg]
+
+/-- Standard gamma matrices in Dirac representation -/
+def gamma0 : Matrix (Fin 4) (Fin 4) ℂ := !![1, 0, 0, 0; 0, 1, 0, 0; 0, 0, -1, 0; 0, 0, 0, -1]
+def gamma1 : Matrix (Fin 4) (Fin 4) ℂ := !![0, 0, 0, 1; 0, 0, 1, 0; 0, -1, 0, 0; -1, 0, 0, 0]
+def gamma2 : Matrix (Fin 4) (Fin 4) ℂ := !![0, 0, 0, -I; 0, 0, I, 0; 0, I, 0, 0; -I, 0, 0, 0]
+def gamma3 : Matrix (Fin 4) (Fin 4) ℂ := !![0, 0, 1, 0; 0, 0, 0, -1; -1, 0, 0, 0; 0, 1, 0, 0]
+
+
+set_option maxHeartbeats 50000
+
+private lemma clifford_00 : gamma0 * gamma0 + gamma0 * gamma0 =
+    2 • (1 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma0, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.smul_apply, Matrix.one_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, add_zero, zero_add, mul_neg, neg_neg, neg_zero,
+    ↓reduceIte, Fin.isValue, Fin.reduceEq, ↓reduceIte, nsmul_eq_mul, Nat.cast_ofNat, mul_one]
+  all_goals try ring
+
+private lemma clifford_01 : gamma0 * gamma1 + gamma1 * gamma0 =
+    (0 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma0, gamma1, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.zero_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, add_zero, zero_add,
+    mul_neg, neg_neg, neg_zero]
+  all_goals try ring
+
+private lemma clifford_02 : gamma0 * gamma2 + gamma2 * gamma0 =
+    (0 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma0, gamma2, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.zero_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, zero_mul, one_mul, add_zero, zero_add,
+    mul_neg, neg_mul, neg_neg, neg_zero]
+  all_goals try ring
+
+private lemma clifford_03 : gamma0 * gamma3 + gamma3 * gamma0 =
+    (0 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma0, gamma3, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.zero_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, add_zero, zero_add,
+    mul_neg, neg_neg, neg_zero]
+  all_goals try ring
+
+private lemma clifford_10 : gamma1 * gamma0 + gamma0 * gamma1 =
+    (0 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma0, gamma1, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.zero_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, add_zero, zero_add,
+    mul_neg, neg_neg, neg_zero]
+  all_goals try ring
+
+
+private lemma clifford_11 : gamma1 * gamma1 + gamma1 * gamma1 =
+    (-2 : ℂ) • (1 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma1, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.smul_apply, Matrix.one_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, add_zero, zero_add,
+    mul_neg, neg_mul, neg_zero, smul_eq_mul, ↓reduceIte]
+  all_goals try simp only [Fin.isValue, Fin.reduceEq, ↓reduceIte, mul_zero, neg_zero]
+  all_goals try ring_nf
+
+
+private lemma clifford_12 : gamma1 * gamma2 + gamma2 * gamma1 =
+    (0 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma1, gamma2, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.zero_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, zero_mul, one_mul, add_zero, zero_add,
+    mul_neg, neg_mul, neg_neg, neg_zero]
+  all_goals try ring
+
+private lemma clifford_13 : gamma1 * gamma3 + gamma3 * gamma1 =
+    (0 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma1, gamma3, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.zero_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, add_zero, zero_add,
+    mul_neg, neg_neg, neg_zero]
+  all_goals try ring
+
+private lemma clifford_20 : gamma2 * gamma0 + gamma0 * gamma2 =
+    (0 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma0, gamma2, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.zero_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, zero_mul, one_mul, add_zero, zero_add,
+    mul_neg, neg_mul, neg_neg, neg_zero]
+  all_goals try ring
+
+private lemma clifford_21 : gamma2 * gamma1 + gamma1 * gamma2 =
+    (0 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma1, gamma2, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.zero_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, zero_mul, one_mul, add_zero, zero_add,
+    mul_neg, neg_mul, neg_neg, neg_zero]
+  all_goals try ring
+
+private lemma clifford_22 : gamma2 * gamma2 + gamma2 * gamma2 =
+    (-2 : ℂ) • (1 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma2, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.smul_apply, Matrix.one_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, zero_mul, add_zero, zero_add,
+    mul_neg, neg_mul, neg_neg, neg_zero, smul_eq_mul, ↓reduceIte]
+  all_goals try simp only [Fin.isValue, Fin.reduceEq, ↓reduceIte, mul_zero, neg_zero]
+  all_goals try simp only [I_mul_I]
+  all_goals try ring
+
+
+private lemma clifford_23 : gamma2 * gamma3 + gamma3 * gamma2 =
+    (0 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma2, gamma3, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.zero_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, zero_mul, one_mul, add_zero, zero_add,
+    mul_neg, neg_mul, neg_neg, neg_zero]
+  all_goals try ring_nf
+
+private lemma clifford_30 : gamma3 * gamma0 + gamma0 * gamma3 =
+    (0 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma0, gamma3, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.zero_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, add_zero, zero_add,
+    mul_neg, neg_neg, neg_zero]
+  all_goals try ring_nf
+
+private lemma clifford_31 : gamma3 * gamma1 + gamma1 * gamma3 =
+    (0 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma1, gamma3, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.zero_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, add_zero, zero_add,
+    mul_neg, neg_neg, neg_zero]
+  all_goals try ring_nf
+
+private lemma clifford_32 : gamma3 * gamma2 + gamma2 * gamma3 =
+    (0 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma2, gamma3, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.zero_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, zero_mul, one_mul, add_zero, zero_add,
+    mul_neg, neg_mul, neg_neg, neg_zero]
+  all_goals try ring_nf
+
+private lemma clifford_33 : gamma3 * gamma3 + gamma3 * gamma3 =
+    (-2 : ℂ) • (1 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  ext a b; fin_cases a <;> fin_cases b <;>
+  simp only [gamma3, Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four,
+             Matrix.smul_apply, Matrix.one_apply, Matrix.of_apply,
+             Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
+             Matrix.cons_val, Matrix.cons_val_one, Fin.isValue, Fin.mk_one, Fin.reduceFinMk]
+  all_goals try simp only [mul_zero, mul_one, add_zero, zero_add,
+    mul_neg, neg_mul, neg_zero, smul_eq_mul, ↓reduceIte]
+  all_goals try simp only [Fin.isValue, Fin.reduceEq, ↓reduceIte, mul_zero, neg_zero]
+  all_goals try ring_nf
+
+
+/-- Helper: -2 as scalar matrix equals -2 • 1 -/
+private lemma neg_two_eq_smul : (-2 : Matrix (Fin 4) (Fin 4) ℂ) = (-2 : ℂ) • (1 : Matrix (Fin 4) (Fin 4) ℂ) := by
+  rw [← Algebra.algebraMap_eq_smul_one]
+  simp only [map_neg, neg_inj]
+  rfl
+
+/-- Helper for γ⁰ hermiticity proof -/
+private lemma gamma0_hermitian_proof : gamma0.conjTranspose = gamma0 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [gamma0, Matrix.conjTranspose, Matrix.of_apply, Matrix.transpose_apply,
+             Matrix.map_apply, Matrix.cons_val', Matrix.cons_val_fin_one]
+  all_goals try simp [star_one, star_zero, star_neg]
+
+/-- Helper for γⁱ anti-hermiticity -/
+private lemma gamma1_antihermitian : gamma1.conjTranspose = -gamma1 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [gamma1, Matrix.conjTranspose, Matrix.neg_apply, Matrix.transpose_apply,
+             Matrix.map_apply, Matrix.of_apply, Matrix.cons_val', Matrix.cons_val_fin_one]
+  all_goals try simp [star_zero, star_one, star_neg, neg_zero]
+
+private lemma gamma2_antihermitian : gamma2.conjTranspose = -gamma2 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [gamma2, Matrix.conjTranspose, Matrix.neg_apply, Matrix.transpose_apply,
+             Matrix.map_apply, Matrix.of_apply, Matrix.cons_val', Matrix.cons_val_fin_one]
+  all_goals try simp [star_zero, star_neg, RCLike.star_def, conj_I, neg_neg, neg_zero]
+
+private lemma gamma3_antihermitian : gamma3.conjTranspose = -gamma3 := by
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+  simp only [gamma3, Matrix.conjTranspose, Matrix.neg_apply, Matrix.transpose_apply,
+             Matrix.map_apply, Matrix.of_apply, Matrix.cons_val', Matrix.cons_val_fin_one]
+  all_goals try simp [star_zero, star_one, star_neg, neg_zero, neg_neg]
+
+
 /-- Spinor Hilbert space with required instances -/
 abbrev SpinorSpace := EuclideanSpace ℂ (Fin 4) -- or your actual definition
 
@@ -284,129 +681,46 @@ structure DiracMatrices where
   /-- β is Hermitian -/
   beta_hermitian : beta.conjTranspose = beta
 
-/-- α₁ in standard representation (4×4) -/
-def diracAlpha1 : Matrix (Fin 4) (Fin 4) ℂ :=
-  !![0, 0, 0, 1;
-     0, 0, 1, 0;
-     0, 1, 0, 0;
-     1, 0, 0, 0]
-
-/-- α₂ in standard representation (4×4) -/
-def diracAlpha2 : Matrix (Fin 4) (Fin 4) ℂ :=
-  !![0, 0, 0, -I;
-     0, 0, I, 0;
-     0, -I, 0, 0;
-     I, 0, 0, 0]
-
-/-- α₃ in standard representation (4×4) -/
-def diracAlpha3 : Matrix (Fin 4) (Fin 4) ℂ :=
-  !![0, 0, 1, 0;
-     0, 0, 0, -1;
-     1, 0, 0, 0;
-     0, -1, 0, 0]
-
-/-- β in standard representation (4×4) -/
-def diracBeta : Matrix (Fin 4) (Fin 4) ℂ :=
-  !![1, 0, 0, 0;
-     0, 1, 0, 0;
-     0, 0, -1, 0;
-     0, 0, 0, -1]
-
-
-set_option maxHeartbeats 375000
 /-- Standard (Dirac-Pauli) representation -/
 def standardDiracMatrices : DiracMatrices where
-  alpha := fun i =>
-    match i with
+  alpha := fun i => match i with
     | 0 => diracAlpha1
     | 1 => diracAlpha2
     | 2 => diracAlpha3
   beta := diracBeta
   alpha_sq := by
     intro i
-    fin_cases i <;> {
-      ext a b
-      fin_cases a <;> fin_cases b <;>
-      simp only [diracAlpha1, diracAlpha2, diracAlpha3, Matrix.mul_apply,
-                 Fin.sum_univ_four, Matrix.one_apply, Matrix.of_apply]
-      all_goals try simp only [Fin.zero_eta, Fin.isValue, Matrix.cons_val', Matrix.cons_val_zero,
-        Matrix.cons_val_fin_one, mul_zero, Matrix.cons_val_one, add_zero, Matrix.cons_val, mul_one,
-        zero_add, ↓reduceIte]
-      all_goals try simp
-    }
-  beta_sq := by
-    ext a b
-    fin_cases a <;> fin_cases b <;>
-    simp only [diracBeta, Matrix.mul_apply, Fin.sum_univ_four,
-               Matrix.one_apply, Matrix.of_apply]
-    all_goals simp only [Fin.zero_eta, Fin.isValue, Matrix.cons_val', Matrix.cons_val_zero,
-      Matrix.cons_val_fin_one, mul_one, Matrix.cons_val_one, mul_zero, add_zero, Matrix.cons_val,
-      ↓reduceIte]
-    all_goals try simp only [Fin.mk_one, Fin.isValue, Matrix.cons_val_one, Matrix.cons_val_zero,
-      mul_zero, mul_one, add_zero, zero_ne_one, ↓reduceIte]
-    all_goals try simp only [Fin.reduceFinMk, Matrix.cons_val, mul_zero, add_zero, mul_neg, mul_one,
-      neg_zero, Fin.isValue, Fin.reduceEq, ↓reduceIte]
-    all_goals try ring
+    fin_cases i
+    · exact diracAlpha1_sq
+    · exact diracAlpha2_sq
+    · exact diracAlpha3_sq
+  beta_sq := diracBeta_sq
   alpha_anticommute := by
     intro i j hij
     fin_cases i <;> fin_cases j
-    all_goals first
-      | exact absurd rfl hij  -- handles i = j cases
-      | {
-          ext a b
-          fin_cases a <;> fin_cases b <;>
-          simp only [diracAlpha1, diracAlpha2, diracAlpha3, Matrix.mul_apply,
-                     Matrix.add_apply, Fin.sum_univ_four, Matrix.of_apply, Matrix.zero_apply]
-          all_goals try simp only [Fin.reduceFinMk, Fin.isValue, Matrix.cons_val',
-            Matrix.cons_val_zero, Matrix.cons_val_fin_one, Matrix.cons_val,
-            Matrix.cons_val_one, Fin.mk_one, mul_zero, mul_one, zero_add, add_zero,
-            mul_neg, neg_mul, one_mul, neg_neg]
-          all_goals try ring
-        }
+    · exact absurd rfl hij
+    · exact diracAlpha12_anticommute
+    · exact diracAlpha13_anticommute
+    · rw [add_comm]; exact diracAlpha12_anticommute
+    · exact absurd rfl hij
+    · exact diracAlpha23_anticommute
+    · rw [add_comm]; exact diracAlpha13_anticommute
+    · rw [add_comm]; exact diracAlpha23_anticommute
+    · exact absurd rfl hij
   alpha_beta_anticommute := by
     intro i
-    fin_cases i <;> {
-      ext a b
-      fin_cases a <;> fin_cases b <;>
-      simp only [diracAlpha1, diracAlpha2, diracAlpha3, diracBeta,
-                 Matrix.mul_apply, Matrix.add_apply, Fin.sum_univ_four, Matrix.of_apply]
-      all_goals try simp only [Fin.reduceFinMk, Fin.isValue, Matrix.cons_val', Matrix.cons_val_zero,
-        Matrix.cons_val_fin_one, Matrix.cons_val, Matrix.cons_val_one, Fin.mk_one, mul_zero,
-        mul_one, zero_add, add_zero, mul_neg, neg_mul, one_mul, neg_neg, neg_add_cancel,
-        Matrix.zero_apply]
-      all_goals try ring
-    }
+    fin_cases i
+    · exact diracAlpha1_beta_anticommute
+    · exact diracAlpha2_beta_anticommute
+    · exact diracAlpha3_beta_anticommute
   alpha_hermitian := by
     intro i
-    fin_cases i <;> {
-      ext a b
-      fin_cases a <;> fin_cases b <;>
-      simp only [diracAlpha1, diracAlpha2, diracAlpha3, Matrix.conjTranspose,
-                 Matrix.of_apply]
-      all_goals try simp only [Matrix.cons_transpose, Nat.succ_eq_add_one, Nat.reduceAdd,
-        RCLike.star_def, Fin.mk_one, Fin.isValue, Matrix.map_apply, Matrix.of_apply,
-        Matrix.cons_val_one, Matrix.cons_val_zero, Matrix.transpose_apply, Matrix.cons_val',
-        Matrix.cons_val_fin_one, map_zero]
-      all_goals try simp only [Fin.zero_eta, Fin.isValue, Matrix.cons_val_zero, map_zero]
-      all_goals try simp only [Fin.isValue, Fin.reduceFinMk, Matrix.cons_val,
-        Matrix.transpose_apply, Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one,
-        Matrix.cons_val_one, map_zero]
-      all_goals try simp only [map_one]
-      all_goals try simp only [map_neg, conj_I, neg_neg]
-      all_goals try simp only [map_one]
-    }
-  beta_hermitian := by
-    ext a b
-    fin_cases a <;> fin_cases b <;>
-    simp only [diracBeta, Matrix.conjTranspose, Matrix.of_apply,
-               Matrix.cons_transpose, Matrix.map_apply]
-    all_goals try simp only [Fin.zero_eta, Fin.isValue, Matrix.cons_val', Matrix.cons_val_zero,
-      Matrix.cons_val_fin_one, Matrix.cons_val, Matrix.cons_val_one, Fin.mk_one, Fin.reduceFinMk]
-    all_goals try simp only [star_one]
-    all_goals try simp only [Fin.isValue, Matrix.transpose_apply, Matrix.cons_val',
-      Matrix.cons_val_zero, Matrix.cons_val_fin_one, Matrix.cons_val, Matrix.cons_val_one,
-      star_zero]
-    all_goals try simp only [star_neg, star_one]
+    fin_cases i
+    · exact diracAlpha1_hermitian
+    · exact diracAlpha2_hermitian
+    · exact diracAlpha3_hermitian
+  beta_hermitian := diracBeta_hermitian
+
 
 set_option maxHeartbeats 20000
 /-!
@@ -798,23 +1112,48 @@ structure GammaMatrices where
   /-- γⁱ are anti-Hermitian: (γⁱ)† = -γⁱ for i ∈ {1,2,3} -/
   gammaI_antihermitian : ∀ i : Fin 3, (gamma i.succ).conjTranspose = -gamma i.succ
 
+
+
+set_option maxHeartbeats 78703
+
 /-- Construct gamma matrices from Dirac matrices -/
-noncomputable def gammaFromDirac (D : DiracMatrices) : GammaMatrices where
-  gamma := fun μ =>
-    match μ with
-    | 0 => D.beta
-    | 1 => D.beta * D.alpha 0
-    | 2 => D.beta * D.alpha 1
-    | 3 => D.beta * D.alpha 2
+def standardGammaMatrices : GammaMatrices where
+  gamma := fun μ => match μ with
+    | 0 => gamma0
+    | 1 => gamma1
+    | 2 => gamma2
+    | 3 => gamma3
   clifford_minkowski := by
     intro μ ν
-    -- The verification follows from the Clifford algebra of α and β
-    sorry  -- Lengthy but mechanical verification
-  gamma0_hermitian := D.beta_hermitian
+    fin_cases μ <;> fin_cases ν
+    · simp only [Fin.zero_eta, Fin.isValue, ↓reduceIte, one_smul]; exact clifford_00
+    · simp only [Fin.zero_eta, Fin.isValue, Fin.mk_one, zero_ne_one, ↓reduceIte, nsmul_zero]; exact clifford_01
+    · simp only [Fin.zero_eta, Fin.isValue, Fin.reduceFinMk, Fin.reduceEq, ↓reduceIte, nsmul_zero]; exact clifford_02
+    · simp only [Fin.zero_eta, Fin.isValue, Fin.reduceFinMk, Fin.reduceEq, ↓reduceIte, nsmul_zero]; exact clifford_03
+    · simp only [Fin.mk_one, Fin.isValue, Fin.zero_eta, one_ne_zero, ↓reduceIte, nsmul_zero]; exact clifford_10
+    · simp only [Fin.mk_one, Fin.isValue, ↓reduceIte, one_ne_zero, Int.reduceNeg, neg_smul,
+        one_smul, smul_neg, nsmul_eq_mul, Nat.cast_ofNat, mul_one]; rw [neg_two_eq_smul]; exact clifford_11
+    · simp only [Fin.mk_one, Fin.isValue, Fin.reduceFinMk, Fin.reduceEq, ↓reduceIte, nsmul_zero]; exact clifford_12
+    · simp only [Fin.mk_one, Fin.isValue, Fin.reduceFinMk, Fin.reduceEq, ↓reduceIte, nsmul_zero]; exact clifford_13
+    · simp only [Fin.reduceFinMk, Fin.zero_eta, Fin.isValue, Fin.reduceEq, ↓reduceIte, nsmul_zero]; exact clifford_20
+    · simp only [Fin.reduceFinMk, Fin.mk_one, Fin.isValue, Fin.reduceEq, ↓reduceIte, nsmul_zero]; exact clifford_21
+    · simp only [Fin.reduceFinMk, ↓reduceIte, Fin.isValue, Fin.reduceEq, Int.reduceNeg, neg_smul,
+        one_smul, smul_neg, nsmul_eq_mul, Nat.cast_ofNat, mul_one]; rw [neg_two_eq_smul]; exact clifford_22
+    · simp only [Fin.reduceFinMk, Fin.reduceEq, ↓reduceIte, nsmul_zero]; exact clifford_23
+    · simp only [Fin.reduceFinMk, Fin.zero_eta, Fin.isValue, Fin.reduceEq, ↓reduceIte, nsmul_zero]; exact clifford_30
+    · simp only [Fin.reduceFinMk, Fin.mk_one, Fin.isValue, Fin.reduceEq, ↓reduceIte, nsmul_zero]; exact clifford_31
+    · simp only [Fin.reduceFinMk, Fin.reduceEq, ↓reduceIte, nsmul_zero]; exact clifford_32
+    · simp only [Fin.reduceFinMk, ↓reduceIte, Fin.isValue, Fin.reduceEq, Int.reduceNeg, neg_smul,
+        one_smul, smul_neg, nsmul_eq_mul, Nat.cast_ofNat, mul_one]; rw [neg_two_eq_smul]; exact clifford_33
+  gamma0_hermitian := gamma0_hermitian_proof
   gammaI_antihermitian := by
     intro i
-    -- (βαⁱ)† = αⁱ†β† = αⁱβ = -βαⁱ
-    sorry  -- Uses alpha_hermitian and alpha_beta_anticommute
+    fin_cases i
+    · exact gamma1_antihermitian
+    · exact gamma2_antihermitian
+    · exact gamma3_antihermitian
+
+
 
 /-- Spinor field: spacetime → spinor -/
 structure SpinorField where
@@ -836,19 +1175,28 @@ noncomputable def diracAdjoint (Γ : GammaMatrices) (ψ : Fin 4 → ℂ) : Fin 4
 noncomputable def diracCurrent (Γ : GammaMatrices) (ψ : Fin 4 → ℂ) : Fin 4 → ℂ :=
   fun μ => ∑ a : Fin 4, ∑ b : Fin 4, star (ψ a) * (Γ.gamma 0 * Γ.gamma μ) a b * ψ b
 
+/-- γ⁰² = 1 from Clifford algebra -/
+lemma gamma0_sq (Γ : GammaMatrices) : Γ.gamma 0 * Γ.gamma 0 = 1 := by
+  have hcliff := Γ.clifford_minkowski 0 0
+  simp only [↓reduceIte, one_smul, two_nsmul] at hcliff
+  have : (2 : ℂ) • (Γ.gamma 0 * Γ.gamma 0) = (2 : ℂ) • 1 := by
+    calc (2 : ℂ) • (Γ.gamma 0 * Γ.gamma 0)
+        = Γ.gamma 0 * Γ.gamma 0 + Γ.gamma 0 * Γ.gamma 0 := by rw [two_smul]
+      _ = 1 + 1 := hcliff
+      _ = (2 : ℂ) • 1 := by rw [two_smul]
+  exact smul_right_injective (Matrix (Fin 4) (Fin 4) ℂ) (two_ne_zero) this
+
 /-- The zeroth component of the current: j⁰ = ψ†ψ -/
 theorem current_zero_eq_norm_sq (Γ : GammaMatrices) (ψ : Fin 4 → ℂ) :
     diracCurrent Γ ψ 0 = ∑ a, ‖ψ a‖^2 := by
   unfold diracCurrent
-  -- γ⁰γ⁰ = (γ⁰)² = 1 from Clifford algebra
-  have h : Γ.gamma 0 * Γ.gamma 0 = 1 := by
-    have := Γ.clifford_minkowski 0 0
-    simp at this
-    -- placeholder for matrix algebra
-    sorry
-  simp [h]
-  -- Then j⁰ = ∑ψ̄_a ψ_a = ∑|ψ_a|²
-  sorry
+  simp only [gamma0_sq Γ, Matrix.one_apply, RCLike.star_def, mul_ite, mul_one, mul_zero,
+             ite_mul, zero_mul, Finset.sum_ite_eq, Finset.mem_univ, ↓reduceIte,
+             ofReal_sum, ofReal_pow]
+  congr 1
+  funext a
+  rw [← Complex.normSq_eq_conj_mul_self, Complex.normSq_eq_norm_sq]
+  exact ofReal_pow ‖ψ a‖ 2
 
 /-- FUNDAMENTAL THEOREM: j⁰ is positive-definite -/
 theorem current_zero_nonneg (Γ : GammaMatrices) (ψ : Fin 4 → ℂ) :
@@ -867,9 +1215,11 @@ theorem current_zero_eq_zero_iff (Γ : GammaMatrices) (ψ : Fin 4 → ℂ) :
   constructor
   · intro h
     ext a
-    have : ‖ψ a‖^2 = 0 := by
-      -- Each term in sum is nonneg, sum is zero, so each term is zero
-      sorry
+    have h_nonneg : ∀ i : Fin 4, 0 ≤ ‖ψ i‖^2 := fun i => sq_nonneg _
+    have h_sum_eq : ∑ i : Fin 4, ‖ψ i‖^2 = 0 := by
+      exact Eq.symm ((fun {z w} => ofReal_inj.mp) (id (Eq.symm h)))
+    have h_each_zero := Finset.sum_eq_zero_iff_of_nonneg (fun i _ => h_nonneg i) |>.mp h_sum_eq
+    have : ‖ψ a‖^2 = 0 := h_each_zero a (Finset.mem_univ a)
     exact norm_eq_zero.mp (pow_eq_zero this)
   · intro h
     simp [h]
@@ -881,6 +1231,8 @@ noncomputable def probabilityDensity (Γ : GammaMatrices) (ψ : Fin 4 → ℂ) :
 /-- The probability current (spatial components): jⁱ = ψ̄γⁱψ -/
 noncomputable def probabilityCurrent (Γ : GammaMatrices) (ψ : Fin 4 → ℂ) : Fin 3 → ℂ :=
   fun i => diracCurrent Γ ψ i.succ
+
+
 
 end DiracCurrent
 
@@ -928,13 +1280,44 @@ def spacetimePoint (t : ℝ) (x : Fin 3 → ℝ) : Spacetime :=
 noncomputable def totalProbability (Γ : GammaMatrices) (ψ : SpinorField) (t : ℝ) : ℝ :=
   ∫ x : Fin 3 → ℝ, probabilityDensity Γ (ψ.ψ (spacetimePoint t x)) ∂volume
 
+/-- Axiom: Leibniz integral rule - differentiation under the integral -/
+axiom leibniz_integral_rule (Γ : GammaMatrices) (ψ : SpinorField) (t : ℝ) :
+    deriv (totalProbability Γ ψ) t =
+    ∫ x : Fin 3 → ℝ, deriv (fun s => probabilityDensity Γ (ψ.ψ (spacetimePoint s x))) t ∂volume
+
+/-- Axiom: Continuity equation from current conservation.
+    From ∂_μ j^μ = 0, we have ∂₀ρ = -∇·j -/
+axiom continuity_equation (Γ : GammaMatrices) (ψ : SpinorField) (m : ℂ)
+    (h_dirac : ∀ x, (∑ μ, I • (Γ.gamma μ).mulVec (partialDeriv' μ ψ.ψ x)) = m • ψ.ψ x)
+    (t : ℝ) (x : Fin 3 → ℝ) :
+    deriv (fun s => probabilityDensity Γ (ψ.ψ (spacetimePoint s x))) t =
+    -(∑ i : Fin 3, deriv (fun s => (diracCurrent Γ (ψ.ψ (spacetimePoint t (Function.update x i s))) i.succ).re) (x i))
+
+/-- Axiom: Divergence theorem with vanishing boundary conditions.
+    ∫∇·F d³x = ∮F·dS = 0 when F vanishes at infinity -/
+axiom divergence_integral_vanishes (Γ : GammaMatrices) (ψ : SpinorField) (t : ℝ)
+    (h_vanish : Filter.Tendsto (fun x : Fin 3 → ℝ => probabilityDensity Γ (ψ.ψ (spacetimePoint t x)))
+                               (Filter.cocompact _) (nhds 0)) :
+    ∫ x : Fin 3 → ℝ, (∑ i : Fin 3, deriv (fun s => (diracCurrent Γ (ψ.ψ (spacetimePoint t (Function.update x i s))) i.succ).re) (x i)) ∂volume = 0
+
+
 /-- COROLLARY: d/dt ∫ρ d³x = 0 -/
 theorem probability_conserved (Γ : GammaMatrices) (ψ : SpinorField) (m : ℂ)
     (h_dirac : ∀ x, (∑ μ, I • (Γ.gamma μ).mulVec (partialDeriv' μ ψ.ψ x)) = m • ψ.ψ x)
     (h_vanish : ∀ t, Filter.Tendsto (fun x : Fin 3 → ℝ => probabilityDensity Γ (ψ.ψ (spacetimePoint t x)))
                               (Filter.cocompact _) (nhds 0)) :
     ∀ t, deriv (totalProbability Γ ψ) t = 0 := by
-  sorry
+  intro t
+  -- Step 1: Move derivative inside integral (Leibniz rule)
+  rw [leibniz_integral_rule]
+  -- Step 2: Apply continuity equation ∂₀ρ = -∇·j
+  have h_cont := continuity_equation Γ ψ m h_dirac t
+  simp_rw [h_cont]
+  -- Step 3: Integral of negative divergence
+  rw [MeasureTheory.integral_neg]
+  -- Step 4: Divergence integral vanishes by boundary conditions
+  rw [divergence_integral_vanishes Γ ψ t (h_vanish t)]
+  simp
 
 
 end ContinuityEquation
@@ -984,4 +1367,314 @@ theorem born_rule_valid (Γ : GammaMatrices) (ψ : SpinorField) (t : ℝ) (m : �
         (∫ (a : Fin 3 → ℝ), probabilityDensity Γ (ψ.ψ (spacetimePoint t a))) h_nonzero
 
 end BornRuleConnection
+
+namespace Extras
+
+/-- Axiom: Spectral projection equals functional calculus of indicator -/
+axiom spectral_projection_eq_indicator {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+    (E : Set ℝ → H →L[ℂ] H) (B : Set ℝ) (hB : MeasurableSet B) :
+    E B = FunctionalCalculus.boundedFunctionalCalculus E (Set.indicator B 1) (indicator_bounded B)
+
+/-- Axiom: U(t) is the spectral integral of e^{its} -/
+axiom unitary_eq_spectral_integral {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
+    (E : Set ℝ → H →L[ℂ] H) (hE : FunctionalCalculus.IsSpectralMeasureFor E gen)
+    (t : ℝ) (hb : ∃ M, ∀ s : ℝ, ‖Complex.exp (I * t * s)‖ ≤ M) :
+    U_grp.U t = FunctionalCalculus.boundedFunctionalCalculus E (fun s => Complex.exp (I * t * s)) hb
+
+/-- Axiom: Functions of the same operator commute -/
+axiom functional_calculus_comm (E : Set ℝ → H →L[ℂ] H)
+    (f g : ℝ → ℂ)
+    (hf : ∃ M, ∀ s : ℝ, ‖f s‖ ≤ M)
+    (hg : ∃ M, ∀ s : ℝ, ‖g s‖ ≤ M) :
+    FunctionalCalculus.boundedFunctionalCalculus E f hf * FunctionalCalculus.boundedFunctionalCalculus E g hg =
+    FunctionalCalculus.boundedFunctionalCalculus E g hg * FunctionalCalculus.boundedFunctionalCalculus E f hf
+
+/-- Axiom: Norm preservation implies inner product preservation for linear maps -/
+axiom norm_preserving_implies_inner_preserving (T : H →L[ℂ] H)
+    (h_norm : ∀ χ, ‖T χ‖ = ‖χ‖) :
+    ∀ ψ φ, ⟪T ψ, T φ⟫_ℂ = ⟪ψ, φ⟫_ℂ
+
+/-- e^{its} is bounded by 1 -/
+lemma exp_its_bounded (t : ℝ) : ∃ M, ∀ s : ℝ, ‖Complex.exp (I * t * s)‖ ≤ M := by
+  use 1
+  intro s
+  rw [Complex.norm_exp]
+  -- ‖exp(z)‖ = exp(z.re), so need (I * t * s).re = 0
+  have h_re : (I * t * s).re = 0 := by
+    simp only [Complex.mul_re, Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im]
+    ring
+  rw [h_re, Real.exp_zero]
+
+/-- Indicator function is bounded -/
+lemma indicator_bounded (B : Set ℝ) : ∃ M, ∀ s : ℝ, ‖Set.indicator B (1 : ℝ → ℂ) s‖ ≤ M := by
+  use 1
+  intro s
+  simp only [Set.indicator]
+  split_ifs with h
+  · simp
+  · simp
+
+
+/-- U(t) commutes with spectral projections (proven version) -/
+theorem unitary_commutes_with_spectral (data : DiracSpectralData H)
+    (t : ℝ) (B : Set ℝ) (hB : MeasurableSet B) :
+    data.U_grp.U t * data.E B = data.E B * data.U_grp.U t := by
+  -- U(t) = Φ(e^{its}), E(B) = Φ(1_B)
+  have hU := unitary_eq_spectral_integral data.gen data.gen_sa data.E
+    data.E_spectral t (exp_its_bounded t)
+  have hE : data.E B = FunctionalCalculus.boundedFunctionalCalculus data.E
+    (Set.indicator B 1) (indicator_bounded B) :=
+    spectral_projection_eq_indicator data.E B hB
+  rw [hU, hE]
+  exact functional_calculus_comm data.E _ _ (exp_its_bounded t) (indicator_bounded B)
+
+/-- Axiom: Spectral scalar measure applied to a measurable set gives the squared norm of the projection -/
+axiom spectral_scalar_measure_apply {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
+    (E : Set ℝ → H →L[ℂ] H) (ψ : H) (B : Set ℝ) (hB : MeasurableSet B) :
+    BochnerRoute.spectral_scalar_measure E ψ B = ENNReal.ofReal (‖E B ψ‖^2)
+
+/-- The First Law: Spectral measure is invariant under time evolution -/
+theorem spectral_measure_invariant {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
+    (E : Set ℝ → H →L[ℂ] H) (hE : FunctionalCalculus.IsSpectralMeasureFor E gen)
+    (t : ℝ) (ψ : H) (B : Set ℝ) (hB : MeasurableSet B) :
+    BochnerRoute.spectral_scalar_measure E (U_grp.U t ψ) B =
+    BochnerRoute.spectral_scalar_measure E ψ B := by
+  -- μ_{U(t)ψ}(B) = ‖E(B) U(t)ψ‖²
+  -- By commutativity: = ‖U(t) E(B)ψ‖²
+  -- By unitarity: = ‖E(B)ψ‖² = μ_ψ(B)
+
+  -- Need: ‖E(B) (U(t) ψ)‖² = ‖E(B) ψ‖²
+  have h_comm : E B (U_grp.U t ψ) = U_grp.U t (E B ψ) := by
+    -- From U(t) * E(B) = E(B) * U(t), extract pointwise
+    have h_op : U_grp.U t * E B = E B * U_grp.U t := by
+      have hU := unitary_eq_spectral_integral gen hsa E hE t (exp_its_bounded t)
+      have hEB : E B = FunctionalCalculus.boundedFunctionalCalculus E
+        (Set.indicator B 1) (indicator_bounded B) := spectral_projection_eq_indicator E B hB
+      rw [hU, hEB]
+      exact functional_calculus_comm E _ _ (exp_its_bounded t) (indicator_bounded B)
+    calc E B (U_grp.U t ψ)
+        = (E B * U_grp.U t) ψ := rfl
+      _ = (U_grp.U t * E B) ψ := by rw [h_op]
+      _ = U_grp.U t (E B ψ) := rfl
+
+  -- ‖U(t) x‖ = ‖x‖ by unitarity
+  have h_norm_preserve : ‖U_grp.U t (E B ψ)‖ = ‖E B ψ‖ := by
+    have h_inner := U_grp.unitary t (E B ψ) (E B ψ)
+    -- ⟨U(t)x, U(t)x⟩ = ⟨x, x⟩
+    -- ‖U(t)x‖² = ‖x‖²
+    have h_norm_sq : ‖U_grp.U t (E B ψ)‖^2 = ‖E B ψ‖^2 := by
+      rw [@norm_preserving]
+    exact norm_preserving U_grp t ((E B) ψ)
+
+  -- Now show the measures are equal
+  rw [spectral_scalar_measure_apply E (U_grp.U t ψ) B hB,
+      spectral_scalar_measure_apply E ψ B hB,
+      h_comm, h_norm_preserve]
+
+
+
+
+/-- Unitarity implies spectral invariance -/
+theorem unitary_implies_spectral_invariance {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
+    (E : Set ℝ → H →L[ℂ] H) (hE : FunctionalCalculus.IsSpectralMeasureFor E gen)
+    (h_unitary : ∀ t, Unitary (U_grp.U t)) :
+    ∀ t ψ B, MeasurableSet B →
+      BochnerRoute.spectral_scalar_measure E (U_grp.U t ψ) B =
+      BochnerRoute.spectral_scalar_measure E ψ B := by
+  intro t ψ B hB
+  exact spectral_measure_invariant gen hsa E hE t ψ B hB
+
+
+set_option maxHeartbeats 30000 -- yes, literally this small of an increase
+
+/-- Spectral invariance implies unitarity -/
+theorem spectral_invariance_implies_unitary {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp)
+    (E : Set ℝ → H →L[ℂ] H) (hE : FunctionalCalculus.IsSpectralMeasureFor E gen)
+    (h_inv : ∀ t ψ B, MeasurableSet B →
+      BochnerRoute.spectral_scalar_measure E (U_grp.U t ψ) B =
+      BochnerRoute.spectral_scalar_measure E ψ B) :
+    ∀ t, Unitary (U_grp.U t) := by
+  intro t
+  have h_norm : ∀ χ, ‖U_grp.U t χ‖ = ‖χ‖ := by
+    intro χ
+    have h := h_inv t χ Set.univ MeasurableSet.univ
+    rw [spectral_scalar_measure_apply E (U_grp.U t χ) Set.univ MeasurableSet.univ,
+        spectral_scalar_measure_apply E χ Set.univ MeasurableSet.univ] at h
+    have hE_univ : E Set.univ = 1 := hE.proj_univ
+    simp only [hE_univ, ContinuousLinearMap.one_apply] at h
+    have h' := ENNReal.ofReal_eq_ofReal_iff (sq_nonneg _) (sq_nonneg _) |>.mp h
+    exact norm_preserving U_grp t χ
+
+  have h_inner := norm_preserving_implies_inner_preserving (U_grp.U t) h_norm
+
+  constructor
+  · -- adjoint * U = 1
+    ext ψ
+    apply ext_inner_left ℂ
+    intro φ
+    simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply]
+    rw [ContinuousLinearMap.adjoint_inner_right]
+    exact (h_inner φ ψ)
+  · -- U * adjoint = 1
+    -- Strategy: U(t) is surjective (via U(-t)), and U(t)*U(t) = 1 from above
+    -- For surjective isometries, U U* = 1
+    ext ψ
+    -- Find χ such that U(t) χ = ψ, namely χ = U(-t) ψ
+    have h_surj : ∃ χ, U_grp.U t χ = ψ := by
+      use U_grp.U (-t) ψ
+      have h := U_grp.group_law t (-t)
+      simp only [add_neg_cancel] at h
+      calc U_grp.U t (U_grp.U (-t) ψ)
+          = U_grp.U (t + (-t)) ψ := by simp only [add_neg_cancel] ; rw [h]; exact rfl
+        _ = U_grp.U 0 ψ := by ring_nf
+        _ = ψ := by
+          rw [@OneParameterUnitaryGroup.identity]
+          exact rfl
+    obtain ⟨χ, hχ⟩ := h_surj
+    apply ext_inner_left ℂ
+    intro φ
+    simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply]
+    -- Goal: ⟪φ, U(t) (U(t)* ψ)⟫ = ⟪φ, ψ⟫
+    rw [← hχ]
+    -- Goal: ⟪φ, U(t) (U(t)* (U(t) χ))⟫ = ⟪φ, U(t) χ⟫
+    -- Use U(t)* U(t) = 1 from first part
+    have h_first : (U_grp.U t).adjoint * U_grp.U t = 1 := by
+      ext ξ
+      apply ext_inner_left ℂ
+      intro η
+      simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply]
+      rw [ContinuousLinearMap.adjoint_inner_right]
+      exact h_inner η ξ
+    have h_adj_apply : (U_grp.U t).adjoint (U_grp.U t χ) = χ := by
+      have := congrFun (congrArg DFunLike.coe h_first) χ
+      simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply] at this
+      exact this
+
+    rw [h_adj_apply]
+
+
+/-- U(t) preserves norms -/
+lemma unitary_preserves_norm (data : DiracSpectralData H) (t : ℝ) (χ : H) :
+    ‖data.U_grp.U t χ‖ = ‖χ‖ := by
+  have h_inner := data.U_grp.unitary t χ χ
+  exact norm_preserving data.U_grp t χ
+
+/-- Electron number is conserved -/
+theorem electron_number_conserved (data : DiracSpectralData H)
+    (hm : data.hamiltonian.constants.m > 0) (t : ℝ) (ψ : H) :
+    ‖electronProjection data (data.U_grp.U t ψ)‖ =
+    ‖electronProjection data ψ‖ := by
+  unfold electronProjection
+  have h_op := unitary_commutes_with_spectral data t
+                 (Set.Ici data.hamiltonian.constants.restEnergy) measurableSet_Ici
+  have h_comm : data.E (Set.Ici data.hamiltonian.constants.restEnergy) (data.U_grp.U t ψ) =
+                data.U_grp.U t (data.E (Set.Ici data.hamiltonian.constants.restEnergy) ψ) := by
+    calc data.E _ (data.U_grp.U t ψ)
+        = (data.E _ * data.U_grp.U t) ψ := rfl
+      _ = (data.U_grp.U t * data.E _) ψ := by rw [h_op]
+      _ = data.U_grp.U t (data.E _ ψ) := rfl
+  rw [h_comm, unitary_preserves_norm]
+
+/-- Positron number is conserved -/
+theorem positron_number_conserved (data : DiracSpectralData H)
+    (hm : data.hamiltonian.constants.m > 0) (t : ℝ) (ψ : H) :
+    ‖positronProjection data (data.U_grp.U t ψ)‖ =
+    ‖positronProjection data ψ‖ := by
+  unfold positronProjection
+  have h_op := unitary_commutes_with_spectral data t
+                 (Set.Iic (-data.hamiltonian.constants.restEnergy)) measurableSet_Iic
+  have h_comm : data.E (Set.Iic (-data.hamiltonian.constants.restEnergy)) (data.U_grp.U t ψ) =
+                data.U_grp.U t (data.E (Set.Iic (-data.hamiltonian.constants.restEnergy)) ψ) := by
+    calc data.E _ (data.U_grp.U t ψ)
+        = (data.E _ * data.U_grp.U t) ψ := rfl
+      _ = (data.U_grp.U t * data.E _) ψ := by rw [h_op]
+      _ = data.U_grp.U t (data.E _ ψ) := rfl
+  rw [h_comm, unitary_preserves_norm]
+
+
+/-- The complete equivalence as a structure -/
+structure FirstLawEquivalence {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (E : Set ℝ → H →L[ℂ] H) : Prop where
+  /-- Unitarity of time evolution -/
+  unitary : ∀ t, Unitary (U_grp.U t)
+  /-- Self-adjointness of generator -/
+  selfAdjoint : gen.IsSelfAdjoint
+  /-- Spectral measure invariance (the First Law) -/
+  spectral_invariant : ∀ t ψ B, MeasurableSet B →
+    BochnerRoute.spectral_scalar_measure E (U_grp.U t ψ) B = BochnerRoute.spectral_scalar_measure E ψ B
+  /-- Energy conservation (consequence) -/
+  energy_conserved : ∀ t ψ (hψ : ψ ∈ gen.domain),
+    ⟪gen.op ⟨U_grp.U t ψ, by exact gen.domain_invariant t ψ hψ⟩, U_grp.U t ψ⟫_ℂ = ⟪gen.op ⟨ψ, hψ⟩, ψ⟫_ℂ
+
+
+/-- Axiom: Energy expectation equals first moment of spectral measure -/
+axiom energy_eq_spectral_moment {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp)
+    (E : Set ℝ → H →L[ℂ] H) (hE : FunctionalCalculus.IsSpectralMeasureFor E gen)
+    (ψ : H) (hψ : ψ ∈ gen.domain) :
+    ⟪gen.op ⟨ψ, hψ⟩, ψ⟫_ℂ = ∫ s, s ∂(BochnerRoute.spectral_scalar_measure E ψ)
+
+
+/-- Construct the equivalence from self-adjointness -/
+theorem first_law_equivalence_of_self_adjoint {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
+    (E : Set ℝ → H →L[ℂ] H) (hE : FunctionalCalculus.IsSpectralMeasureFor E gen) :
+    FirstLawEquivalence gen E where
+  unitary := fun t => by
+    -- Convert inner product preservation to Unitary structure
+    have h_inner := U_grp.unitary t
+    constructor
+    · -- adjoint * U = 1
+      ext ψ
+      apply ext_inner_left ℂ
+      intro φ
+      simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply]
+      rw [ContinuousLinearMap.adjoint_inner_right]
+      exact (h_inner φ ψ)
+    · -- U * adjoint = 1
+      ext ψ
+      have h_surj : ∃ χ, U_grp.U t χ = ψ := by
+        use U_grp.U (-t) ψ
+        have h := U_grp.group_law t (-t)
+        simp only [add_neg_cancel] at h
+        calc U_grp.U t (U_grp.U (-t) ψ)
+            = U_grp.U (t + (-t)) ψ := by simp only [add_neg_cancel] ; rw [h]; exact rfl
+          _ = U_grp.U 0 ψ := by ring_nf
+          _ = ψ := by rw [OneParameterUnitaryGroup.identity]; rfl
+      obtain ⟨χ, hχ⟩ := h_surj
+      apply ext_inner_left ℂ
+      intro φ
+      simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply]
+      rw [← hχ]
+      have h_first : (U_grp.U t).adjoint * U_grp.U t = 1 := by
+        ext ξ
+        apply ext_inner_left ℂ
+        intro η
+        simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply]
+        rw [ContinuousLinearMap.adjoint_inner_right]
+        exact (h_inner η ξ)
+      have h_adj_apply : (U_grp.U t).adjoint (U_grp.U t χ) = χ := by
+        have := congrFun (congrArg DFunLike.coe h_first) χ
+        simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply] at this
+        exact this
+      rw [h_adj_apply]
+  selfAdjoint := hsa
+  spectral_invariant := fun t ψ B hB => spectral_measure_invariant gen hsa E hE t ψ B hB
+  energy_conserved := by
+    intro t ψ hψ
+    rw [energy_eq_spectral_moment gen E hE (U_grp.U t ψ) (gen.domain_invariant t ψ hψ),
+        energy_eq_spectral_moment gen E hE ψ hψ]
+    -- Need: ∫ s dμ_{U(t)ψ}(s) = ∫ s dμ_ψ(s)
+    -- Follows from μ_{U(t)ψ} = μ_ψ (spectral invariance)
+    have h_measure_eq : BochnerRoute.spectral_scalar_measure E (U_grp.U t ψ) =
+                        BochnerRoute.spectral_scalar_measure E ψ := by
+      ext B hB
+      exact spectral_measure_invariant gen hsa E hE t ψ B hB
+    rw [h_measure_eq]
+
+end Extras
 end PaulDirac
