@@ -1,7 +1,7 @@
 /-
 Author: Adam Bornemann
 Created: 12-27-2025
-Updated: 1-9-2026
+Updated: 1-6-2026
 
 ================================================================================
 THE CAYLEY TRANSFORM
@@ -4626,85 +4626,215 @@ lemma unitary_not_approx_eigenvalue_isUnit [Nontrivial H] {U : H →L[ℂ] H} (h
   exact normal_bounded_below_isUnit h_normal ε hε_pos h_bounded_below
 
 
-/-!
-## Approximate Eigenvalue Correspondence
-
-This section establishes that approximate eigenvalues of A correspond to
-approximate eigenvalues of U under the Möbius map.
-
-### Approximate Eigenvalues
-
-**Definition:** μ is an approximate eigenvalue of A if for every ε > 0,
-there exists a unit vector ψ with ‖(A - μI)ψ‖ < ε.
-
-Equivalently: there exists a sequence of unit vectors ψ_n with
-‖(A - μI)ψ_n‖ → 0 (but (A - μI)ψ_n ≠ 0, unlike true eigenvalues).
-
-### The Correspondence
-
-We prove both directions:
-
-**Forward (A → U):** If μ is an approximate eigenvalue of A, then
-w = (μ - i)/(μ + i) is an approximate eigenvalue of U.
-
-**Backward (U → A):** If w is an approximate eigenvalue of U, then
-μ (where w = (μ - i)/(μ + i)) is an approximate eigenvalue of A.
-
-### Why This Matters
-
-For normal operators (including unitary U), the spectrum equals the
-set of approximate eigenvalues. Combined with the exact eigenvalue
-correspondence, this gives:
-
-    σ(A) ↔ σ(U) via the Möbius map
-
-### Technical Challenge
-
-The backward direction (U → A) is trickier because:
-- We start with φ satisfying ‖(U - wI)φ‖ < ε
-- We need to find ψ with ‖(A - μI)ψ‖ < C‖ψ‖
-- The intertwining identity relates these, but we need norm bounds
-
-The key is that ‖(A + iI)ψ‖² = ‖Aψ‖² + ‖ψ‖², which bounds ‖ψ‖ below.
--/
 
 /--
-**Norm lower bound for approximate eigenvectors.**
+**Lower bound on domain element norm from approximate eigenvalue condition.**
 
-### Statement
+If ψ ∈ D(A) satisfies:
+1. ‖(A + iI)ψ‖ = 1  (normalized in the graph norm sense)
+2. ‖(A - μI)ψ‖ ≤ δ  (approximate μ-eigenvector)
+3. δ² < 1 + μ²      (small enough approximation)
 
-If ψ ∈ D(A) with ‖(A + iI)ψ‖ = 1 (i.e., ψ is the resolvent of a unit vector),
-then ‖ψ‖ ≥ 1/(2√(1 + μ²)).
+Then: ‖ψ‖ ≥ (√(1 + μ² - δ²) - |μ|δ) / (1 + μ²)
 
-### Context
-
-This is stated as an axiom because the full proof requires additional
-estimates. The intuition is:
-
-From ‖(A + iI)ψ‖² = ‖Aψ‖² + ‖ψ‖² = 1:
-- If ψ is an approximate μ-eigenvector, then Aψ ≈ μψ
-- So ‖Aψ‖ ≈ |μ|‖ψ‖
-- Therefore 1 ≈ (1 + μ²)‖ψ‖², giving ‖ψ‖ ≈ 1/√(1 + μ²)
-
-The factor of 2 provides margin for the approximation.
-
-### Use Case
-
-This bound is needed in `cayley_approx_eigenvalue_backward` to ensure
-that when we extract ψ from φ via the resolvent, we get a useful
-lower bound on ‖ψ‖ that lets us translate the ε-bound on U to a
-C‖ψ‖-bound on A.
-
-### TODO
-
-Replace this axiom with a full proof using triangle inequality estimates.
+As δ → 0, this gives ‖ψ‖ ≥ 1/√(1 + μ²) - O(δ).
 -/
-axiom approx_eigenvalue_norm_lower_bound {U_grp : OneParameterUnitaryGroup (H := H)}
+lemma approx_eigenvalue_norm_lower_bound {U_grp : OneParameterUnitaryGroup (H := H)}
     (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (μ : ℝ)
     (ψ : H) (hψ : ψ ∈ gen.domain) (hψ_ne : ψ ≠ 0)
-    (h_norm : ‖gen.op ⟨ψ, hψ⟩ + I • ψ‖ = 1) :
-    ‖ψ‖ ≥ 1 / (2 * Real.sqrt (1 + μ^2))
+    (h_norm : ‖gen.op ⟨ψ, hψ⟩ + I • ψ‖ = 1)
+    (δ : ℝ) (hδ_pos : 0 ≤ δ) (hδ_small : δ^2 < 1 + μ^2)
+    (h_approx : ‖gen.op ⟨ψ, hψ⟩ - (↑μ : ℂ) • ψ‖ ≤ δ) :
+    ‖ψ‖ ≥ (Real.sqrt (1 + μ^2 - δ^2) - |μ| * δ) / (1 + μ^2) := by
+  
+  /-
+  Step 1: From self-adjointness, ‖(A + iI)ψ‖² = ‖Aψ‖² + ‖ψ‖².
+  Combined with h_norm: ‖Aψ‖² + ‖ψ‖² = 1.
+  -/
+  have h_pythag := self_adjoint_norm_sq_add gen hsa ψ hψ
+  have h_sum_one : ‖gen.op ⟨ψ, hψ⟩‖^2 + ‖ψ‖^2 = 1 := by
+    have : ‖gen.op ⟨ψ, hψ⟩ + I • ψ‖^2 = 1 := by rw [h_norm]; ring
+    linarith [h_pythag]
+  
+  /-
+  Step 2: From ‖(A - μI)ψ‖ ≤ δ, extract bounds on ‖Aψ‖.
+  
+  Triangle inequality: |‖Aψ‖ - |μ|‖ψ‖| ≤ ‖Aψ - μψ‖ ≤ δ
+  
+  Therefore: ‖Aψ‖ ≥ |μ|‖ψ‖ - δ  (if this is positive)
+  -/
+  have h_Aμψ_bound : ‖gen.op ⟨ψ, hψ⟩ - (↑μ : ℂ) • ψ‖ ≤ δ := h_approx
+  
+  -- Convert to real-valued norm comparison
+  have h_triangle : |‖gen.op ⟨ψ, hψ⟩‖ - |μ| * ‖ψ‖| ≤ δ := by
+    have h1 : ‖(↑μ : ℂ) • ψ‖ = |μ| * ‖ψ‖ := by
+      rw [norm_smul]
+      simp only [norm_real, Real.norm_eq_abs]
+    calc |‖gen.op ⟨ψ, hψ⟩‖ - |μ| * ‖ψ‖|
+        = |‖gen.op ⟨ψ, hψ⟩‖ - ‖(↑μ : ℂ) • ψ‖| := by rw [h1]
+      _ ≤ ‖gen.op ⟨ψ, hψ⟩ - (↑μ : ℂ) • ψ‖ := abs_norm_sub_norm_le _ _
+      _ ≤ δ := h_approx
+  
+  -- Extract: ‖Aψ‖ ≥ |μ|‖ψ‖ - δ
+  have h_Aψ_lower : ‖gen.op ⟨ψ, hψ⟩‖ ≥ |μ| * ‖ψ‖ - δ := by
+    have ⟨h1, _⟩ := abs_le.mp h_triangle
+    -- h1 : -δ ≤ ‖Aψ‖ - |μ|‖ψ‖
+    -- Rearranging: ‖Aψ‖ ≥ |μ|‖ψ‖ - δ
+    linarith
+  
+  /-
+  Step 3: Substitute into ‖Aψ‖² + ‖ψ‖² = 1.
+  
+  If ‖Aψ‖ ≥ |μ|‖ψ‖ - δ, then ‖Aψ‖² ≥ (|μ|‖ψ‖ - δ)² (when the RHS is ≥ 0).
+  
+  Therefore: (|μ|‖ψ‖ - δ)² + ‖ψ‖² ≤ 1
+  
+  Expanding: μ²‖ψ‖² - 2|μ|δ‖ψ‖ + δ² + ‖ψ‖² ≤ 1
+             (1 + μ²)‖ψ‖² - 2|μ|δ‖ψ‖ + (δ² - 1) ≤ 0
+  -/
+  set x := ‖ψ‖ with hx_def
+  have hx_pos : x > 0 := norm_pos_iff.mpr hψ_ne
+  
+  /-
+  Step 4: Solve the quadratic inequality.
+  
+  (1 + μ²)x² - 2|μ|δx + (δ² - 1) ≤ 0
+  
+  This is a downward-opening parabola (coefficient of x² is positive,
+  but the inequality is ≤ 0). The roots are:
+  
+  x = [2|μ|δ ± √(4μ²δ² - 4(1+μ²)(δ² - 1))] / [2(1+μ²)]
+    = [|μ|δ ± √(μ²δ² - (1+μ²)δ² + (1+μ²))] / (1+μ²)
+    = [|μ|δ ± √(1 + μ² - δ²)] / (1+μ²)
+  
+  For the quadratic to be ≤ 0, x must be between the roots.
+  The smaller root is x₋ = [|μ|δ - √(1+μ²-δ²)] / (1+μ²).
+  
+  But wait—we need x ≥ x₋, not x ≤ x₊!
+  
+  Actually, let me reconsider. We have ‖Aψ‖² ≥ (|μ|x - δ)² when |μ|x ≥ δ.
+  So: (|μ|x - δ)² + x² ≤ ‖Aψ‖² + x² = 1
+  
+  This gives (|μ|x - δ)² ≤ 1 - x², i.e., |μ|x - δ ≤ √(1 - x²).
+  
+  Hmm, let me use the other direction. We have:
+  ‖Aψ‖² = 1 - x²
+  ‖Aψ‖ ≤ |μ|x + δ  (from triangle inequality, other direction)
+  
+  So: 1 - x² = ‖Aψ‖² ≤ (|μ|x + δ)²
+      1 - x² ≤ μ²x² + 2|μ|δx + δ²
+      1 - δ² ≤ x²(1 + μ²) + 2|μ|δx
+      1 - δ² ≤ (1 + μ²)x² + 2|μ|δx
+  
+  Rearranging: (1 + μ²)x² + 2|μ|δx - (1 - δ²) ≥ 0
+               (1 + μ²)x² + 2|μ|δx + (δ² - 1) ≥ 0
+  -/
+  
+  have h_Aψ_upper : ‖gen.op ⟨ψ, hψ⟩‖ ≤ |μ| * x + δ := by
+    have ⟨_, h2⟩ := abs_le.mp h_triangle
+    -- h2 : ‖Aψ‖ - |μ|‖ψ‖ ≤ δ
+    -- Rearranging: ‖Aψ‖ ≤ |μ|‖ψ‖ + δ
+    linarith
+  
+  have h_Aψ_sq : ‖gen.op ⟨ψ, hψ⟩‖^2 = 1 - x^2 := by linarith [h_sum_one]
+  
+  have h_ineq : (1 + μ^2) * x^2 + 2 * |μ| * δ * x + (δ^2 - 1) ≥ 0 := by
+    have h1 : 1 - x^2 ≤ (|μ| * x + δ)^2 := by
+      calc 1 - x^2 = ‖gen.op ⟨ψ, hψ⟩‖^2 := h_Aψ_sq.symm
+        _ ≤ (|μ| * x + δ)^2 := by
+            apply sq_le_sq'
+            · linarith [norm_nonneg (gen.op ⟨ψ, hψ⟩), hδ_pos, 
+                        mul_nonneg (abs_nonneg μ) (le_of_lt hx_pos)]
+            · exact h_Aψ_upper
+    calc (1 + μ^2) * x^2 + 2 * |μ| * δ * x + (δ^2 - 1)
+        = μ^2 * x^2 + 2 * |μ| * δ * x + δ^2 + x^2 - 1 := by ring
+      _ = (|μ| * x + δ)^2 - (1 - x^2) := by rw [← sq_abs μ]; ring
+      _ ≥ 0 := by linarith [h1]
+  
+  /-
+  Step 5: The quadratic (1+μ²)t² + 2|μ|δt + (δ² - 1) ≥ 0 
+  
+  has roots at t = [-|μ|δ ± √(μ²δ² - (1+μ²)(δ²-1))] / (1+μ²)
+                 = [-|μ|δ ± √(1 + μ² - δ²)] / (1+μ²)
+  
+  (using discriminant: μ²δ² - (1+μ²)(δ²-1) = μ²δ² - δ² - μ²δ² + 1 + μ² = 1 + μ² - δ²)
+  
+  The parabola opens upward (coefficient 1+μ² > 0), so the inequality ≥ 0
+  holds when t ≤ t₋ or t ≥ t₊, where:
+  
+  t₋ = [-|μ|δ - √(1+μ²-δ²)] / (1+μ²) < 0
+  t₊ = [-|μ|δ + √(1+μ²-δ²)] / (1+μ²)
+  
+  Since x = ‖ψ‖ > 0 and t₋ < 0, we must have x ≥ t₊.
+  -/
+  
+  have h_discriminant : 1 + μ^2 - δ^2 > 0 := by linarith [hδ_small]
+  
+  have h_sqrt_exists : Real.sqrt (1 + μ^2 - δ^2) > 0 := Real.sqrt_pos.mpr h_discriminant
+  
+  -- The larger root
+  set t_plus := (Real.sqrt (1 + μ^2 - δ^2) - |μ| * δ) / (1 + μ^2) with htplus_def -- unexpected token '₊'; expected ':='
+  
+  -- The smaller root  
+  set t_minus := (-Real.sqrt (1 + μ^2 - δ^2) - |μ| * δ) / (1 + μ^2) with htminus_def
+  
+  have htminus_neg : t_minus < 0 := by
+    rw [htminus_def]
+    apply div_neg_of_neg_of_pos
+    · linarith [h_sqrt_exists, mul_nonneg (abs_nonneg μ) hδ_pos]
+    · linarith [sq_nonneg μ]
+  
+  have h_coeff_pos : 1 + μ^2 > 0 := by linarith [sq_nonneg μ]
+  
+  have h_at_root : (1 + μ^2) * t_plus^2 + 2 * |μ| * δ * t_plus + (δ^2 - 1) = 0 := by
+    rw [htplus_def]
+    field_simp
+    -- First, unify μ^2 and |μ|^2 so ring_nf treats them consistently
+    rw [← sq_abs μ]
+    ring_nf
+    -- Now the sqrt contains (1 + (|μ|^2 - δ^2))
+    have h_sq : Real.sqrt (1 + (|μ|^2 - δ^2)) ^ 2 = 1 + (|μ|^2 - δ^2) := by
+      apply Real.sq_sqrt
+      have : |μ|^2 = μ^2 := sq_abs μ
+      linarith [h_discriminant]
+    rw [h_sq]
+    ring
+  
+  -- For upward parabola: f(x) ≥ 0 and x > 0 and t₋ < 0 implies x ≥ t₊
+  have h_x_ge_t_plus : x ≥ t_plus := by
+    by_contra h_lt
+    push_neg at h_lt
+    -- If t₋ < x < t₊, then the quadratic is negative (contradiction)
+    have h_neg : (1 + μ^2) * x^2 + 2 * |μ| * δ * x + (δ^2 - 1) < 0 := by
+      -- The quadratic is negative between roots for upward parabola
+      have h_factored : ∀ t, (1 + μ^2) * t^2 + 2 * |μ| * δ * t + (δ^2 - 1) = 
+                  (1 + μ^2) * (t - t_minus) * (t - t_plus) := by
+        intro t
+        rw [htplus_def, htminus_def]
+        field_simp
+        rw [← sq_abs μ]
+        ring_nf
+        have h_sq : Real.sqrt (1 + (|μ|^2 - δ^2)) ^ 2 = 1 + (|μ|^2 - δ^2) := by
+          apply Real.sq_sqrt
+          have : |μ|^2 = μ^2 := sq_abs μ
+          linarith [h_discriminant]
+        rw [h_sq]
+        ring
+      rw [h_factored]
+      apply mul_neg_of_pos_of_neg
+      · -- Need: (1 + μ^2) * (x - t_minus) > 0
+        apply mul_pos h_coeff_pos
+        linarith [htminus_neg]  -- x > 0 > t_minus, so x - t_minus > 0
+      · -- Need: x - t_plus < 0
+        linarith [h_lt]
+    linarith [h_ineq, h_neg]
 
+  -- Conclude
+  calc ‖ψ‖ = x := rfl
+    _ ≥ t_plus := h_x_ge_t_plus
+    _ = (Real.sqrt (1 + μ^2 - δ^2) - |μ| * δ) / (1 + μ^2) := htplus_def
+
+set_option maxHeartbeats 400000
 /--
 **Backward approximate eigenvalue correspondence:** U → A.
 
@@ -4773,27 +4903,29 @@ lemma cayley_approx_eigenvalue_backward {U_grp : OneParameterUnitaryGroup (H := 
   have h_one_sub_w_ne : (1 : ℂ) - w ≠ 0 := one_sub_mobius_ne_zero μ hμ_ne
   have h_one_sub_w_norm_pos : ‖(1 : ℂ) - w‖ > 0 := norm_pos_iff.mpr h_one_sub_w_ne
 
-  /-
-  Step 1: Choose ε strategically.
-
-  We set ε = C · |1-w| / (2√(1 + μ²)) so that the final bound works out.
-  The denominator 2√(1 + μ²) matches the lower bound on ‖ψ‖.
-  -/
   set denom := Real.sqrt (1 + μ^2) with hdenom
   have hdenom_pos : denom > 0 := Real.sqrt_pos.mpr (by linarith [sq_nonneg μ])
-
-  obtain ⟨φ, hφ_norm, hφ_bound⟩ := h_approx (C * ‖(1 : ℂ) - w‖ / (2 * denom)) (by positivity)
+  have hdenom_ge_one : denom ≥ 1 := by
+    rw [hdenom]
+    calc Real.sqrt (1 + μ^2) ≥ Real.sqrt 1 := Real.sqrt_le_sqrt (by linarith [sq_nonneg μ])
+      _ = 1 := Real.sqrt_one
 
   /-
-  Step 2: Extract ψ from φ via the resolvent.
+  KEY CHANGE: Use min(C, 1/2) to ensure δ is small enough for the norm lower bound.
   -/
+  set C' := min C (1/2) with hC'_def
+  have hC'_pos : C' > 0 := lt_min hC (by norm_num : (0:ℝ) < 1/2)
+  have hC'_le_half : C' ≤ 1/2 := min_le_right C (1/2)
+  have hC'_le_C : C' ≤ C := min_le_left C (1/2)
+
+  obtain ⟨φ, hφ_norm, hφ_bound⟩ := h_approx (C' * ‖(1 : ℂ) - w‖ / (2 * denom)) (by positivity)
+
   set ψ := Resolvent.resolvent_at_neg_i gen hsa φ with hψ_def
   have hψ_mem : ψ ∈ gen.domain := Resolvent.resolvent_solution_mem_plus gen hsa φ
   have hφ_eq : gen.op ⟨ψ, hψ_mem⟩ + I • ψ = φ := Resolvent.resolvent_solution_eq_plus gen hsa φ
 
   use ψ, hψ_mem
 
-  -- Show φ ≠ 0 and ψ ≠ 0
   have hφ_ne : φ ≠ 0 := by
     intro h; rw [h, norm_zero] at hφ_norm; exact one_ne_zero hφ_norm.symm
   have hψ_ne : ψ ≠ 0 := by
@@ -4808,13 +4940,6 @@ lemma cayley_approx_eigenvalue_backward {U_grp : OneParameterUnitaryGroup (H := 
   constructor
   · exact norm_ne_zero_iff.mpr hψ_ne
 
-  /-
-  Step 3: Apply the intertwining identity.
-
-  (U - wI)φ = (1 - w)(A - μI)ψ
-
-  So ‖(A - μI)ψ‖ = ‖(U - wI)φ‖ / |1 - w|
-  -/
   have h_key := cayley_shift_identity gen hsa μ hμ_ne ψ hψ_mem
   simp only at h_key
   rw [← hφ_eq.symm] at h_key
@@ -4826,39 +4951,195 @@ lemma cayley_approx_eigenvalue_backward {U_grp : OneParameterUnitaryGroup (H := 
     rw [this, norm_smul]
     field_simp [ne_of_gt h_one_sub_w_norm_pos]
 
-  -- From ‖(A+iI)ψ‖² = ‖Aψ‖² + ‖ψ‖² = 1
   have h_norm_identity : ‖gen.op ⟨ψ, hψ_mem⟩‖^2 + ‖ψ‖^2 = 1 := by
     have h := self_adjoint_norm_sq_add gen hsa ψ hψ_mem
     rw [hφ_eq, hφ_norm] at h
     linarith [h, sq_nonneg ‖gen.op ⟨ψ, hψ_mem⟩‖]
 
-  -- ‖ψ‖ ≤ 1 (since ‖ψ‖² ≤ ‖Aψ‖² + ‖ψ‖² = 1)
-  have hψ_norm_le_one : ‖ψ‖ ≤ 1 := by
-    have h : ‖ψ‖^2 ≤ 1 := by linarith [sq_nonneg ‖gen.op ⟨ψ, hψ_mem⟩‖, h_norm_identity]
-    nlinarith [norm_nonneg ψ, sq_nonneg ‖ψ‖, sq_nonneg (‖ψ‖ - 1)]
-
   /-
-  Step 4: Apply the norm lower bound.
-
-  Since ‖(A + iI)ψ‖ = ‖φ‖ = 1, by the axiom:
-    ‖ψ‖ ≥ 1/(2√(1 + μ²))
+  Step 4: Derive the δ bound and prove ‖ψ‖ ≥ 1/(2*denom).
   -/
+  
+  -- First, establish the δ bound
+  set δ := ‖gen.op ⟨ψ, hψ_mem⟩ - (↑μ : ℂ) • ψ‖ with hδ_def
+  
+  have hδ_bound : δ < C' / (2 * denom) := by
+    calc δ = ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖ / ‖(1 : ℂ) - w‖ := h_norm_eq
+      _ < (C' * ‖(1 : ℂ) - w‖ / (2 * denom)) / ‖(1 : ℂ) - w‖ := by
+          apply div_lt_div_of_pos_right hφ_bound h_one_sub_w_norm_pos
+      _ = C' / (2 * denom) := by field_simp
+  
+  have hδ_nonneg : δ ≥ 0 := norm_nonneg _
+  
+  -- Key bound: δ < 1/(4*denom) since C' ≤ 1/2
+  have hδ_small : δ < 1 / (4 * denom) := by
+    calc δ < C' / (2 * denom) := hδ_bound
+      _ ≤ (1/2) / (2 * denom) := by apply div_le_div_of_nonneg_right hC'_le_half (by positivity)
+      _ = 1 / (4 * denom) := by ring
+  
+  -- Now prove the norm lower bound using quadratic analysis
   have hψ_norm_lower : ‖ψ‖ ≥ 1 / (2 * denom) := by
-    have h_norm : ‖gen.op ⟨ψ, hψ_mem⟩ + I • ψ‖ = 1 := by rw [hφ_eq]; exact hφ_norm
-    exact approx_eigenvalue_norm_lower_bound gen hsa μ ψ hψ_mem hψ_ne h_norm
+    -- From triangle inequality: ‖Aψ‖ ≤ |μ|‖ψ‖ + δ
+    have h_Aψ_upper : ‖gen.op ⟨ψ, hψ_mem⟩‖ ≤ |μ| * ‖ψ‖ + δ := by
+      have h1 : ‖(↑μ : ℂ) • ψ‖ = |μ| * ‖ψ‖ := by
+        rw [norm_smul]
+        simp only [norm_real, Real.norm_eq_abs]
+      calc ‖gen.op ⟨ψ, hψ_mem⟩‖ 
+        = ‖gen.op ⟨ψ, hψ_mem⟩ - (↑μ : ℂ) • ψ + (↑μ : ℂ) • ψ‖ := by rw [sub_add_cancel]
+        _ ≤ ‖gen.op ⟨ψ, hψ_mem⟩ - (↑μ : ℂ) • ψ‖ + ‖(↑μ : ℂ) • ψ‖ := norm_add_le _ _
+        _ = δ + |μ| * ‖ψ‖ := by rw [← hδ_def, h1]
+        _ = |μ| * ‖ψ‖ + δ := by ring
+
+    -- Quadratic constraint: 1 - ‖ψ‖² = ‖Aψ‖² ≤ (|μ|‖ψ‖ + δ)²
+    have h_quad : 1 - ‖ψ‖^2 ≤ (|μ| * ‖ψ‖ + δ)^2 := by
+      have h1 : ‖gen.op ⟨ψ, hψ_mem⟩‖^2 = 1 - ‖ψ‖^2 := by linarith [h_norm_identity]
+      calc 1 - ‖ψ‖^2 = ‖gen.op ⟨ψ, hψ_mem⟩‖^2 := h1.symm
+        _ ≤ (|μ| * ‖ψ‖ + δ)^2 := by
+            apply sq_le_sq'
+            · linarith [norm_nonneg (gen.op ⟨ψ, hψ_mem⟩), 
+                        mul_nonneg (abs_nonneg μ) (norm_nonneg ψ), hδ_nonneg]
+            · exact h_Aψ_upper
+
+    -- Expand: 1 - x² ≤ μ²x² + 2|μ|δx + δ²
+    -- Rearrange: 1 - δ² ≤ (1 + μ²)x² + 2|μ|δx
+    set x := ‖ψ‖ with hx_def
+    have hx_nonneg : x ≥ 0 := norm_nonneg ψ
+    
+    have h_expanded : (1 + μ^2) * x^2 + 2 * |μ| * δ * x + (δ^2 - 1) ≥ 0 := by
+      have h1 : 1 - x^2 ≤ (|μ| * x + δ)^2 := h_quad
+      have h2 : (|μ| * x + δ)^2 = μ^2 * x^2 + 2 * |μ| * δ * x + δ^2 := by
+        rw [← sq_abs μ]; ring
+      calc (1 + μ^2) * x^2 + 2 * |μ| * δ * x + (δ^2 - 1)
+          = μ^2 * x^2 + 2 * |μ| * δ * x + δ^2 + x^2 - 1 := by ring
+        _ = (|μ| * x + δ)^2 - (1 - x^2) := by rw [h2]; ring
+        _ ≥ 0 := by linarith [h1]
+    
+    -- The quadratic (1+μ²)t² + 2|μ|δt + (δ²-1) has positive root at
+    -- t₊ = (√(1+μ²-δ²) - |μ|δ) / (1+μ²)
+    -- and x ≥ t₊ since x > 0 and the parabola opens upward
+    
+    have h_denom_sq : denom^2 = 1 + μ^2 := by
+      rw [hdenom]; exact Real.sq_sqrt (by linarith [sq_nonneg μ])
+    
+    -- Key: δ² < 1 + μ² (needed for discriminant)
+    have hδ_sq_small : δ^2 < 1 + μ^2 := by
+      have h1 : δ < 1 / (4 * denom) := hδ_small
+      have h2 : δ^2 < 1 / (16 * denom^2) := by
+        have h_lb : -(1 / (4 * denom)) < δ := by linarith
+        have h1 : δ^2 < (1 / (4 * denom))^2 := sq_lt_sq' h_lb hδ_small
+        calc δ^2 < (1 / (4 * denom))^2 := h1
+          _ = 1 / (16 * denom^2) := by ring
+      calc δ^2 < 1 / (16 * denom^2) := h2
+        _ = 1 / (16 * (1 + μ^2)) := by rw [h_denom_sq]
+        _ < 1 + μ^2 := by
+            have : 1 + μ^2 ≥ 1 := by linarith [sq_nonneg μ]
+            have : 16 * (1 + μ^2) ≥ 16 := by linarith
+            have : 1 / (16 * (1 + μ^2)) ≤ 1/16 := by simp only [one_div, mul_inv_rev, inv_pos,
+              Nat.ofNat_pos, mul_le_iff_le_one_left] ; (expose_names; exact inv_le_one_of_one_le₀ this_1)
+            linarith
+    
+    -- Now we prove the lower bound via direct algebraic manipulation
+    -- We show: if (1+μ²)x² + 2|μ|δx + (δ²-1) ≥ 0 and x ≥ 0, then x ≥ 1/(2*denom)
+    
+    by_contra h_neg
+    push_neg at h_neg
+    -- Assume x < 1/(2*denom)
+    
+    -- We'll show this leads to the quadratic being negative, contradiction
+    -- The key estimate: for x < 1/(2*denom) and δ < 1/(4*denom), 
+    -- the quadratic is negative
+    
+    have h_contra : (1 + μ^2) * x^2 + 2 * |μ| * δ * x + (δ^2 - 1) < 0 := by
+      -- Upper bound each positive term, lower bound negative term
+      have hx_upper : x < 1 / (2 * denom) := h_neg
+      have hδ_upper : δ < 1 / (4 * denom) := hδ_small
+      
+      -- First term: (1+μ²)x² < (1+μ²)/(4*denom²) = (1+μ²)/(4*(1+μ²)) = 1/4
+      have h_term1 : (1 + μ^2) * x^2 < 1/4 := by
+        have h1 : x^2 < 1 / (4 * denom^2) := by
+          have h_lb : -(1 / (2 * denom)) < x := by linarith
+          have h1' : x^2 < (1 / (2 * denom))^2 := sq_lt_sq' h_lb hx_upper
+          calc x^2 < (1 / (2 * denom))^2 := h1'
+            _ = 1 / (4 * denom^2) := by ring
+        calc (1 + μ^2) * x^2 < (1 + μ^2) * (1 / (4 * denom^2)) := by
+              apply mul_lt_mul_of_pos_left h1 (by linarith [sq_nonneg μ])
+          _ = (1 + μ^2) / (4 * (1 + μ^2)) := by rw [h_denom_sq]; ring
+          _ = 1/4 := by field_simp
+      
+      -- Second term: 2|μ|δx < 2|μ| * 1/(4*denom) * 1/(2*denom) = |μ|/(4*denom²)
+      have h_term2' : 2 * |μ| * δ * x < 1/4 := by
+        by_cases hμ_zero : μ = 0
+        · -- Case μ = 0: the term is 0 < 1/4
+          simp [hμ_zero]
+        · -- Case μ ≠ 0
+          have hμ_pos : |μ| > 0 := abs_pos.mpr hμ_zero
+          have h_mu_bound : |μ| ≤ denom := by
+            rw [hdenom]
+            calc |μ| = Real.sqrt (μ^2) := (Real.sqrt_sq_eq_abs μ).symm
+              _ ≤ Real.sqrt (1 + μ^2) := Real.sqrt_le_sqrt (by linarith [sq_nonneg μ])
+          have h1 : δ * x < 1/(4*denom) * (1/(2*denom)) := by
+            apply mul_lt_mul hδ_upper (le_of_lt hx_upper) (by positivity) (by positivity)
+          have h2 : 1/(4*denom) * (1/(2*denom)) = 1/(8*denom^2) := by field_simp; ring
+          calc 2 * |μ| * δ * x = 2 * |μ| * (δ * x) := by ring
+            _ < 2 * |μ| * (1/(8*denom^2)) := by
+                rw [h2] at h1
+                exact mul_lt_mul_of_pos_left h1 (by linarith : 2 * |μ| > 0)
+            _ = |μ| / (4 * denom^2) := by ring
+            _ = |μ| / (4 * (1 + μ^2)) := by rw [h_denom_sq]
+            _ ≤ denom / (4 * (1 + μ^2)) := by
+                apply div_le_div_of_nonneg_right h_mu_bound (by positivity)
+            _ = Real.sqrt (1 + μ^2) / (4 * (1 + μ^2)) := by rw [hdenom]
+            _ = 1 / (4 * Real.sqrt (1 + μ^2)) := by
+                have h_sqrt_sq : Real.sqrt (1 + μ^2) * Real.sqrt (1 + μ^2) = 1 + μ^2 := 
+                  Real.mul_self_sqrt (by linarith [sq_nonneg μ])
+                rw [div_eq_div_iff (by positivity) (by positivity)]
+                simp only [one_mul]
+                calc Real.sqrt (1 + μ^2) * (4 * Real.sqrt (1 + μ^2)) 
+                    = 4 * (Real.sqrt (1 + μ^2) * Real.sqrt (1 + μ^2)) := by ring
+                  _ = 4 * (1 + μ^2) := by rw [h_sqrt_sq]
+            _ ≤ 1/4 := by
+                apply div_le_div_of_nonneg_left (by norm_num : (0:ℝ) ≤ 1) (by norm_num)
+                calc 4 * Real.sqrt (1 + μ^2) ≥ 4 * 1 := by
+                      apply mul_le_mul_of_nonneg_left hdenom_ge_one (by norm_num)
+                  _ = 4 := by ring
+      
+      -- Combined: first two terms < 1/4 + |μ|/(4*(1+μ²)) ≤ 1/4 + 1/4 = 1/2
+      -- (using |μ| ≤ √(1+μ²) = denom, so |μ|/(1+μ²) ≤ denom/(1+μ²) = 1/denom ≤ 1)
+      have h_mu_bound : |μ| ≤ denom := by
+        rw [hdenom]
+        calc |μ| = Real.sqrt (μ^2) := (Real.sqrt_sq_eq_abs μ).symm
+          _ ≤ Real.sqrt (1 + μ^2) := Real.sqrt_le_sqrt (by linarith [sq_nonneg μ])
+      
+      
+      -- Third term: δ² - 1 < -1 + 1/16 < -1/2 (since δ² < 1/16 when δ < 1/4)
+      have h_term3 : δ^2 - 1 < -1/2 := by
+        have h1 : δ^2 < 1 / (16 * denom^2) := by 
+          have h_lb : -(1 / (4 * denom)) < δ := by linarith
+          have h1 : δ^2 < (1 / (4 * denom))^2 := sq_lt_sq' h_lb hδ_small
+          calc δ^2 < (1 / (4 * denom))^2 := h1
+            _ = 1 / (16 * denom^2) := by ring
+        have h2 : 1 / (16 * denom^2) ≤ 1/16 := by
+          apply div_le_div_of_nonneg_left (by norm_num : (0:ℝ) ≤ 1) (by norm_num)
+          calc 16 * denom^2 ≥ 16 * 1 := by nlinarith [hdenom_ge_one]
+            _ = 16 := by ring
+        linarith
+      
+      -- Total: < 1/4 + 1/4 + (-1/2) = 0
+      linarith
+    
+    linarith [h_expanded, h_contra]
 
   /-
   Step 5: Chain the inequalities.
   -/
   calc ‖gen.op ⟨ψ, hψ_mem⟩ - (↑μ : ℂ) • ψ‖
-      = ‖(U - w • ContinuousLinearMap.id ℂ H) φ‖ / ‖(1 : ℂ) - w‖ := h_norm_eq
-    _ < (C * ‖(1 : ℂ) - w‖ / (2 * denom)) / ‖(1 : ℂ) - w‖ := by
-        apply div_lt_div_of_pos_right hφ_bound h_one_sub_w_norm_pos
-    _ = C / (2 * denom) := by field_simp
+      = δ := rfl
+    _ < C' / (2 * denom) := hδ_bound
+    _ ≤ C / (2 * denom) := by apply div_le_div_of_nonneg_right hC'_le_C (by positivity)
     _ ≤ C * ‖ψ‖ := by
-        have h := hψ_norm_lower
         calc C / (2 * denom) = C * (1 / (2 * denom)) := by ring
-          _ ≤ C * ‖ψ‖ := by apply mul_le_mul_of_nonneg_left h (le_of_lt hC)
+          _ ≤ C * ‖ψ‖ := mul_le_mul_of_nonneg_left hψ_norm_lower (le_of_lt hC)
+
 
 /--
 **Forward approximate eigenvalue correspondence:** A → U.
