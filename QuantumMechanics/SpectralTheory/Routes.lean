@@ -1,7 +1,7 @@
 /-
 Author: Adam Bornemann
 Created: 12/25/25
-Updated: 1/5/26
+Updated: 1/9/26
 
 ============================================================================================================================
 ROUTES TO THE SPECTRAL THEOREM: FROM DYNAMICS TO SPECTRUM
@@ -119,8 +119,8 @@ References:
   [4] Riesz & Sz.-Nagy, "Functional Analysis" - Chapter X
   [5] Rudin, "Functional Analysis" - Chapter 13 (Unbounded Operators)
 -/
-import LogosLibrary.DeepTheorems.Quantum.Evolution.Bochner
-import LogosLibrary.DeepTheorems.Quantum.Evolution.Resolvent
+import LogosLibrary.QuantumMechanics.Evolution.Bochner
+import LogosLibrary.QuantumMechanics.Evolution.Resolvent
 
 namespace SpectralBridge
 
@@ -148,10 +148,28 @@ def PositiveDefiniteContinuous (f : ℝ → ℂ) : Prop :=
 -- SPECTRAL MEASURE AXIOMS: Tie E to U_grp
 -- ============================================================================
 
-/-- The scalar spectral measure for a vector ψ.
-    For a projection E(B), ⟪E(B)ψ, ψ⟫_ℂ is real and nonneg, so this is a genuine measure. -/
-axiom spectral_scalar_measure (E : Set ℝ → (H →L[ℂ] H)) (ψ : H) :
+/-- The spectral scalar measure associated to a spectral projection family E.
+
+    AXIOM JUSTIFICATION: This measure exists by the spectral theorem for
+    projection-valued measures. Construction requires Mathlib's Stieltjes
+    measure machinery applied to F(t) = ⟪E(-∞,t]ψ,ψ⟫. -/
+axiom spectral_scalar_measure' (E : Set ℝ → (H →L[ℂ] H)) (ψ : H) :
     MeasureTheory.Measure ℝ
+
+
+/-- The spectral distribution function F_ψ(t) = ⟪E(-∞, t]ψ, ψ⟫ -/
+noncomputable def spectralDistribution (E : Set ℝ → H →L[ℂ] H) (ψ : H) :
+    StieltjesFunction where
+  toFun := fun t => (⟪E (Set.Iic t) ψ, ψ⟫_ℂ).re
+  mono' := sorry  -- E monotone: s ≤ t → E(Iic s) ≤ E(Iic t) in projection order
+  right_continuous' := by sorry  -- From strong operator continuity of E
+
+/-- The spectral scalar measure FROM the Stieltjes function -/
+noncomputable def spectral_scalar_measure (E : Set ℝ → H →L[ℂ] H) (ψ : H) :
+    Measure ℝ :=
+  (spectralDistribution E ψ).measure
+
+
 /-
 noncomputable def spectral_scalar_measure (E : Set ℝ → (H →L[ℂ] H)) (ψ : H) :
     MeasureTheory.Measure ℝ := by
@@ -159,9 +177,14 @@ noncomputable def spectral_scalar_measure (E : Set ℝ → (H →L[ℂ] H)) (ψ 
 -/
 
 /-- The spectral scalar measure assigns B ↦ ⟪E(B)ψ, ψ⟫.re -/
-axiom spectral_scalar_measure_apply (E : Set ℝ → (H →L[ℂ] H)) (ψ : H)
+axiom spectral_scalar_measure_apply' (E : Set ℝ → (H →L[ℂ] H)) (ψ : H)
     (B : Set ℝ) (hB : MeasurableSet B) :
   (spectral_scalar_measure E ψ B).toReal = (⟪E B ψ, ψ⟫_ℂ).re
+
+/-- The spectral scalar measure assigns finite values matching the inner product. -/
+axiom spectral_scalar_measure_apply (E : Set ℝ → (H →L[ℂ] H)) (ψ : H)
+    (B : Set ℝ) (hB : MeasurableSet B) :
+  spectral_scalar_measure E ψ B = ENNReal.ofReal (⟪E B ψ, ψ⟫_ℂ).re
 
 /-- Spectral theorem: the Fourier transform of the spectral measure gives the correlation. -/
 axiom spectral_integral_relation (E : Set ℝ → (H →L[ℂ] H))
@@ -174,8 +197,16 @@ axiom measure_eq_of_fourier_eq (μ ν : MeasureTheory.Measure ℝ)
   (∀ t : ℝ, ∫ ω, Complex.exp (I * ω * t) ∂μ = ∫ ω, Complex.exp (I * ω * t) ∂ν) → μ = ν
 
 /-- The spectral scalar measure is finite (bounded by ‖ψ‖²). -/
-axiom spectral_scalar_measure_finite (E : Set ℝ → (H →L[ℂ] H)) (ψ : H) :
-    MeasureTheory.IsFiniteMeasure (spectral_scalar_measure E ψ)
+lemma spectral_scalar_measure_finite (E : Set ℝ → (H →L[ℂ] H))
+    (hE_univ : E Set.univ = 1) (ψ : H) :
+    IsFiniteMeasure (spectral_scalar_measure E ψ) := by
+  constructor
+  rw [spectral_scalar_measure_apply E ψ Set.univ MeasurableSet.univ]
+  rw [hE_univ]
+  simp only [ContinuousLinearMap.one_apply, inner_self_eq_norm_sq_to_K,
+             coe_algebraMap]
+  exact ENNReal.ofReal_lt_top
+
 
 /-- E(B) is self-adjoint (orthogonal projection). -/
 axiom spectral_self_adjoint (E : Set ℝ → (H →L[ℂ] H))
@@ -256,14 +287,16 @@ lemma bochner_measure_spec (ψ : H) :
   Classical.choose_spec (bochner_theorem (fun t => ⟪U_grp.U t ψ, ψ⟫_ℂ)
     (unitary_correlation_pd_continuous U_grp ψ))
 
+
 /-- The Bochner measure IS the spectral measure. -/
-theorem bochner_measure_eq_spectral (ψ : H) (B : Set ℝ)
+theorem bochner_measure_eq_spectral (hE_univ : E Set.univ = 1) (ψ : H) (B : Set ℝ)
     (hB : MeasurableSet B) :
     (bochner_measure U_grp ψ B).toReal = (⟪E B ψ, ψ⟫_ℂ).re := by
   obtain ⟨h_finite, h_fourier⟩ := bochner_measure_spec U_grp ψ
 
   haveI : IsFiniteMeasure (bochner_measure U_grp ψ) := h_finite
-  haveI : IsFiniteMeasure (spectral_scalar_measure E ψ) := spectral_scalar_measure_finite E ψ
+  haveI : IsFiniteMeasure (spectral_scalar_measure E ψ) :=
+    spectral_scalar_measure_finite E hE_univ ψ
 
   have h_fourier_eq : ∀ t : ℝ,
       ∫ ω, Complex.exp (I * ω * t) ∂(bochner_measure U_grp ψ) =
@@ -273,7 +306,7 @@ theorem bochner_measure_eq_spectral (ψ : H) (B : Set ℝ)
   have h_eq : bochner_measure U_grp ψ = spectral_scalar_measure E ψ :=
     measure_eq_of_fourier_eq _ _ h_fourier_eq
 
-  rw [h_eq, spectral_scalar_measure_apply E ψ B hB]
+  rw [h_eq, spectral_scalar_measure_apply' E ψ B hB]
 
 /-- Convert spectral measure to ℂ for polarization calculations -/
 noncomputable def spectral_measure_cplx
@@ -292,22 +325,22 @@ lemma spectral_diagonal_real (B : Set ℝ) (ψ : H) :
   exact Complex.conj_eq_iff_im.mp key.symm
 
 /-- spectral_measure_cplx equals the inner product. -/
-lemma spectral_measure_cplx_eq (ψ : H) (B : Set ℝ) (hB : MeasurableSet B) :
+lemma spectral_measure_cplx_eq (hE_univ : E Set.univ = 1) (ψ : H) (B : Set ℝ) (hB : MeasurableSet B) :
     spectral_measure_cplx U_grp ψ B = ⟪E B ψ, ψ⟫_ℂ := by
   unfold spectral_measure_cplx
-  rw [bochner_measure_eq_spectral U_grp E ψ B hB]
+  rw [bochner_measure_eq_spectral U_grp E hE_univ ψ B hB]
   have h_im := spectral_diagonal_real E B ψ
   conv_rhs => rw [← Complex.re_add_im ⟪E B ψ, ψ⟫_ℂ, h_im]
   simp
 
 /-- Polarization gives off-diagonal spectral measures. -/
-theorem polarization_spectral (ψ φ : H) (B : Set ℝ) (hB : MeasurableSet B) :
+theorem polarization_spectral (hE_univ : E Set.univ = 1) (ψ φ : H) (B : Set ℝ) (hB : MeasurableSet B) :
     ⟪E B ψ, φ⟫_ℂ = (1/4 : ℂ) * (
       spectral_measure_cplx U_grp (ψ + φ) B -
       spectral_measure_cplx U_grp (ψ - φ) B -
       I * spectral_measure_cplx U_grp (ψ + I • φ) B +
-      I * spectral_measure_cplx U_grp (ψ - I • φ) B) := by
-  simp_rw [spectral_measure_cplx_eq U_grp E _ B hB]
+      I * spectral_measure_cplx U_grp (ψ - I • φ) B)  := by
+  simp_rw [spectral_measure_cplx_eq U_grp E hE_univ _ _ hB]
   simp only [map_add, map_sub, map_smul]
   simp only [inner_add_left, inner_add_right, inner_sub_left, inner_sub_right,
              inner_smul_left, inner_smul_right]
@@ -636,7 +669,7 @@ Recover the spectral measure from the resolvent via:
 -/
 theorem stieltjes_inversion {U_grp : OneParameterUnitaryGroup (H := H)}
     (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
-    (E : Set ℝ → (H →L[ℂ] H))
+    (E : Set ℝ → (H →L[ℂ] H)) (hE_univ : E Set.univ = 1)
     (a b : ℝ) (hab : a < b) (ψ : H) :
     ∀ δ > 0, ∃ ε₀ > 0, ∀ ε, ε < ε₀ → ∀ hε : ε > 0,
       ‖⟪E (Set.Ioc a b) ψ, ψ⟫_ℂ - (1 / Real.pi : ℂ) *
@@ -644,8 +677,8 @@ theorem stieltjes_inversion {U_grp : OneParameterUnitaryGroup (H := H)}
   intro δ hδ
 
   set μ := BochnerRoute.spectral_scalar_measure E ψ with hμ_def
-  haveI hμ_finite : MeasureTheory.IsFiniteMeasure μ := BochnerRoute.spectral_scalar_measure_finite E ψ
-
+  haveI hμ_finite : MeasureTheory.IsFiniteMeasure μ :=
+    BochnerRoute.spectral_scalar_measure_finite E hE_univ ψ
   -- Get ε₀ from dominated convergence
   have h_conv := arctan_dominated_convergence (μ := μ) a b hab
   rw [Metric.tendsto_nhdsWithin_nhds] at h_conv
@@ -658,7 +691,7 @@ theorem stieltjes_inversion {U_grp : OneParameterUnitaryGroup (H := H)}
 
   -- The spectral measure gives ⟪E(a,b]ψ, ψ⟫
   have h_spectral : (μ (Set.Ioc a b)).toReal = (⟪E (Set.Ioc a b) ψ, ψ⟫_ℂ).re :=
-    BochnerRoute.spectral_scalar_measure_apply E ψ (Set.Ioc a b) measurableSet_Ioc
+    BochnerRoute.spectral_scalar_measure_apply' E ψ (Set.Ioc a b) measurableSet_Ioc
 
   -- ⟪E(a,b]ψ, ψ⟫ is real
   have h_real : (⟪E (Set.Ioc a b) ψ, ψ⟫_ℂ).im = 0 :=
@@ -764,7 +797,7 @@ Same convergence argument as Stieltjes inversion then applies.
 -/
 theorem stones_formula {U_grp : OneParameterUnitaryGroup (H := H)}
     (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
-    (E : Set ℝ → (H →L[ℂ] H))
+    (E : Set ℝ → (H →L[ℂ] H)) (hE_univ : E Set.univ = 1)
     (a b : ℝ) (hab : a < b) (ψ : H) :
     ∀ δ > 0, ∃ ε₀ > 0, ∀ ε, ε < ε₀ → ∀ hε : ε > 0,
       ‖⟪E (Set.Ioc a b) ψ, ψ⟫_ℂ - (1 / (2 * Real.pi * Complex.I)) *
@@ -773,7 +806,8 @@ theorem stones_formula {U_grp : OneParameterUnitaryGroup (H := H)}
   intro δ hδ
 
   set μ := BochnerRoute.spectral_scalar_measure E ψ with hμ_def
-  haveI hμ_finite : MeasureTheory.IsFiniteMeasure μ := BochnerRoute.spectral_scalar_measure_finite E ψ
+  haveI hμ_finite : MeasureTheory.IsFiniteMeasure μ :=
+    BochnerRoute.spectral_scalar_measure_finite E hE_univ ψ
 
   -- Get ε₀ from dominated convergence
   have h_conv := stones_dominated_convergence (μ := μ) a b hab
@@ -787,7 +821,7 @@ theorem stones_formula {U_grp : OneParameterUnitaryGroup (H := H)}
 
   -- The spectral measure gives ⟪E(a,b]ψ, ψ⟫
   have h_spectral : (μ (Set.Ioc a b)).toReal = (⟪E (Set.Ioc a b) ψ, ψ⟫_ℂ).re :=
-    BochnerRoute.spectral_scalar_measure_apply E ψ (Set.Ioc a b) measurableSet_Ioc
+    BochnerRoute.spectral_scalar_measure_apply' E ψ (Set.Ioc a b) measurableSet_Ioc
 
   -- ⟪E(a,b]ψ, ψ⟫ is real
   have h_real : (⟪E (Set.Ioc a b) ψ, ψ⟫_ℂ).im = 0 :=
