@@ -57,12 +57,12 @@ The free Dirac operator has spectrum:
 
   ┌───────────────────────────────────────────────────────────┐
   │                                                           │
-  │   ══════════════╪════════════════════╪══════════════      │
+  │   ═══════════════╪════════════════════╪═══════════════    │
   │                -mc²        0        +mc²                  │
   │                                                           │
   │   ◄──────────────┤    spectral gap    ├──────────────►    │
-  │   negative energy │   (-mc², +mc²)    │  positive energy  │
-  │    (positrons)    │    FORBIDDEN      │   (electrons)     │
+  │  negative energy │    (-mc², +mc²)    │  positive energy  │
+  │   (positrons)    │     FORBIDDEN      │   (electrons)     │
   │                                                           │
   └───────────────────────────────────────────────────────────┘
 
