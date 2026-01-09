@@ -1,7 +1,7 @@
 /-
 Author: Adam Bornemann
-Created: 1-5-2026
-Updated: 1-6-2026
+Created: 1-6-2026
+Updated: 1-9-2026
 
 ================================================================================
 FUNCTIONAL CALCULUS FOR UNBOUNDED SELF-ADJOINT OPERATORS
@@ -209,6 +209,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 /-!
 ## §1. Domain Characterization
 -/
+
 /-- Spectral projections multiply: E(B)E(C) = E(B ∩ C) -/
 axiom spectral_projection_mul (E : Set ℝ → H →L[ℂ] H)
     (B C : Set ℝ) (hB : MeasurableSet B) (hC : MeasurableSet C) :
@@ -260,27 +261,18 @@ lemma spectral_projection_norm_sq (E : Set ℝ → H →L[ℂ] H) (B : Set ℝ) 
 ## Spectral Scalar Measure Properties
 -/
 
-/-- The spectral measure of zero is the zero measure -/
-lemma spectral_scalar_measure_zero (E : Set ℝ → H →L[ℂ] H) (B : Set ℝ) (hB : MeasurableSet B) :
+lemma spectral_scalar_measure_zero (E : Set ℝ → H →L[ℂ] H)
+    (B : Set ℝ) (hB : MeasurableSet B) :
     spectral_scalar_measure E (0 : H) B = 0 := by
-  have h := spectral_scalar_measure_apply E (0 : H) B hB
-  simp only [map_zero, inner_zero_left, Complex.zero_re, ENNReal.toReal_eq_zero_iff] at h
-  cases h with
-  | inl h => exact h
-  | inr h =>
-    -- h : spectral_scalar_measure E 0 B = ⊤
-    -- But the measure is finite, so this is impossible
-    haveI := spectral_scalar_measure_finite E (0 : H)
-    have hfin : spectral_scalar_measure E 0 B < ⊤ := measure_lt_top _ B
-    rw [h] at hfin
-    exact absurd hfin (lt_irrefl ⊤)
+  rw [spectral_scalar_measure_apply E (0 : H) B hB]
+  simp only [map_zero, inner_zero_left, Complex.zero_re, ENNReal.ofReal_zero]
 
 
 /-- Spectral measure scales quadratically: μ(c•ψ)(B) = |c|² μ(ψ)(B) -/
 lemma spectral_scalar_measure_smul (E : Set ℝ → H →L[ℂ] H) (c : ℂ) (ψ : H) (B : Set ℝ) (hB : MeasurableSet B) :
     (spectral_scalar_measure E (c • ψ) B).toReal = ‖c‖^2 * (spectral_scalar_measure E ψ B).toReal := by
-  rw [spectral_scalar_measure_apply E (c • ψ) B hB]
-  rw [spectral_scalar_measure_apply E ψ B hB]
+  rw [spectral_scalar_measure_apply' E (c • ψ) B hB]
+  rw [spectral_scalar_measure_apply' E ψ B hB]
   simp only [map_smul, inner_smul_left, inner_smul_right]
   have h : starRingEnd ℂ c * c = (‖c‖^2 : ℂ) := conj_mul' c
   calc (c * (starRingEnd ℂ c * ⟪(E B) ψ, ψ⟫_ℂ)).re
@@ -315,13 +307,12 @@ lemma spectral_cross_term_bound (E : Set ℝ → H →L[ℂ] H) (B : Set ℝ) (h
     rw [← Real.sqrt_sq (norm_nonneg _)]
     congr 1
     rw [spectral_projection_norm_sq E B hB x]
-    exact Eq.symm (spectral_scalar_measure_apply E x B hB)
-
+    exact Eq.symm (spectral_scalar_measure_apply' E x B hB)
   have hy : ‖E B y‖ = Real.sqrt ((spectral_scalar_measure E y B).toReal) := by
     rw [← Real.sqrt_sq (norm_nonneg _)]
     congr 1
     rw [spectral_projection_norm_sq E B hB y]
-    exact Eq.symm (spectral_scalar_measure_apply E y B hB)
+    exact Eq.symm (spectral_scalar_measure_apply' E y B hB)
 
   rw [hx, hy] at h_cs
   exact h_cs
@@ -334,9 +325,9 @@ lemma spectral_scalar_measure_add (E : Set ℝ → H →L[ℂ] H) (x y : H) (B :
     (spectral_scalar_measure E x B).toReal +
     (spectral_scalar_measure E y B).toReal +
     2 * Complex.re ⟪E B x, y⟫_ℂ := by
-  rw [spectral_scalar_measure_apply E (x + y) B hB]
-  rw [spectral_scalar_measure_apply E x B hB]
-  rw [spectral_scalar_measure_apply E y B hB]
+  rw [spectral_scalar_measure_apply' E (x + y) B hB]
+  rw [spectral_scalar_measure_apply' E x B hB]
+  rw [spectral_scalar_measure_apply' E y B hB]
   simp only [map_add, inner_add_left, inner_add_right]
   have h_conj : Complex.re ⟪E B y, x⟫_ℂ = Complex.re ⟪E B x, y⟫_ℂ := by
     rw [spectral_self_adjoint E B y x]
@@ -389,11 +380,22 @@ axiom spectral_integral_add_bound (E : Set ℝ → H →L[ℂ] H) (x y : H) (f :
 /-!
 ## The Submodule Structure
 -/
+
+
 /-- Helper for functionalDomain_zero_mem -/
 lemma spectral_scalar_measure_zero_eq (E : Set ℝ → H →L[ℂ] H) :
     spectral_scalar_measure E (0 : H) = 0 := by
   ext B hB
   exact spectral_scalar_measure_zero E B hB
+  /-
+  Application type mismatch: The argument
+  B
+has type
+  Set ℝ
+of sort `Type` but is expected to have type
+  E Set.univ = 1
+of sort `Prop` in the application
+  spectral_scalar_measure_zero E B-/
 
 /-- Helper: zero is in the functional domain -/
 lemma functionalDomain_zero_mem (E : Set ℝ → H →L[ℂ] H) (f : ℝ → ℂ) :
@@ -403,10 +405,13 @@ lemma functionalDomain_zero_mem (E : Set ℝ → H →L[ℂ] H) (f : ℝ → ℂ
   exact integrable_zero_measure
 
 /-- Helper for functionalDomain_smul_mem -/
-lemma spectral_scalar_measure_smul_eq (E : Set ℝ → H →L[ℂ] H) (c : ℂ) (ψ : H) :
+lemma spectral_scalar_measure_smul_eq (E : Set ℝ → H →L[ℂ] H) (hE_univ : E Set.univ = 1)
+    (c : ℂ) (ψ : H) :
     spectral_scalar_measure E (c • ψ) = ENNReal.ofReal (‖c‖^2) • spectral_scalar_measure E ψ := by
-  haveI : IsFiniteMeasure (spectral_scalar_measure E (c • ψ)) := spectral_scalar_measure_finite E (c • ψ)
-  haveI : IsFiniteMeasure (spectral_scalar_measure E ψ) := spectral_scalar_measure_finite E ψ
+  haveI : IsFiniteMeasure (spectral_scalar_measure E (c • ψ)) :=
+    spectral_scalar_measure_finite E hE_univ (c • ψ)
+  haveI : IsFiniteMeasure (spectral_scalar_measure E ψ) :=
+    spectral_scalar_measure_finite E hE_univ ψ
   ext B hB
   rw [Measure.smul_apply, ← ENNReal.toReal_eq_toReal]
   · rw [spectral_scalar_measure_smul E c ψ B hB]
@@ -416,12 +421,13 @@ lemma spectral_scalar_measure_smul_eq (E : Set ℝ → H →L[ℂ] H) (c : ℂ) 
   · exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top (measure_lt_top _ _).ne
 
 /-- Helper: scalar multiples preserve functional domain -/
-lemma functionalDomain_smul_mem (E : Set ℝ → H →L[ℂ] H) (f : ℝ → ℂ) (c : ℂ) (ψ : H)
+lemma functionalDomain_smul_mem (E : Set ℝ → H →L[ℂ] H) (hE_univ : E Set.univ = 1)
+    (f : ℝ → ℂ) (c : ℂ) (ψ : H)
     (hψ : ψ ∈ functionalDomain (spectral_scalar_measure E) f) :
     c • ψ ∈ functionalDomain (spectral_scalar_measure E) f := by
   simp only [functionalDomain, Set.mem_setOf_eq] at hψ ⊢
-  rw [spectral_scalar_measure_smul_eq E c ψ]
-  exact Integrable.smul_measure hψ (ENNReal.coe_ne_top)
+  rw [spectral_scalar_measure_smul_eq E hE_univ c ψ]
+  exact Integrable.smul_measure hψ ENNReal.coe_ne_top
 
 /-- Helper: sums preserve functional domain -/
 lemma functionalDomain_add_mem (E : Set ℝ → H →L[ℂ] H) (f : ℝ → ℂ) (x y : H)
@@ -432,11 +438,12 @@ lemma functionalDomain_add_mem (E : Set ℝ → H →L[ℂ] H) (f : ℝ → ℂ)
   exact spectral_integral_add_bound E x y f hx hy
 
 /-- The functional domain is a submodule -/
-def functionalDomainSubmodule' (E : Set ℝ → H →L[ℂ] H) (f : ℝ → ℂ) : Submodule ℂ H where
+def functionalDomainSubmodule' (E : Set ℝ → H →L[ℂ] H) (hE_univ : E Set.univ = 1)
+    (f : ℝ → ℂ) : Submodule ℂ H where
   carrier := functionalDomain (spectral_scalar_measure E) f
   zero_mem' := functionalDomain_zero_mem E f
   add_mem' := fun hx hy => functionalDomain_add_mem E f _ _ hx hy
-  smul_mem' := fun c _ hψ => functionalDomain_smul_mem E f c _ hψ
+  smul_mem' := fun c _ hψ => functionalDomain_smul_mem E hE_univ f c _ hψ
 
 /-!
 ## Spectral Projection Properties - Basic
@@ -455,7 +462,7 @@ lemma spectral_projection_empty (E : Set ℝ → H →L[ℂ] H)
   have h_measure_empty : spectral_scalar_measure E ψ ∅ = 0 := measure_empty
   -- By spectral_scalar_measure_apply: (μ_ψ(∅)).toReal = ⟪E(∅)ψ, ψ⟫.re
   have h_inner_zero : (⟪E ∅ ψ, ψ⟫_ℂ).re = 0 := by
-    rw [← spectral_scalar_measure_apply E ψ ∅ MeasurableSet.empty]
+    rw [← spectral_scalar_measure_apply' E ψ ∅ MeasurableSet.empty]
     simp [h_measure_empty]
   -- Therefore ‖E(∅)ψ‖ = 0
   have h_norm_zero : ‖E ∅ ψ‖ = 0 := by
@@ -538,15 +545,15 @@ lemma spectral_projection_range_eq_fixed (E : Set ℝ → H →L[ℂ] H)
     exact ⟨ψ, h⟩
 
 /-- Kernel characterization: E(B)ψ = 0 iff μ_ψ(B) = 0 -/
-lemma spectral_projection_ker_iff (E : Set ℝ → H →L[ℂ] H)
+lemma spectral_projection_ker_iff (E : Set ℝ → H →L[ℂ] H) (hE_univ : E Set.univ = 1)
     (B : Set ℝ) (hB : MeasurableSet B) (ψ : H) :
     E B ψ = 0 ↔ spectral_scalar_measure E ψ B = 0 := by
-  haveI := spectral_scalar_measure_finite E ψ
+  haveI := spectral_scalar_measure_finite E hE_univ ψ
   constructor
   · intro h
     have h1 : ‖E B ψ‖^2 = 0 := by simp [h]
     rw [spectral_projection_norm_sq E B hB ψ] at h1
-    rw [← spectral_scalar_measure_apply E ψ B hB] at h1
+    rw [← spectral_scalar_measure_apply' E ψ B hB] at h1
     have h2 : (spectral_scalar_measure E ψ B).toReal = 0 := by linarith
     rw [ENNReal.toReal_eq_zero_iff] at h2
     cases h2 with
@@ -554,7 +561,7 @@ lemma spectral_projection_ker_iff (E : Set ℝ → H →L[ℂ] H)
     | inr h => exact absurd h (measure_lt_top _ B).ne
   · intro h
     have h1 : (spectral_scalar_measure E ψ B).toReal = 0 := by simp [h]
-    rw [spectral_scalar_measure_apply E ψ B hB] at h1
+    rw [spectral_scalar_measure_apply' E ψ B hB] at h1
     have h2 : ‖E B ψ‖^2 = 0 := by
       rw [spectral_projection_norm_sq E B hB ψ]
       linarith
@@ -568,13 +575,13 @@ lemma spectral_projection_ker_iff (E : Set ℝ → H →L[ℂ] H)
 lemma spectral_scalar_measure_eq_norm_sq (E : Set ℝ → H →L[ℂ] H)
     (B : Set ℝ) (hB : MeasurableSet B) (ψ : H) :
     (spectral_scalar_measure E ψ B).toReal = ‖E B ψ‖^2 := by
-  rw [spectral_scalar_measure_apply E ψ B hB, ← spectral_projection_norm_sq E B hB ψ]
+  rw [spectral_scalar_measure_apply' E ψ B hB, ← spectral_projection_norm_sq E B hB ψ]
 
 /-- Monotonicity: B ⊆ C → μ_ψ(B) ≤ μ_ψ(C) -/
-lemma spectral_scalar_measure_mono (E : Set ℝ → H →L[ℂ] H)
+lemma spectral_scalar_measure_mono (E : Set ℝ → H →L[ℂ] H) (hE_univ : E Set.univ = 1)
     (B C : Set ℝ) (hB : MeasurableSet B) (hC : MeasurableSet C) (hBC : B ⊆ C) (ψ : H) :
     spectral_scalar_measure E ψ B ≤ spectral_scalar_measure E ψ C := by
-  haveI := spectral_scalar_measure_finite E ψ
+  haveI := spectral_scalar_measure_finite E hE_univ ψ
   exact MeasureTheory.measure_mono hBC
 
 /-- μ_ψ(ℝ) = ‖ψ‖² -/
@@ -582,7 +589,7 @@ lemma spectral_scalar_measure_univ (E : Set ℝ → H →L[ℂ] H)
     (hE_univ : E Set.univ = 1)
     (ψ : H) :
     (spectral_scalar_measure E ψ Set.univ).toReal = ‖ψ‖^2 := by
-  rw [spectral_scalar_measure_apply E ψ Set.univ MeasurableSet.univ]
+  rw [spectral_scalar_measure_apply' E ψ Set.univ MeasurableSet.univ]
   rw [hE_univ]
   simp only [ContinuousLinearMap.one_apply]
   rw [inner_self_eq_norm_sq_to_K (𝕜 := ℂ)]
@@ -671,22 +678,22 @@ lemma spectral_scalar_measure_polarization (E : Set ℝ → H →L[ℂ] H)
   congr 1
   -- Rewrite each spectral measure in terms of inner product
   have h1 : ((spectral_scalar_measure E (x + y) B).toReal : ℂ) = ⟪E B (x + y), x + y⟫_ℂ := by
-    rw [spectral_scalar_measure_apply E (x + y) B hB]
+    rw [spectral_scalar_measure_apply' E (x + y) B hB]
     have h := spectral_diagonal_real E B (x + y)
     conv_rhs => rw [← Complex.re_add_im ⟪E B (x + y), x + y⟫_ℂ, h]
     simp
   have h2 : ((spectral_scalar_measure E (x - y) B).toReal : ℂ) = ⟪E B (x - y), x - y⟫_ℂ := by
-    rw [spectral_scalar_measure_apply E (x - y) B hB]
+    rw [spectral_scalar_measure_apply' E (x - y) B hB]
     have h := spectral_diagonal_real E B (x - y)
     conv_rhs => rw [← Complex.re_add_im ⟪E B (x - y), x - y⟫_ℂ, h]
     simp
   have h3 : ((spectral_scalar_measure E (x + I • y) B).toReal : ℂ) = ⟪E B (x + I • y), x + I • y⟫_ℂ := by
-    rw [spectral_scalar_measure_apply E (x + I • y) B hB]
+    rw [spectral_scalar_measure_apply' E (x + I • y) B hB]
     have h := spectral_diagonal_real E B (x + I • y)
     conv_rhs => rw [← Complex.re_add_im ⟪E B (x + I • y), x + I • y⟫_ℂ, h]
     simp
   have h4 : ((spectral_scalar_measure E (x - I • y) B).toReal : ℂ) = ⟪E B (x - I • y), x - I • y⟫_ℂ := by
-    rw [spectral_scalar_measure_apply E (x - I • y) B hB]
+    rw [spectral_scalar_measure_apply' E (x - I • y) B hB]
     have h := spectral_diagonal_real E B (x - I • y)
     conv_rhs => rw [← Complex.re_add_im ⟪E B (x - I • y), x - I • y⟫_ℂ, h]
     simp
@@ -821,11 +828,12 @@ lemma functionalDomain_id_iff (E : Set ℝ → H →L[ℂ] H) (ψ : H) :
     simp_all only [norm_real, Real.norm_eq_abs, sq_abs]
 
 /-- Domain as submodule -/
-def functionalDomainSubmodule (E : Set ℝ → H →L[ℂ] H) (f : ℝ → ℂ) : Submodule ℂ H where
+def functionalDomainSubmodule (E : Set ℝ → H →L[ℂ] H) (hE_univ : E Set.univ = 1)
+    (f : ℝ → ℂ) : Submodule ℂ H where
   carrier := functionalDomain (spectral_scalar_measure E) f
   zero_mem' := functionalDomain_zero_mem E f
   add_mem' := fun hx hy => functionalDomain_add_mem E f _ _ hx hy
-  smul_mem' := fun c _ hψ => functionalDomain_smul_mem E f c _ hψ
+  smul_mem' := fun c _ hψ => functionalDomain_smul_mem E hE_univ f c _ hψ
 
 
 /-!
@@ -963,27 +971,27 @@ axiom spectral_integral_one (E : Set ℝ → H →L[ℂ] H)
 
 /-- Functional calculus for general measurable functions. -/
 noncomputable def functionalCalculus
-    (E : Set ℝ → H →L[ℂ] H)
+    (E : Set ℝ → H →L[ℂ] H) (hE_univ : E Set.univ = 1)
     (f : ℝ → ℂ) :
-    functionalDomainSubmodule E f →ₗ[ℂ] H where
+    functionalDomainSubmodule E hE_univ f →ₗ[ℂ] H where
   toFun := fun ⟨ψ, hψ⟩ => spectral_integral E f ψ hψ
   map_add' := fun ⟨x, hx⟩ ⟨y, hy⟩ => by
     simp only
     have hxy : x + y ∈ functionalDomain (spectral_scalar_measure E) f :=
-      (functionalDomainSubmodule E f).add_mem hx hy
+      (functionalDomainSubmodule E hE_univ f).add_mem hx hy
     exact spectral_integral_add_vector E f x y hx hy hxy
   map_smul' := fun c ⟨ψ, hψ⟩ => by
     simp only [RingHom.id_apply]
     have hcψ : c • ψ ∈ functionalDomain (spectral_scalar_measure E) f :=
-      (functionalDomainSubmodule E f).smul_mem c hψ
+      (functionalDomainSubmodule E hE_univ f).smul_mem c hψ
     exact spectral_integral_smul_vector E f c ψ hψ hcψ
 
 /-- The inner product formula for functional calculus. -/
 axiom functionalCalculus_inner
-    (E : Set ℝ → H →L[ℂ] H)
+    (E : Set ℝ → H →L[ℂ] H) (hE_univ : E Set.univ = 1)
     (f : ℝ → ℂ)
     (ψ : H) (hψ : ψ ∈ functionalDomain (spectral_scalar_measure E) f) :
-    ⟪functionalCalculus E f ⟨ψ, hψ⟩, ψ⟫_ℂ = ∫ s, f s ∂(spectral_scalar_measure E ψ)
+    ⟪functionalCalculus E hE_univ f ⟨ψ, hψ⟩, ψ⟫_ℂ = ∫ s, f s ∂(spectral_scalar_measure E ψ)
 
 /-!
 ## §3. Algebraic Properties (*-homomorphism)
@@ -1022,45 +1030,48 @@ axiom spectral_integral_mul_function (E : Set ℝ → H →L[ℂ] H) (f g : ℝ 
 -/
 
 /-- **Addition**: (f + g)(A) = f(A) + g(A) -/
-theorem functionalCalculus_add (E : Set ℝ → H →L[ℂ] H) (f g : ℝ → ℂ)
+theorem functionalCalculus_add (E : Set ℝ → H →L[ℂ] H) (hE_univ : E Set.univ = 1)
+    (f g : ℝ → ℂ)
     (ψ : H)
     (hf : ψ ∈ functionalDomain (spectral_scalar_measure E) f)
     (hg : ψ ∈ functionalDomain (spectral_scalar_measure E) g)
     (hfg : ψ ∈ functionalDomain (spectral_scalar_measure E) (f + g)) :
-    functionalCalculus E (f + g) ⟨ψ, hfg⟩ =
-    functionalCalculus E f ⟨ψ, hf⟩ + functionalCalculus E g ⟨ψ, hg⟩ :=
+    functionalCalculus E hE_univ (f + g) ⟨ψ, hfg⟩ =
+    functionalCalculus E hE_univ f ⟨ψ, hf⟩ + functionalCalculus E hE_univ g ⟨ψ, hg⟩ :=
   spectral_integral_add_function E f g ψ hf hg hfg
 
 /-- **Multiplication**: (fg)(A) = f(A) ∘ g(A) on appropriate domain -/
-theorem functionalCalculus_mul (E : Set ℝ → H →L[ℂ] H) (f g : ℝ → ℂ)
+theorem functionalCalculus_mul (E : Set ℝ → H →L[ℂ] H) (hE_univ : E Set.univ = 1)
+    (f g : ℝ → ℂ)
     (ψ : H)
     (hg : ψ ∈ functionalDomain (spectral_scalar_measure E) g)
     (hfg : ψ ∈ functionalDomain (spectral_scalar_measure E) (f * g))
-    (hf_gψ : functionalCalculus E g ⟨ψ, hg⟩ ∈ functionalDomain (spectral_scalar_measure E) f) :
-    functionalCalculus E (f * g) ⟨ψ, hfg⟩ =
-    functionalCalculus E f ⟨functionalCalculus E g ⟨ψ, hg⟩, hf_gψ⟩ :=
+    (hf_gψ : functionalCalculus E hE_univ g ⟨ψ, hg⟩ ∈ functionalDomain (spectral_scalar_measure E) f) :
+    functionalCalculus E hE_univ (f * g) ⟨ψ, hfg⟩ =
+    functionalCalculus E hE_univ f ⟨functionalCalculus E hE_univ g ⟨ψ, hg⟩, hf_gψ⟩ :=
   spectral_integral_mul_function E f g ψ hg hfg hf_gψ
 
 /-- **Conjugation**: f̄(A) = f(A)* -/
-theorem functionalCalculus_conj (E : Set ℝ → H →L[ℂ] H) (f : ℝ → ℂ)
+theorem functionalCalculus_conj (E : Set ℝ → H →L[ℂ] H) (hE_univ : E Set.univ = 1)
+    (f : ℝ → ℂ)
     (ψ φ : H)
     (hψ : ψ ∈ functionalDomain (spectral_scalar_measure E) f)
     (hφ : φ ∈ functionalDomain (spectral_scalar_measure E) (starRingEnd ℂ ∘ f)) :
-    ⟪functionalCalculus E f ⟨ψ, hψ⟩, φ⟫_ℂ =
-    ⟪ψ, functionalCalculus E (starRingEnd ℂ ∘ f) ⟨φ, hφ⟩⟫_ℂ :=
+    ⟪functionalCalculus E hE_univ f ⟨ψ, hψ⟩, φ⟫_ℂ =
+    ⟪ψ, functionalCalculus E hE_univ (starRingEnd ℂ ∘ f) ⟨φ, hφ⟩⟫_ℂ :=
   spectral_integral_conj E f ψ φ hψ hφ
 
 /-- **Normalization**: 1(A) = I -/
-theorem functionalCalculus_one (E : Set ℝ → H →L[ℂ] H)
-    (hE_univ : E Set.univ = 1)
+theorem functionalCalculus_one (E : Set ℝ → H →L[ℂ] H) (hE_univ : E Set.univ = 1)
     (ψ : H) (h : ψ ∈ functionalDomain (spectral_scalar_measure E) (fun _ => 1)) :
-    functionalCalculus E (fun _ => 1) ⟨ψ, h⟩ = ψ :=
+    functionalCalculus E hE_univ (fun _ => 1) ⟨ψ, h⟩ = ψ :=
   spectral_integral_one E hE_univ ψ h
 
 /-- **Spectral mapping for indicator**: 𝟙_B(A) = E(B) -/
-theorem functionalCalculus_indicator (E : Set ℝ → H →L[ℂ] H) (B : Set ℝ) (hB : MeasurableSet B)
+theorem functionalCalculus_indicator (E : Set ℝ → H →L[ℂ] H) (hE_univ : E Set.univ = 1)
+    (B : Set ℝ) (hB : MeasurableSet B)
     (ψ : H) (h : ψ ∈ functionalDomain (spectral_scalar_measure E) (Set.indicator B 1)) :
-    functionalCalculus E (Set.indicator B 1) ⟨ψ, h⟩ = E B ψ :=
+    functionalCalculus E hE_univ (Set.indicator B 1) ⟨ψ, h⟩ = E B ψ :=
   spectral_integral_indicator E B hB ψ h
 
 end Algebra
@@ -1106,7 +1117,7 @@ theorem generator_eq_spectral_integral {U_grp : OneParameterUnitaryGroup (H := H
     (hE : IsSpectralMeasureFor E gen)
     (ψ : H) (hψ_dom : ψ ∈ gen.domain)
     (hψ_func : ψ ∈ functionalDomain (spectral_scalar_measure E) identityFunction) :
-    gen.op ⟨ψ, hψ_dom⟩ = functionalCalculus E identityFunction ⟨ψ, hψ_func⟩ := by
+    gen.op ⟨ψ, hψ_dom⟩ = functionalCalculus E hE.proj_univ identityFunction ⟨ψ, hψ_func⟩ := by
   apply ext_inner_right ℂ
   intro φ
   exact generator_spectral_integral_inner_eq gen hsa E hE ψ hψ_dom hψ_func φ
