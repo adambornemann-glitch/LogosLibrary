@@ -57,12 +57,12 @@ The free Dirac operator has spectrum:
 
   ┌───────────────────────────────────────────────────────────┐
   │                                                           │
-  │   ═══════════════╪════════════════════╪═══════════════    │
+  │   ══════════════╪════════════════════╪══════════════      │
   │                -mc²        0        +mc²                  │
   │                                                           │
   │   ◄──────────────┤    spectral gap    ├──────────────►    │
-  │  negative energy │    (-mc², +mc²)    │  positive energy  │
-  │   (positrons)    │     FORBIDDEN      │   (electrons)     │
+  │   negative energy │   (-mc², +mc²)    │  positive energy  │
+  │    (positrons)    │    FORBIDDEN      │   (electrons)     │
   │                                                           │
   └───────────────────────────────────────────────────────────┘
 
@@ -202,9 +202,9 @@ open  MeasureTheory InnerProductSpace Complex StonesTheorem.Cayley SpectralBridg
 open scoped BigOperators
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
-/- 
+/-
 =====================================================================================================================================
-# HELPER LEMMAS 
+# HELPER LEMMAS
 =====================================================================================================================================
 
 Computational verification of the Clifford algebra relations for two matrix representations:
@@ -221,7 +221,7 @@ Both satisfy anticommutation relations; the proofs are brute-force matrix arithm
 The Hamiltonian H_D = -iℏc(α·∇) + βmc² requires matrices satisfying:
 
   αᵢ² = I,  β² = I           (involutory)
-  {αᵢ, αⱼ} = 0  for i ≠ j    (spatial anticommutation)  
+  {αᵢ, αⱼ} = 0  for i ≠ j    (spatial anticommutation)
   {αᵢ, β} = 0                (mass-momentum anticommutation)
   αᵢ† = αᵢ,  β† = β          (Hermitian)
 
@@ -273,8 +273,8 @@ set_option maxHeartbeats 375000
 **Mathematical meaning**: α₁ has eigenvalues ±1 (since x² = 1 ⟹ x = ±1).
 Combined with Hermiticity, this gives a complete spectral decomposition.
 
-**Physical meaning**: The Clifford algebra relation {αᵢ, αⱼ} = 2δᵢⱼ 
-(of which this is the i = j = 1 case) is what makes H_D² yield the 
+**Physical meaning**: The Clifford algebra relation {αᵢ, αⱼ} = 2δᵢⱼ
+(of which this is the i = j = 1 case) is what makes H_D² yield the
 relativistic dispersion relation E² = (pc)² + (mc²)².
 
 **Proof strategy**: Brute-force verification of all 16 matrix entries.
@@ -291,8 +291,8 @@ private lemma diracAlpha1_sq : diracAlpha1 * diracAlpha1 = 1 := by
 
 /-- α₂ is an involution: α₂² = I.
 
-Unlike α₁ and α₃, the matrix α₂ contains imaginary entries (±I) from the 
-Pauli-Y matrix. The product α₂² involves terms like (-I)(I) = 1, which 
+Unlike α₁ and α₃, the matrix α₂ contains imaginary entries (±I) from the
+Pauli-Y matrix. The product α₂² involves terms like (-I)(I) = 1, which
 is why `mul_neg, neg_mul` appear in the simplification. -/
 private lemma diracAlpha2_sq : diracAlpha2 * diracAlpha2 = 1 := by
   ext a b
@@ -334,7 +334,7 @@ private lemma diracBeta_sq : diracBeta * diracBeta = 1 := by
 /-- α₁ and α₂ anticommute: {α₁, α₂} = α₁α₂ + α₂α₁ = 0.
 
 This is the i ≠ j case of the Clifford relation {αᵢ, αⱼ} = 2δᵢⱼ.
-Anticommutation of distinct α matrices ensures that H_D² produces 
+Anticommutation of distinct α matrices ensures that H_D² produces
 the Laplacian (not some cross-term mess): (α·p)² = p₁² + p₂² + p₃².
 
 The proof mixes real entries (from α₁) with imaginary entries (from α₂),
@@ -399,7 +399,7 @@ private lemma diracAlpha1_beta_anticommute : diracAlpha1 * diracBeta + diracBeta
 
 /-- α₂ and β anticommute: {α₂, β} = 0.
 
-Same structural role as `diracAlpha1_beta_anticommute`. The imaginary entries 
+Same structural role as `diracAlpha1_beta_anticommute`. The imaginary entries
 of α₂ don't affect the cancellation pattern since β is diagonal and real. -/
 private lemma diracAlpha2_beta_anticommute : diracAlpha2 * diracBeta + diracBeta * diracAlpha2 = 0 := by
   ext a b
@@ -413,7 +413,7 @@ private lemma diracAlpha2_beta_anticommute : diracAlpha2 * diracBeta + diracBeta
 
 /-- α₃ and β anticommute: {α₃, β} = 0.
 
-Completes the set of α-β anticommutation relations. Both matrices have 
+Completes the set of α-β anticommutation relations. Both matrices have
 real entries, so the cancellations are purely ±1 arithmetic. -/
 private lemma diracAlpha3_beta_anticommute : diracAlpha3 * diracBeta + diracBeta * diracAlpha3 = 0 := by
   ext a b
@@ -476,7 +476,7 @@ private lemma diracBeta_hermitian : diracBeta.conjTranspose = diracBeta := by
              Matrix.map_apply, Matrix.cons_val', Matrix.cons_val_fin_one]
   all_goals try simp [star_zero, star_one, star_neg]
 
-/-! 
+/-!
 ### Gamma Matrices (γ^μ)
 
 The covariant form of the Clifford algebra, satisfying the Minkowski relation:
@@ -516,16 +516,16 @@ to read — their value is in their *existence*, not their *content*.
 The key relations being verified:
 
   **Spatial anticommutation**: αᵢαⱼ + αⱼαᵢ = 2δᵢⱼ I₄
-  
+
   **Mass term structure**: β² = I₄, {αᵢ, β} = 0
-  
+
   **Hermiticity**: αᵢ† = αᵢ, β† = β
 
 These ensure H_D is symmetric on its domain, which is the first step
 toward self-adjointness.
 
 The γ-matrices satisfy the Minkowski-signature Clifford algebra:
-  
+
   {γ^μ, γ^ν} = 2η^μν  where η = diag(1, -1, -1, -1)
 
 This is the covariant form needed for the current conservation proof.
@@ -549,7 +549,7 @@ private lemma clifford_00 : gamma0 * gamma0 + gamma0 * gamma0 =
 
 /-- Minkowski-Clifford relation: {γ⁰, γ¹} = 2η⁰¹ I = 0.
 
-Off-diagonal Minkowski components vanish (η⁰¹ = 0), so distinct 
+Off-diagonal Minkowski components vanish (η⁰¹ = 0), so distinct
 gamma matrices anticommute. This is the covariant form of {αᵢ, β} = 0. -/
 private lemma clifford_01 : gamma0 * gamma1 + gamma1 * gamma0 =
     (0 : Matrix (Fin 4) (Fin 4) ℂ) := by
@@ -829,12 +829,12 @@ private lemma gamma3_antihermitian : gamma3.conjTranspose = -gamma3 := by
 
 
 
-/- 
+/-
 =====================================================================================================================================
 # DIRAC OPERATOR ON HILBERT SPACE
 =====================================================================================================================================
 
-We now lift the Clifford algebra from finite-dimensional matrices to unbounded 
+We now lift the Clifford algebra from finite-dimensional matrices to unbounded
 operators on the spinor Hilbert space H = L²(ℝ³, ℂ⁴).
 
 **Key structures**:
@@ -842,7 +842,7 @@ operators on the spinor Hilbert space H = L²(ℝ³, ℂ⁴).
   • `DiracOperator`: An unbounded operator with explicit domain tracking
   • `DiracHamiltonian`: Full structure with physical constants and symmetry properties
 
-**Why domains matter**: 
+**Why domains matter**:
 The Dirac operator H_D = -iℏc(α·∇) + βmc² involves differentiation, so it cannot
 be defined on all of L². We must track dom(H_D) = H¹(ℝ³, ℂ⁴) (Sobolev space).
 The `domain` field in `DiracOperator` makes this explicit.
@@ -852,13 +852,13 @@ The `domain` field in `DiracOperator` makes this explicit.
   • The full Hilbert space L²(ℝ³, ℂ⁴) ≅ L²(ℝ³) ⊗ ℂ⁴ adds spatial wavefunctions
 -/
 
-/-- The fiber space ℂ⁴ at each spatial point. Encodes spin (2 components) 
+/-- The fiber space ℂ⁴ at each spatial point. Encodes spin (2 components)
 and particle/antiparticle (2 components) degrees of freedom. -/
 abbrev SpinorSpace := EuclideanSpace ℂ (Fin 4)
 
 /-- An unbounded linear operator with explicit domain.
 
-Unlike bounded operators (H →L[ℂ] H), the Dirac operator is only defined on 
+Unlike bounded operators (H →L[ℂ] H), the Dirac operator is only defined on
 a dense subspace. The `domain` field tracks this; `op` maps domain elements to H. -/
 structure DiracOperator (H : Type*) [NormedAddCommGroup H] [InnerProductSpace ℂ H] where
   domain : Submodule ℂ H
@@ -872,7 +872,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 This section builds the abstract algebraic framework:
 
 1. **Pauli matrices** (2×2): The fundamental building blocks σₓ, σᵧ, σᵤ
-2. **DiracMatrices structure**: Abstract requirements for any valid representation  
+2. **DiracMatrices structure**: Abstract requirements for any valid representation
 3. **standardDiracMatrices**: Proof that our concrete matrices satisfy the structure
 
 The abstraction matters because physics is representation-independent — only the
@@ -882,7 +882,7 @@ Clifford algebra relations determine the spectrum, the current, and the dynamics
 /-!
 ### Pauli Matrices
 
-The 2×2 Pauli matrices generate SU(2) and form the building blocks of the 
+The 2×2 Pauli matrices generate SU(2) and form the building blocks of the
 4×4 Dirac matrices via the block structure:
 
         ┌         ┐
@@ -948,7 +948,7 @@ lemma pauliZ_sq : pauliZ * pauliZ = 1 := by
   fin_cases i <;> fin_cases j <;>
   simp [pauliZ, Matrix.mul_apply, Fin.sum_univ_two]
 
-/-- σₓ and σᵧ anticommute: {σₓ, σᵧ} = 0. 
+/-- σₓ and σᵧ anticommute: {σₓ, σᵧ} = 0.
 This is the Clifford algebra relation that makes spin non-commutative. -/
 lemma pauliXY_anticommute : pauliX * pauliY + pauliY * pauliX = 0 := by
   ext i j
@@ -978,7 +978,7 @@ Physics depends only on these relations, not on the representation.
 with a "mass matrix" β. The relations are:
 
   • `alpha_sq`: αᵢ² = I (spatial generators are involutions)
-  • `beta_sq`: β² = I (mass generator is an involution)  
+  • `beta_sq`: β² = I (mass generator is an involution)
   • `alpha_anticommute`: {αᵢ, αⱼ} = 0 for i ≠ j (spatial Clifford relations)
   • `alpha_beta_anticommute`: {αᵢ, β} = 0 (momentum-mass decoupling)
   • `alpha_hermitian`, `beta_hermitian`: all matrices self-adjoint
@@ -1093,7 +1093,7 @@ SI (ℏ ≈ 1.05 × 10⁻³⁴ J·s) or natural units (ℏ = c = 1). The proofs 
 
 **Fields**:
 - `hbar`: Reduced Planck constant ℏ = h/2π, sets the scale of quantum effects
-- `c`: Speed of light, couples space and time in relativistic dynamics  
+- `c`: Speed of light, couples space and time in relativistic dynamics
 - `m`: Particle rest mass, determines the spectral gap width 2mc²
 
 **Constraints**:
@@ -1199,8 +1199,8 @@ The spectrum of the free Dirac operator has a distinctive structure:
   σ(H_D) = (-∞, -mc²] ∪ [mc², ∞)
 
   ══════════════╪═══════════════════╪══════════════
-              -mc²        0        +mc²              
-  
+              -mc²        0        +mc²
+
   ◄─────────────┤   spectral gap    ├────────────►
    negative     │   (-mc², +mc²)    │   positive
    energy       │    FORBIDDEN      │   energy
@@ -1423,7 +1423,7 @@ Inner products are preserved: ⟨U(t)ψ, U(t)φ⟩ = ⟨ψ, φ⟩.
 **Proof strategy**:
 1. For U*U = 1: Use that U(t) preserves inner products (from `U_grp.unitary`),
    then `ext_inner_left` reduces to showing ⟨φ, U*Uψ⟩ = ⟨φ, ψ⟩.
-   
+
 2. For UU* = 1: Use that U(-t) is the inverse of U(t) by the group law.
    Then U(t)* = U(-t), so U(t)U(t)* = U(t)U(-t) = U(0) = 1. -/
 theorem dirac_evolution_unitary (data : DiracSpectralData H) (t : ℝ) :
@@ -1459,14 +1459,14 @@ For bounded f, this is all of H. For unbounded f (like f(s) = s), it's a dense s
 **Physical meaning**: This is how we compute "functions of energy" — the quantum
 analogue of evaluating f at the energy of a classical particle. -/
 noncomputable def diracFunctionalCalculus (data : DiracSpectralData H) (f : ℝ → ℂ) :
-    FunctionalCalculus.functionalDomainSubmodule data.E f →ₗ[ℂ] H :=
-  FunctionalCalculus.functionalCalculus data.E f
+    FunctionalCalculus.functionalDomainSubmodule data.E data.E_spectral.proj_univ f →ₗ[ℂ] H :=
+  FunctionalCalculus.functionalCalculus data.E data.E_spectral.proj_univ f
 
 /-- The sign function for splitting electron and positron subspaces.
 
 **Definition**:
   sign(s) = +1  if s ≥ mc²   (electron energies)
-  sign(s) = -1  if s ≤ -mc²  (positron energies)  
+  sign(s) = -1  if s ≤ -mc²  (positron energies)
   sign(s) = 0   if |s| < mc² (in the gap)
 
 **Physical meaning**: The operator sign(H_D) = E₊ - E₋ where E₊ projects onto
@@ -1681,18 +1681,18 @@ theorem electron_positron_complete (data : DiracSpectralData H)
   unfold electronProjection positronProjection
   -- E([mc², ∞)) + E((-∞, -mc²]) = E(ℝ) = 1
   -- because ℝ = [mc², ∞) ∪ (-∞, -mc²] ∪ (-mc², mc²) and E(gap) = 0
-  
+
   -- Step 1: mc² > 0
   have h_pos : data.hamiltonian.constants.restEnergy > 0 := by
     unfold DiracConstants.restEnergy
     apply mul_pos hm
     exact sq_pos_of_pos data.hamiltonian.constants.c_pos
-  
+
   -- Step 2: The gap contributes nothing
   have h_gap : data.E (Set.Ioo (-data.hamiltonian.constants.restEnergy)
                                data.hamiltonian.constants.restEnergy) = 0 :=
     dirac_spectral_gap_zero data hm
-  
+
   -- Step 3: The three sets partition ℝ
   have h_union : Set.Ici data.hamiltonian.constants.restEnergy ∪
                  Set.Iic (-data.hamiltonian.constants.restEnergy) ∪
@@ -1708,7 +1708,7 @@ theorem electron_positron_complete (data : DiracSpectralData H)
       · right
         push_neg at h h'
         exact ⟨h', h⟩
-  
+
   -- Step 4a: Electron and positron supports are disjoint
   have h_disj1 : Disjoint (Set.Ici data.hamiltonian.constants.restEnergy)
                           (Set.Iic (-data.hamiltonian.constants.restEnergy)) := by
@@ -1716,7 +1716,7 @@ theorem electron_positron_complete (data : DiracSpectralData H)
     intro x ⟨hx_ge, hx_le⟩
     simp only [Set.mem_Ici, Set.mem_Iic] at hx_ge hx_le
     linarith  -- x ≥ mc² and x ≤ -mc² contradicts mc² > 0
-  
+
   -- Step 4b: (Electron ∪ positron) is disjoint from gap
   have h_disj2 : Disjoint (Set.Ici data.hamiltonian.constants.restEnergy ∪
                            Set.Iic (-data.hamiltonian.constants.restEnergy))
@@ -1728,7 +1728,7 @@ theorem electron_positron_complete (data : DiracSpectralData H)
     cases hx_union with
     | inl h => linarith [hx_gap.2]  -- x ≥ mc² contradicts x < mc²
     | inr h => linarith [hx_gap.1]  -- x ≤ -mc² contradicts x > -mc²
-  
+
   -- Step 5: Chain of equalities using additivity
   calc data.E (Set.Ici data.hamiltonian.constants.restEnergy) +
        data.E (Set.Iic (-data.hamiltonian.constants.restEnergy))
@@ -2749,7 +2749,7 @@ theorem spectral_invariance_implies_unitary {U_grp : OneParameterUnitaryGroup (H
       BochnerRoute.spectral_scalar_measure E ψ B) :
     ∀ t, Unitary (U_grp.U t) := by
   intro t
-  
+
   -- Step 1: Spectral invariance implies norm preservation
   have h_norm : ∀ χ, ‖U_grp.U t χ‖ = ‖χ‖ := by
     intro χ
@@ -2777,7 +2777,7 @@ theorem spectral_invariance_implies_unitary {U_grp : OneParameterUnitaryGroup (H
     -- ⟨φ, U*Uψ⟩ = ⟨Uφ, Uψ⟩ = ⟨φ, ψ⟩
     rw [ContinuousLinearMap.adjoint_inner_right]
     exact (h_inner φ ψ)
-    
+
   · -- Part 2: U(t)U(t)* = 1 (co-isometry, uses surjectivity)
     ext ψ
     -- Key insight: U(t) is surjective because U(-t) is a right inverse
@@ -2793,14 +2793,14 @@ theorem spectral_invariance_implies_unitary {U_grp : OneParameterUnitaryGroup (H
           rw [@OneParameterUnitaryGroup.identity]
           exact rfl
     obtain ⟨χ, hχ⟩ := h_surj
-    
+
     apply ext_inner_left ℂ
     intro φ
     simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply]
     -- Goal: ⟨φ, U(t) (U(t)* ψ)⟩ = ⟨φ, ψ⟩
     -- Write ψ = U(t)χ and use U(t)*U(t) = 1
     rw [← hχ]
-    
+
     -- From Part 1, we have U(t)*U(t) = 1
     have h_first : (U_grp.U t).adjoint * U_grp.U t = 1 := by
       ext ξ
@@ -2809,7 +2809,7 @@ theorem spectral_invariance_implies_unitary {U_grp : OneParameterUnitaryGroup (H
       simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply]
       rw [ContinuousLinearMap.adjoint_inner_right]
       exact h_inner η ξ
-    
+
     -- Therefore U(t)*(U(t)χ) = χ
     have h_adj_apply : (U_grp.U t).adjoint (U_grp.U t χ) = χ := by
       have := congrFun (congrArg DFunLike.coe h_first) χ
@@ -3041,7 +3041,7 @@ theorem first_law_equivalence_of_self_adjoint {U_grp : OneParameterUnitaryGroup 
     (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
     (E : Set ℝ → H →L[ℂ] H) (hE : FunctionalCalculus.IsSpectralMeasureFor E gen) :
     FirstLawEquivalence gen E where
-  
+
   -- Component 1: Unitarity of U(t)
   unitary := fun t => by
     -- Inner product preservation from Stone's theorem
@@ -3083,13 +3083,13 @@ theorem first_law_equivalence_of_self_adjoint {U_grp : OneParameterUnitaryGroup 
         simp only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply] at this
         exact this
       rw [h_adj_apply]
-  
+
   -- Component 2: Self-adjointness (given)
   selfAdjoint := hsa
-  
+
   -- Component 3: Spectral measure invariance (the First Law itself)
   spectral_invariant := fun t ψ B hB => spectral_measure_invariant gen hsa E hE t ψ B hB
-  
+
   -- Component 4: Energy conservation (consequence of spectral invariance)
   energy_conserved := by
     intro t ψ hψ
