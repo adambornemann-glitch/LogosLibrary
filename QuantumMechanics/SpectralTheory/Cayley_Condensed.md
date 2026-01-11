@@ -521,7 +521,3 @@ theorem spectralMeasure_cayley_correspondence {U_grp : OneParameterUnitaryGroup 
 13. `cayley_spectrum_correspondence`
 14. `generator_domain_eq_range_one_minus_cayley`
 15. `spectralMeasure_cayley_correspondence`
-
----
-
-*End of Document*
