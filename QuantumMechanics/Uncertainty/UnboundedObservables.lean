@@ -62,6 +62,7 @@ open scoped ComplexConjugate
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
+/-- A symmetric operator with dense domain, representing a quantum observable. -/
 structure UnboundedObservable (H : Type*) [NormedAddCommGroup H] [InnerProductSpace ℂ H]
     [CompleteSpace H] where
   domain : Submodule ℂ H
@@ -71,28 +72,29 @@ structure UnboundedObservable (H : Type*) [NormedAddCommGroup H] [InnerProductSp
 
 namespace UnboundedObservable
 
-
-
+/-- Apply `A` to `ψ` given a proof `hψ : ψ ∈ A.domain`. -/
 @[inline]
 def apply (A : UnboundedObservable H) (ψ : H) (hψ : ψ ∈ A.domain) : H :=
   A.toFun ⟨ψ, hψ⟩
 
-
+/-- Notation `A ⬝ ψ ⊢ hψ` for applying an unbounded operator with explicit domain proof. -/
 notation:max A " ⬝ " ψ " ⊢ " hψ => UnboundedObservable.apply A ψ hψ
-
 
 instance : CoeFun (UnboundedObservable H) (fun A => A.domain → H) where
   coe A := A.toFun
 
+/-- Coerce `ψ : H` with `hψ : ψ ∈ A.domain` to an element of `A.domain`. -/
 @[inline]
 def toDomainElt (A : UnboundedObservable H) (ψ : H) (hψ : ψ ∈ A.domain) : A.domain :=
   ⟨ψ, hψ⟩
 
+/-- Symmetry with explicit domain proofs: `⟪Aψ, φ⟫ = ⟪ψ, Aφ⟫`. -/
 theorem symmetric' (A : UnboundedObservable H) {ψ φ : H}
     (hψ : ψ ∈ A.domain) (hφ : φ ∈ A.domain) :
     ⟪A ⬝ ψ ⊢ hψ, φ⟫_ℂ = ⟪ψ, A ⬝ φ ⊢ hφ⟫_ℂ :=
   A.symmetric ⟨ψ, hψ⟩ ⟨φ, hφ⟩
 
+/-- Expectation values are real: `⟪ψ, Aψ⟫` has zero imaginary part. -/
 theorem inner_self_im_eq_zero (A : UnboundedObservable H) {ψ : H} (hψ : ψ ∈ A.domain) :
     (⟪ψ, A ⬝ ψ ⊢ hψ⟫_ℂ).im = 0 := by
   have h := A.symmetric' hψ hψ
@@ -101,30 +103,35 @@ theorem inner_self_im_eq_zero (A : UnboundedObservable H) {ψ : H} (hψ : ψ ∈
   simp only [Complex.conj_im] at this
   linarith
 
+/-- `⟪ψ, Aψ⟫` equals its real part. -/
 theorem inner_self_eq_re (A : UnboundedObservable H) {ψ : H} (hψ : ψ ∈ A.domain) :
     ⟪ψ, A ⬝ ψ ⊢ hψ⟫_ℂ = (⟪ψ, A ⬝ ψ ⊢ hψ⟫_ℂ).re := by
   simp [Complex.ext_iff, A.inner_self_im_eq_zero hψ]
 
-
+/-- `A` respects addition. -/
 theorem apply_add (A : UnboundedObservable H) {ψ φ : H}
     (hψ : ψ ∈ A.domain) (hφ : φ ∈ A.domain) :
     A.apply (ψ + φ) (A.domain.add_mem hψ hφ) = A.apply ψ hψ + A.apply φ hφ :=
   A.toFun.map_add ⟨ψ, hψ⟩ ⟨φ, hφ⟩
 
+/-- `A` respects scalar multiplication. -/
 theorem apply_smul (A : UnboundedObservable H) {ψ : H} (c : ℂ) (hψ : ψ ∈ A.domain) :
     A.apply (c • ψ) (A.domain.smul_mem c hψ) = c • A.apply ψ hψ :=
   A.toFun.map_smul c ⟨ψ, hψ⟩
 
+/-- `A` respects subtraction. -/
 theorem apply_sub (A : UnboundedObservable H) {ψ φ : H}
     (hψ : ψ ∈ A.domain) (hφ : φ ∈ A.domain) :
     A.apply (ψ - φ) (A.domain.sub_mem hψ hφ) = A.apply ψ hψ - A.apply φ hφ :=
   A.toFun.map_sub ⟨ψ, hψ⟩ ⟨φ, hφ⟩
 
+/-- `A` respects real scalar multiplication. -/
 theorem apply_smul_real (A : UnboundedObservable H) {ψ : H} (r : ℝ) (hψ : ψ ∈ A.domain) :
     A.apply ((r : ℂ) • ψ) (A.domain.smul_mem (r : ℂ) hψ) = (r : ℂ) • A.apply ψ hψ :=
   apply_smul A (r : ℂ) hψ
 
-
+/-- Bundled proof that `[A,B]ψ` is well-defined: `ψ ∈ Dom(A) ∩ Dom(B)`,
+    `Bψ ∈ Dom(A)`, and `Aψ ∈ Dom(B)`. -/
 structure DomainConditions (A B : UnboundedObservable H) (ψ : H) where
   hψ_A : ψ ∈ A.domain
   hψ_B : ψ ∈ B.domain
@@ -135,24 +142,29 @@ namespace DomainConditions
 
 variable {A B : UnboundedObservable H} {ψ : H}
 
+/-- `Aψ` given domain conditions for `[A,B]ψ`. -/
 def Aψ (h : DomainConditions A B ψ) : H := A ⬝ ψ ⊢ h.hψ_A
 
+/-- `Bψ` given domain conditions for `[A,B]ψ`. -/
 def Bψ (h : DomainConditions A B ψ) : H := B ⬝ ψ ⊢ h.hψ_B
 
+/-- `ABψ` given domain conditions for `[A,B]ψ`. -/
 def ABψ (h : DomainConditions A B ψ) : H := A ⬝ (B ⬝ ψ ⊢ h.hψ_B) ⊢ h.hBψ_A
 
+/-- `BAψ` given domain conditions for `[A,B]ψ`. -/
 def BAψ (h : DomainConditions A B ψ) : H := B ⬝ (A ⬝ ψ ⊢ h.hψ_A) ⊢ h.hAψ_B
 
 end DomainConditions
 
-
+/-- The commutator `[A,B]ψ = ABψ - BAψ`. -/
 def commutatorAt (A B : UnboundedObservable H) (ψ : H) (h : DomainConditions A B ψ) : H :=
   h.ABψ - h.BAψ
 
-
+/-- The anticommutator `{A,B}ψ = ABψ + BAψ`. -/
 def anticommutatorAt (A B : UnboundedObservable H) (ψ : H) (h : DomainConditions A B ψ) : H :=
   h.ABψ + h.BAψ
 
+/-- `⟪ψ, [A,B]ψ⟫` is purely imaginary. -/
 theorem commutator_re_eq_zero (A B : UnboundedObservable H) (ψ : H)
     (h : DomainConditions A B ψ) :
     (⟪ψ, commutatorAt A B ψ h⟫_ℂ).re = 0 := by
@@ -168,7 +180,7 @@ theorem commutator_re_eq_zero (A B : UnboundedObservable H) (ψ : H)
   simp only [Complex.sub_re, Complex.conj_re]
   ring
 
-
+/-- `⟪ψ, {A,B}ψ⟫` is purely real. -/
 theorem anticommutator_im_eq_zero (A B : UnboundedObservable H) (ψ : H)
     (h : DomainConditions A B ψ) :
     (⟪ψ, anticommutatorAt A B ψ h⟫_ℂ).im = 0 := by
@@ -184,17 +196,17 @@ theorem anticommutator_im_eq_zero (A B : UnboundedObservable H) (ψ : H)
   simp only [Complex.add_im, Complex.conj_im]
   ring
 
-
+/-- The expectation value `⟨A⟩_ψ = Re⟨ψ, Aψ⟩` for a normalized state. -/
 noncomputable def expectation (A : UnboundedObservable H) (ψ : H)
     (_ : ‖ψ‖ = 1) (hψ : ψ ∈ A.domain) : ℝ :=
   (⟪ψ, A ⬝ ψ ⊢ hψ⟫_ℂ).re
 
-
+/-- The shifted operator `(A - ⟨A⟩_ψ)φ` applied to `φ`. -/
 noncomputable def shiftedApply (A : UnboundedObservable H) (ψ : H) (φ : H)
     (h_norm : ‖ψ‖ = 1) (hψ : ψ ∈ A.domain) (hφ : φ ∈ A.domain) : H :=
   (A ⬝ φ ⊢ hφ) - (A.expectation ψ h_norm hψ : ℂ) • φ
 
-
+/-- The shifted operator `A - ⟨A⟩I` is symmetric. -/
 theorem shifted_symmetric (A : UnboundedObservable H) (ψ : H)
     (h_norm : ‖ψ‖ = 1) (hψ_dom : ψ ∈ A.domain)
     {φ₁ φ₂ : H} (hφ₁ : φ₁ ∈ A.domain) (hφ₂ : φ₂ ∈ A.domain) :
@@ -205,23 +217,23 @@ theorem shifted_symmetric (A : UnboundedObservable H) (ψ : H)
   rw [A.symmetric' hφ₁ hφ₂]
   simp only [Complex.conj_ofReal]
 
-
+/-- The variance `Var(A)_ψ = ‖(A - ⟨A⟩)ψ‖²`. -/
 noncomputable def variance (A : UnboundedObservable H) (ψ : H)
     (h_norm : ‖ψ‖ = 1) (hψ : ψ ∈ A.domain) : ℝ :=
   ‖A.shiftedApply ψ ψ h_norm hψ hψ‖^2
 
-
+/-- The standard deviation `σ_A = √Var(A)`. -/
 noncomputable def stdDev (A : UnboundedObservable H) (ψ : H)
     (h_norm : ‖ψ‖ = 1) (hψ : ψ ∈ A.domain) : ℝ :=
   Real.sqrt (A.variance ψ h_norm hψ)
 
-
+/-- Variance is nonnegative. -/
 theorem variance_nonneg (A : UnboundedObservable H) (ψ : H)
     (h_norm : ‖ψ‖ = 1) (hψ : ψ ∈ A.domain) :
     0 ≤ A.variance ψ h_norm hψ :=
   sq_nonneg _
 
-
+/-- Standard deviation is nonnegative. -/
 theorem stdDev_nonneg (A : UnboundedObservable H) (ψ : H)
     (h_norm : ‖ψ‖ = 1) (hψ : ψ ∈ A.domain) :
     0 ≤ A.stdDev ψ h_norm hψ :=
