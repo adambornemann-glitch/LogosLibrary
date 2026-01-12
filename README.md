@@ -23,7 +23,7 @@ These results handle unbounded operators properly—the physically relevant case
 
 ## What This Is
 
-Logos Library is a Lean 4 formalization project building verified foundations for physics. Every theorem is machine-checked with no gaps.
+Logos Library is a Lean 4 formalization project building verified foundations for Quantum Mechanics.
 
 **Completed Infrastructure:**
 
@@ -119,24 +119,6 @@ Key results:
 
 ---
 
-## Project Structure
-```
-LogosLibrary/
-├── Units/                    # Physical units with type safety
-└── DeepTheorems/
-   ├── Quantum/
-   │   ├── Uncertainty/      # Robertson (complete) 🚧 needs touch ups
-   │   ├── Spectral/         # Functional Calc (in progress)
-   │   └── Evolution/        # Stone (complete)
-   ├── Relativity/
-   │   ├── SR/               # MinkowskiSpacetime (complete)
-   │   ├── LorentzBoost/     # Ott-Landsberg (complete), Connes-Rovelli (complete)
-   │   └── GR/               # KerrMetric (complete)
-   └── Holography/           # AdS/CFT, entropy bounds (in progress)
-```
-
----
-
 ## Quick Start
 ```bash
 # Clone
@@ -166,25 +148,6 @@ lake build LogosLibrary.Relativity.LorentzBoost.ConnesRovelli
 - **Lean 4**: See `lean-toolchain`
 - **Mathlib4**: Pinned for stability during development
 
----
-
-## Standards
-
-- All physical claims formally verified
-- No `sorry` in completed work
-- Unbounded operators handled with proper domain tracking
-- Documentation includes mathematical context and proof strategies
-
----
-
-## Roadmap
-
-| Phase | Target |
-|-------|--------|
-| ✅ Complete | Robertson, Stone, Resolvent theory, Ott-Landsberg, Thermal Time |
-| ✅ Complete | Spectral theory for unbounded operators |
-| 🚧 Building | Functional calculus, Dirac equation |
-| Future | Tomita-Takesaki, algebraic QFT foundations |
 
 ---
 
