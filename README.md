@@ -14,7 +14,7 @@
 | Ott-Landsberg Resolution | ✅ Complete | ~2,500 | 7 independent proofs; 60-year debate settled |
 | Thermal Time Uniqueness | ✅ Complete | ~2,000 | Connes-Rovelli form τ/T forced by Lorentz covariance |
 | The Uncertainty Principle | ✅ Complete | ~1,200 | Unbounded operators, not the bounded simplification |
-| Unitary Evolution | ✅ Complete | ~11,000 | 1932 approach via Bochner-Yosida, both directions |
+| Unitary Evolution | ✅ Complete | ~8,000 | 1932 approach via Bochner-Yosida, both directions |
 
 These results handle unbounded operators properly—the physically relevant case for quantum mechanics. Previous formalizations either avoided unbounded operators entirely or treated only bounded approximations.
 
