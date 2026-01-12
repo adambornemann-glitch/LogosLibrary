@@ -16,7 +16,8 @@
 | The Uncertainty Principle | ✅ Complete | ~1,200 | Unbounded operators, not the bounded simplification |
 | Unitary Evolution | ✅ Complete | ~8,000 | 1932 approach via Bochner-Yosida, both directions |
 
-These results handle unbounded operators properly—the physically relevant case for quantum mechanics. Previous formalizations either avoided unbounded operators entirely or treated only bounded approximations.
+These results handle unbounded operators properly—the physically relevant case for quantum mechanics and
+quantum chemistry.
 
 ---
 
