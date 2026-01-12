@@ -59,7 +59,7 @@ open scoped ComplexConjugate
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
-
+/-- Domain conditions for `[A,B]ψ` together with normalization `‖ψ‖ = 1`. -/
 structure ShiftedDomainConditions (A B : UnboundedObservable H) (ψ : H) extends
     DomainConditions A B ψ where
   h_norm : ‖ψ‖ = 1
@@ -68,43 +68,49 @@ namespace ShiftedDomainConditions
 
 variable {A B : UnboundedObservable H} {ψ : H}
 
+/-- The shifted operator `(A - ⟨A⟩)ψ`. -/
 noncomputable def A'ψ (h : ShiftedDomainConditions A B ψ) : H :=
   A.shiftedApply ψ ψ h.h_norm h.hψ_A h.hψ_A
 
+/-- The shifted operator `(B - ⟨B⟩)ψ`. -/
 noncomputable def B'ψ (h : ShiftedDomainConditions A B ψ) : H :=
   B.shiftedApply ψ ψ h.h_norm h.hψ_B h.hψ_B
 
+/-- `(B - ⟨B⟩)ψ ∈ Dom(A)`. -/
 theorem B'ψ_in_A_domain (h : ShiftedDomainConditions A B ψ) : h.B'ψ ∈ A.domain := by
   unfold B'ψ shiftedApply
   exact A.domain.sub_mem h.hBψ_A (A.domain.smul_mem _ h.hψ_A)
 
+/-- `(A - ⟨A⟩)ψ ∈ Dom(B)`. -/
 theorem A'ψ_in_B_domain (h : ShiftedDomainConditions A B ψ) : h.A'ψ ∈ B.domain := by
   unfold A'ψ shiftedApply
   exact B.domain.sub_mem h.hAψ_B (B.domain.smul_mem _ h.hψ_B)
 
 end ShiftedDomainConditions
 
-
+/-- Monotonicity of squaring for nonnegative reals. -/
 lemma sq_le_sq' {x y : ℝ} (hx : 0 ≤ x) (hxy : x ≤ y) : x^2 ≤ y^2 := by
   calc x^2 = x * x := sq x
     _ ≤ x * y := by exact mul_le_mul_of_nonneg_left hxy hx
     _ ≤ y * y := by exact mul_le_mul_of_nonneg_right hxy (le_trans hx hxy)
     _ = y^2 := (sq y).symm
 
-
+/-- `‖z‖² = z.im²` when `z.re = 0`. -/
 lemma normSq_of_re_zero {z : ℂ} (h : z.re = 0) : Complex.normSq z = z.im^2 := by
   rw [Complex.normSq_apply, h]
   ring
 
+/-- `‖z‖² = z.re²` when `z.im = 0`. -/
 lemma normSq_of_im_zero {z : ℂ} (h : z.im = 0) : Complex.normSq z = z.re^2 := by
   rw [Complex.normSq_apply, h]
   ring
 
+/-- `‖z‖² = z.re² + z.im²`. -/
 lemma normSq_eq_re_sq_add_im_sq (z : ℂ) : Complex.normSq z = z.re^2 + z.im^2 := by
   rw [Complex.normSq_apply]
   ring
 
-
+/-- The key identity: `Im⟨Ãψ, B̃ψ⟩ = ½ Im⟨ψ, [A,B]ψ⟩`. -/
 theorem im_inner_shifted_eq_half_commutator (A B : UnboundedObservable H) (ψ : H)
     (h : ShiftedDomainConditions A B ψ) :
     (⟪h.A'ψ, h.B'ψ⟫_ℂ).im =
@@ -146,14 +152,13 @@ theorem im_inner_shifted_eq_half_commutator (A B : UnboundedObservable H) (ψ : 
   rw [h_key]
   exact rfl
 
-
-
+/-- `‖z‖ = |z.im|` when `z.re = 0`. -/
 theorem norm_eq_abs_im_of_re_zero {z : ℂ} (h : z.re = 0) : ‖z‖ = |z.im| := by
   have hz : z = z.im * Complex.I := Complex.ext (by simp [h]) (by simp)
   rw [hz, norm_mul, Complex.norm_I, mul_one, Complex.norm_real, Real.norm_eq_abs]
   exact congrArg abs (congrArg Complex.im hz)
 
-
+/-- **Robertson uncertainty inequality**: `σ_A σ_B ≥ ½ |⟨[A,B]⟩|`. -/
 theorem robertson_uncertainty (A B : UnboundedObservable H) (ψ : H)
     (h : ShiftedDomainConditions A B ψ) :
     A.stdDev ψ h.h_norm h.hψ_A * B.stdDev ψ h.h_norm h.hψ_B ≥
