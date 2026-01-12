@@ -18,12 +18,19 @@ is a direct consequence of the canonical commutation relation:
   Z. Physik 44, 326-352. (First rigorous proof of σₓσₚ ≥ ℏ/2)
 - Robertson, H.P. (1929). "The Uncertainty Principle". Phys. Rev. 34, 163-164.
 -/
-import LogosLibrary.QuantumMechanics.Uncertainty.Robertson
+import LogosLibrary.QuantumMechanics.Uncertainty.Schrödinger
 
-namespace Heisenberg.Theorem
-open Robertson.Theorem Robertson.Core InnerProductSpace Complex
+
+namespace QuantumMechanics.Heisenberg
+open QuantumMechanics.Schrodinger QuantumMechanics.Robertson QuantumMechanics.UnboundedObservable InnerProductSpace Complex
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+
+
+/-- The reduced Planck constant (natural units: ℏ = 1) -/
+noncomputable def ℏ : ℝ := 1
+
+lemma ℏ_pos : ℏ > 0 := by unfold ℏ; norm_num
 /--
 Heisenberg's Uncertainty Principle: σₓ · σₚ ≥ ℏ/2
 
@@ -76,23 +83,15 @@ This is why we work with unbounded operators on infinite-dimensional Hilbert spa
 theorem heisenberg_uncertainty_principle
     (X P : UnboundedObservable H)
     (ψ : H)
-    (h_norm : ‖ψ‖ = 1)
-    (h_domX : ψ ∈ X.domain)
-    (h_domP : ψ ∈ P.domain)
-    (h_dom_XP : P.op ψ ∈ X.domain)
-    (h_dom_PX : X.op ψ ∈ P.domain)
-    (h_canonical : ⟪ψ, (X.op ∘ₗ P.op - P.op ∘ₗ X.op) ψ⟫_ℂ = Complex.I * ℏ) :
-    unboundedStandardDeviation X ψ h_norm h_domX *
-    unboundedStandardDeviation P ψ h_norm h_domP ≥ ℏ / 2 := by
-  have h_robertson := robertson_uncertainty_principle X P ψ h_norm h_domX h_domP h_dom_XP h_dom_PX
+    (h : ShiftedDomainConditions X P ψ)
+    (h_canonical : ⟪ψ, commutatorAt X P ψ h.toDomainConditions⟫_ℂ = Complex.I * (ℏ : ℂ)) :
+    X.stdDev ψ h.h_norm h.hψ_A * P.stdDev ψ h.h_norm h.hψ_B ≥ (ℏ : ℝ )/ 2 := by
+  have h_robertson := robertson_uncertainty X P ψ h
   rw [h_canonical] at h_robertson
-  have h_norm_iℏ : ‖Complex.I * ℏ‖ = ℏ := by
-    rw [Complex.norm_mul, Complex.norm_I, one_mul, Complex.norm_real]
-    exact Real.norm_of_nonneg (le_of_lt ℏ_pos)
-  calc unboundedStandardDeviation X ψ h_norm h_domX *
-       unboundedStandardDeviation P ψ h_norm h_domP
-      ≥ (1/2) * ‖Complex.I * ℏ‖ := h_robertson
-    _ = (1/2) * ℏ := by rw [h_norm_iℏ]
-    _ = ℏ / 2 := by ring
+  have h_norm_iℏ : ‖Complex.I * (ℏ : ℂ)‖ = (ℏ : ℝ) := by
+    simp only [norm_mul, Complex.norm_I, one_mul]
+    -- goal: ‖(ℏ : ℂ)‖ = ℏ
+    exact Complex.norm_real ℏ ▸ abs_of_pos ℏ_pos
+  linarith [h_robertson, h_norm_iℏ]
 
-  end Heisenberg.Theorem
+  end QuantumMechanics.Heisenberg
