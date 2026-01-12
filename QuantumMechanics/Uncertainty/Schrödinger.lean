@@ -69,13 +69,13 @@ open InnerProductSpace UnboundedObservable Robertson
 open scoped ComplexConjugate
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
-
+/-- The covariance `Cov(A,B)_ψ = ½⟨{A,B}⟩ - ⟨A⟩⟨B⟩`. -/
 noncomputable def covariance (A B : UnboundedObservable H) (ψ : H)
     (h : ShiftedDomainConditions A B ψ) : ℝ :=
   (1/2) * (⟪ψ, anticommutatorAt A B ψ h.toDomainConditions⟫_ℂ).re -
   A.expectation ψ h.h_norm h.hψ_A * B.expectation ψ h.h_norm h.hψ_B
 
-
+/-- The real part of `⟨Ãψ, B̃ψ⟩` equals the covariance. -/
 theorem re_inner_shifted_eq_covariance (A B : UnboundedObservable H) (ψ : H)
     (h : ShiftedDomainConditions A B ψ) :
     (⟪h.A'ψ, h.B'ψ⟫_ℂ).re = covariance A B ψ h := by
@@ -149,7 +149,9 @@ theorem re_inner_shifted_eq_covariance (A B : UnboundedObservable H) (ψ : H)
     Complex.ofReal_im, mul_zero, sub_zero, Complex.mul_im, zero_mul, add_zero, one_div]
   ring
 
+/-- **Schrödinger uncertainty inequality**: `Var(A) Var(B) ≥ ¼|⟨[A,B]⟩|² + Cov(A,B)²`.
 
+This is stronger than Robertson's inequality, which drops the covariance term. -/
 theorem schrodinger_uncertainty (A B : UnboundedObservable H) (ψ : H)
     (h : ShiftedDomainConditions A B ψ) :
     A.variance ψ h.h_norm h.hψ_A * B.variance ψ h.h_norm h.hψ_B ≥
@@ -196,7 +198,7 @@ theorem schrodinger_uncertainty (A B : UnboundedObservable H) (ψ : H)
     _ = (1/4) * ‖⟪ψ, commutatorAt A B ψ h.toDomainConditions⟫_ℂ‖^2 + (covariance A B ψ h)^2 := by
         ring
 
-
+/-- Robertson's inequality as a corollary of Schrödinger's (variance form). -/
 theorem robertson_from_schrodinger (A B : UnboundedObservable H) (ψ : H)
     (h : ShiftedDomainConditions A B ψ) :
     A.variance ψ h.h_norm h.hψ_A * B.variance ψ h.h_norm h.hψ_B ≥
@@ -205,7 +207,7 @@ theorem robertson_from_schrodinger (A B : UnboundedObservable H) (ψ : H)
   have h_cov_sq_nonneg : 0 ≤ (covariance A B ψ h)^2 := sq_nonneg _
   linarith
 
-
+/-- Robertson's inequality as a corollary of Schrödinger's (standard deviation form). -/
 theorem robertson_stddev_from_schrodinger (A B : UnboundedObservable H) (ψ : H)
     (h : ShiftedDomainConditions A B ψ) :
     A.stdDev ψ h.h_norm h.hψ_A * B.stdDev ψ h.h_norm h.hψ_B ≥
@@ -230,7 +232,7 @@ theorem robertson_stddev_from_schrodinger (A B : UnboundedObservable H) (ψ : H)
   rw [h_lhs, h_rhs] at h_sqrt
   exact h_sqrt
 
-
+/-- Schrödinger uncertainty in standard deviation form. -/
 theorem schrodinger_stddev (A B : UnboundedObservable H) (ψ : H)
     (h : ShiftedDomainConditions A B ψ) :
     A.stdDev ψ h.h_norm h.hψ_A * B.stdDev ψ h.h_norm h.hψ_B ≥
@@ -244,5 +246,4 @@ theorem schrodinger_stddev (A B : UnboundedObservable H) (ψ : H)
     rw [← Real.sqrt_mul (variance_nonneg A ψ h.h_norm h.hψ_A)]
   rw [h_lhs] at h_sqrt
   exact h_sqrt
-
 end QuantumMechanics.Schrodinger
