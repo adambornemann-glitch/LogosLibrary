@@ -76,7 +76,7 @@ noncomputable def covariance (A B : UnboundedObservable H) (ψ : H)
   A.expectation ψ h.h_norm h.hψ_A * B.expectation ψ h.h_norm h.hψ_B
 
 /-- The real part of `⟨Ãψ, B̃ψ⟩` equals the covariance. -/
-theorem re_inner_shifted_eq_covariance (A B : UnboundedObservable H) (ψ : H)
+lemma re_inner_shifted_eq_covariance (A B : UnboundedObservable H) (ψ : H)
     (h : ShiftedDomainConditions A B ψ) :
     (⟪h.A'ψ, h.B'ψ⟫_ℂ).re = covariance A B ψ h := by
 
@@ -199,7 +199,7 @@ theorem schrodinger_uncertainty (A B : UnboundedObservable H) (ψ : H)
         ring
 
 /-- Robertson's inequality as a corollary of Schrödinger's (variance form). -/
-theorem robertson_from_schrodinger (A B : UnboundedObservable H) (ψ : H)
+lemma robertson_from_schrodinger (A B : UnboundedObservable H) (ψ : H)
     (h : ShiftedDomainConditions A B ψ) :
     A.variance ψ h.h_norm h.hψ_A * B.variance ψ h.h_norm h.hψ_B ≥
     (1/4) * ‖⟪ψ, commutatorAt A B ψ h.toDomainConditions⟫_ℂ‖^2 := by
@@ -208,7 +208,7 @@ theorem robertson_from_schrodinger (A B : UnboundedObservable H) (ψ : H)
   linarith
 
 /-- Robertson's inequality as a corollary of Schrödinger's (standard deviation form). -/
-theorem robertson_stddev_from_schrodinger (A B : UnboundedObservable H) (ψ : H)
+lemma robertson_stddev_from_schrodinger (A B : UnboundedObservable H) (ψ : H)
     (h : ShiftedDomainConditions A B ψ) :
     A.stdDev ψ h.h_norm h.hψ_A * B.stdDev ψ h.h_norm h.hψ_B ≥
     (1/2) * ‖⟪ψ, commutatorAt A B ψ h.toDomainConditions⟫_ℂ‖ := by
@@ -233,7 +233,7 @@ theorem robertson_stddev_from_schrodinger (A B : UnboundedObservable H) (ψ : H)
   exact h_sqrt
 
 /-- Schrödinger uncertainty in standard deviation form. -/
-theorem schrodinger_stddev (A B : UnboundedObservable H) (ψ : H)
+lemma schrodinger_stddev (A B : UnboundedObservable H) (ψ : H)
     (h : ShiftedDomainConditions A B ψ) :
     A.stdDev ψ h.h_norm h.hψ_A * B.stdDev ψ h.h_norm h.hψ_B ≥
     Real.sqrt ((1/4) * ‖⟪ψ, commutatorAt A B ψ h.toDomainConditions⟫_ℂ‖^2 +
