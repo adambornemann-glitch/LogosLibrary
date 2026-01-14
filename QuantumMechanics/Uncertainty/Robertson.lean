@@ -77,12 +77,12 @@ noncomputable def B'ψ (h : ShiftedDomainConditions A B ψ) : H :=
   B.shiftedApply ψ ψ h.h_norm h.hψ_B h.hψ_B
 
 /-- `(B - ⟨B⟩)ψ ∈ Dom(A)`. -/
-theorem B'ψ_in_A_domain (h : ShiftedDomainConditions A B ψ) : h.B'ψ ∈ A.domain := by
+lemma B'ψ_in_A_domain (h : ShiftedDomainConditions A B ψ) : h.B'ψ ∈ A.domain := by
   unfold B'ψ shiftedApply
   exact A.domain.sub_mem h.hBψ_A (A.domain.smul_mem _ h.hψ_A)
 
 /-- `(A - ⟨A⟩)ψ ∈ Dom(B)`. -/
-theorem A'ψ_in_B_domain (h : ShiftedDomainConditions A B ψ) : h.A'ψ ∈ B.domain := by
+lemma A'ψ_in_B_domain (h : ShiftedDomainConditions A B ψ) : h.A'ψ ∈ B.domain := by
   unfold A'ψ shiftedApply
   exact B.domain.sub_mem h.hAψ_B (B.domain.smul_mem _ h.hψ_B)
 
@@ -111,7 +111,7 @@ lemma normSq_eq_re_sq_add_im_sq (z : ℂ) : Complex.normSq z = z.re^2 + z.im^2 :
   ring
 
 /-- The key identity: `Im⟨Ãψ, B̃ψ⟩ = ½ Im⟨ψ, [A,B]ψ⟩`. -/
-theorem im_inner_shifted_eq_half_commutator (A B : UnboundedObservable H) (ψ : H)
+lemma im_inner_shifted_eq_half_commutator (A B : UnboundedObservable H) (ψ : H)
     (h : ShiftedDomainConditions A B ψ) :
     (⟪h.A'ψ, h.B'ψ⟫_ℂ).im =
     (1/2) * (⟪ψ, commutatorAt A B ψ h.toDomainConditions⟫_ℂ).im := by
@@ -153,7 +153,7 @@ theorem im_inner_shifted_eq_half_commutator (A B : UnboundedObservable H) (ψ : 
   exact rfl
 
 /-- `‖z‖ = |z.im|` when `z.re = 0`. -/
-theorem norm_eq_abs_im_of_re_zero {z : ℂ} (h : z.re = 0) : ‖z‖ = |z.im| := by
+lemma norm_eq_abs_im_of_re_zero {z : ℂ} (h : z.re = 0) : ‖z‖ = |z.im| := by
   have hz : z = z.im * Complex.I := Complex.ext (by simp [h]) (by simp)
   rw [hz, norm_mul, Complex.norm_I, mul_one, Complex.norm_real, Real.norm_eq_abs]
   exact congrArg abs (congrArg Complex.im hz)
