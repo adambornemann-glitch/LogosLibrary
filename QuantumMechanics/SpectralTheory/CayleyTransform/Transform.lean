@@ -4,7 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Adam Bornemann
 -/
 import LogosLibrary.QuantumMechanics.UnitaryEvo.Resolvent
-import LogosLibrary.QuantumMechanics.Spectral.CayleyTransform.Unitary
+import LogosLibrary.QuantumMechanics.SpectralTheory.CayleyTransform.Unitary
 
 /-!
 # The Cayley Transform
