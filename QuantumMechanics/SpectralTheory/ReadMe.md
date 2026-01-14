@@ -92,7 +92,7 @@ Constructs spectral measures from unitary groups via complementary approaches.
 - `spectral_self_adjoint`: ⟨E(B)ψ, φ⟩ = ⟨ψ, E(B)φ⟩
 - `spectral_scalar_measure_finite`: μ_ψ(ℝ) = ‖ψ‖² < ∞
 
-**Axioms (~20):**
+**Axioms (~24):**
 - Bochner's theorem, Fourier uniqueness, Lorentzian approximation properties
 - Fubini/DCT applications for interchanging limits
 
@@ -119,7 +119,7 @@ The functional calculus Φ: f ↦ f(A) = ∫f dE is a *-homomorphism.
 - `boundedFunctionalCalculus_nonneg`: f ≥ 0 ⟹ ⟨Φ(f)ψ, ψ⟩ ≥ 0
 - `boundedFunctionalCalculus_mono`: f ≤ g ⟹ ⟨Φ(f)ψ, ψ⟩ ≤ ⟨Φ(g)ψ, ψ⟩
 
-**Axioms (~30):**
+**Axioms (~22):**
 - Spectral integral construction and properties
 - Generator-spectral correspondence
 - Three routes agreement
