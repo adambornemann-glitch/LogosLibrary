@@ -3,8 +3,8 @@ Copyright (c) 2026 Adam Bornemann. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Adam Bornemann
 -/
-import LogosLibrary.QuantumMechanics.Spectral.Routes
-import LogosLibrary.QuantumMechanics.Spectral.Cayley
+import LogosLibrary.QuantumMechanics.SpectralTheory.Routes
+import LogosLibrary.QuantumMechanics.SpectralTheory.Cayley.Basic
 import Mathlib.MeasureTheory.Integral.Bochner.ContinuousLinearMap
 import Mathlib.Analysis.Complex.Basic
 /-
