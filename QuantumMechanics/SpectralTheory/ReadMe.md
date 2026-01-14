@@ -231,8 +231,8 @@ Unlike Klein-Gordon, Dirac has positive-definite probability:
 | File | Count | Categories |
 |------|-------|------------|
 | Cayley | 1 | Spectral theorem existence |
-| Routes | 25 | Measure theory, harmonic analysis |
-| FunctionalCalc | ~29 | Spectral integral construction |
+| Routes | 24 | Measure theory, harmonic analysis |
+| FunctionalCalc | ~22 | Spectral integral construction |
 | DiracOperator | 11 | Spectral theory, PDE results |
 
 **Total: 66 axioms**
