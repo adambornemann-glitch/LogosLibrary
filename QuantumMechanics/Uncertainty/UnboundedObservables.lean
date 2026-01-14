@@ -89,13 +89,13 @@ def toDomainElt (A : UnboundedObservable H) (ψ : H) (hψ : ψ ∈ A.domain) : A
   ⟨ψ, hψ⟩
 
 /-- Symmetry with explicit domain proofs: `⟪Aψ, φ⟫ = ⟪ψ, Aφ⟫`. -/
-theorem symmetric' (A : UnboundedObservable H) {ψ φ : H}
+lemma symmetric' (A : UnboundedObservable H) {ψ φ : H}
     (hψ : ψ ∈ A.domain) (hφ : φ ∈ A.domain) :
     ⟪A ⬝ ψ ⊢ hψ, φ⟫_ℂ = ⟪ψ, A ⬝ φ ⊢ hφ⟫_ℂ :=
   A.symmetric ⟨ψ, hψ⟩ ⟨φ, hφ⟩
 
 /-- Expectation values are real: `⟪ψ, Aψ⟫` has zero imaginary part. -/
-theorem inner_self_im_eq_zero (A : UnboundedObservable H) {ψ : H} (hψ : ψ ∈ A.domain) :
+lemma inner_self_im_eq_zero (A : UnboundedObservable H) {ψ : H} (hψ : ψ ∈ A.domain) :
     (⟪ψ, A ⬝ ψ ⊢ hψ⟫_ℂ).im = 0 := by
   have h := A.symmetric' hψ hψ
   rw [← inner_conj_symm] at h
@@ -104,29 +104,29 @@ theorem inner_self_im_eq_zero (A : UnboundedObservable H) {ψ : H} (hψ : ψ ∈
   linarith
 
 /-- `⟪ψ, Aψ⟫` equals its real part. -/
-theorem inner_self_eq_re (A : UnboundedObservable H) {ψ : H} (hψ : ψ ∈ A.domain) :
+lemma inner_self_eq_re (A : UnboundedObservable H) {ψ : H} (hψ : ψ ∈ A.domain) :
     ⟪ψ, A ⬝ ψ ⊢ hψ⟫_ℂ = (⟪ψ, A ⬝ ψ ⊢ hψ⟫_ℂ).re := by
   simp [Complex.ext_iff, A.inner_self_im_eq_zero hψ]
 
 /-- `A` respects addition. -/
-theorem apply_add (A : UnboundedObservable H) {ψ φ : H}
+lemma apply_add (A : UnboundedObservable H) {ψ φ : H}
     (hψ : ψ ∈ A.domain) (hφ : φ ∈ A.domain) :
     A.apply (ψ + φ) (A.domain.add_mem hψ hφ) = A.apply ψ hψ + A.apply φ hφ :=
   A.toFun.map_add ⟨ψ, hψ⟩ ⟨φ, hφ⟩
 
 /-- `A` respects scalar multiplication. -/
-theorem apply_smul (A : UnboundedObservable H) {ψ : H} (c : ℂ) (hψ : ψ ∈ A.domain) :
+lemma apply_smul (A : UnboundedObservable H) {ψ : H} (c : ℂ) (hψ : ψ ∈ A.domain) :
     A.apply (c • ψ) (A.domain.smul_mem c hψ) = c • A.apply ψ hψ :=
   A.toFun.map_smul c ⟨ψ, hψ⟩
 
 /-- `A` respects subtraction. -/
-theorem apply_sub (A : UnboundedObservable H) {ψ φ : H}
+lemma apply_sub (A : UnboundedObservable H) {ψ φ : H}
     (hψ : ψ ∈ A.domain) (hφ : φ ∈ A.domain) :
     A.apply (ψ - φ) (A.domain.sub_mem hψ hφ) = A.apply ψ hψ - A.apply φ hφ :=
   A.toFun.map_sub ⟨ψ, hψ⟩ ⟨φ, hφ⟩
 
 /-- `A` respects real scalar multiplication. -/
-theorem apply_smul_real (A : UnboundedObservable H) {ψ : H} (r : ℝ) (hψ : ψ ∈ A.domain) :
+lemma apply_smul_real (A : UnboundedObservable H) {ψ : H} (r : ℝ) (hψ : ψ ∈ A.domain) :
     A.apply ((r : ℂ) • ψ) (A.domain.smul_mem (r : ℂ) hψ) = (r : ℂ) • A.apply ψ hψ :=
   apply_smul A (r : ℂ) hψ
 
@@ -165,7 +165,7 @@ def anticommutatorAt (A B : UnboundedObservable H) (ψ : H) (h : DomainCondition
   h.ABψ + h.BAψ
 
 /-- `⟪ψ, [A,B]ψ⟫` is purely imaginary. -/
-theorem commutator_re_eq_zero (A B : UnboundedObservable H) (ψ : H)
+lemma commutator_re_eq_zero (A B : UnboundedObservable H) (ψ : H)
     (h : DomainConditions A B ψ) :
     (⟪ψ, commutatorAt A B ψ h⟫_ℂ).re = 0 := by
   unfold commutatorAt DomainConditions.ABψ DomainConditions.BAψ
@@ -181,7 +181,7 @@ theorem commutator_re_eq_zero (A B : UnboundedObservable H) (ψ : H)
   ring
 
 /-- `⟪ψ, {A,B}ψ⟫` is purely real. -/
-theorem anticommutator_im_eq_zero (A B : UnboundedObservable H) (ψ : H)
+lemma anticommutator_im_eq_zero (A B : UnboundedObservable H) (ψ : H)
     (h : DomainConditions A B ψ) :
     (⟪ψ, anticommutatorAt A B ψ h⟫_ℂ).im = 0 := by
   unfold anticommutatorAt DomainConditions.ABψ DomainConditions.BAψ
@@ -207,7 +207,7 @@ noncomputable def shiftedApply (A : UnboundedObservable H) (ψ : H) (φ : H)
   (A ⬝ φ ⊢ hφ) - (A.expectation ψ h_norm hψ : ℂ) • φ
 
 /-- The shifted operator `A - ⟨A⟩I` is symmetric. -/
-theorem shifted_symmetric (A : UnboundedObservable H) (ψ : H)
+lemma shifted_symmetric (A : UnboundedObservable H) (ψ : H)
     (h_norm : ‖ψ‖ = 1) (hψ_dom : ψ ∈ A.domain)
     {φ₁ φ₂ : H} (hφ₁ : φ₁ ∈ A.domain) (hφ₂ : φ₂ ∈ A.domain) :
     ⟪A.shiftedApply ψ φ₁ h_norm hψ_dom hφ₁, φ₂⟫_ℂ =
@@ -228,13 +228,13 @@ noncomputable def stdDev (A : UnboundedObservable H) (ψ : H)
   Real.sqrt (A.variance ψ h_norm hψ)
 
 /-- Variance is nonnegative. -/
-theorem variance_nonneg (A : UnboundedObservable H) (ψ : H)
+lemma variance_nonneg (A : UnboundedObservable H) (ψ : H)
     (h_norm : ‖ψ‖ = 1) (hψ : ψ ∈ A.domain) :
     0 ≤ A.variance ψ h_norm hψ :=
   sq_nonneg _
 
 /-- Standard deviation is nonnegative. -/
-theorem stdDev_nonneg (A : UnboundedObservable H) (ψ : H)
+lemma stdDev_nonneg (A : UnboundedObservable H) (ψ : H)
     (h_norm : ‖ψ‖ = 1) (hψ : ψ ∈ A.domain) :
     0 ≤ A.stdDev ψ h_norm hψ :=
   Real.sqrt_nonneg _
