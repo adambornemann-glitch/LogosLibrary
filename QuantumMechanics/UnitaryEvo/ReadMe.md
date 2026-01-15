@@ -21,50 +21,50 @@ on the domain of vectors where this limit exists.
 UnitaryEvo/
 ├── Bochner/
 │   ├── Limits/
-│   │   ├── Helpers.lean       — Auxiliary lemmas for limit interchange
-│   │   ├── Minus.lean         — Left-sided limit constructions
-│   │   └── Plus.lean          — Right-sided limit constructions
-│   ├── Basic.lean             — Core Bochner integral definitions
-│   ├── Domain.lean            — Domain characterization of the generator
+│   │   ├── Helpers.lean      
+│   │   ├── Minus.lean         
+│   │   └── Plus.lean          
+│   ├── Basic.lean             
+│   ├── Domain.lean           
 │   ├── Limits.lean            — Main limit theorems for Bochner integrals
-│   └── Resolvent.lean         — Connection to resolvent operators
+│   └── Resolvent.lean         
 │
 ├── Resolvent/
 │   ├── Range/
-│   │   ├── ClosedRange.lean   — The resolvent has closed range
-│   │   ├── Orthogonal.lean    — Orthogonality properties of range
-│   │   └── Surjectivity.lean  — Surjectivity of the resolvent
+│   │   ├── ClosedRange.lean   
+│   │   ├── Orthogonal.lean    
+│   │   └── Surjectivity.lean  
 │   ├── Analytic.lean          — Analyticity of the resolvent map
-│   ├── Basic.lean             — Core resolvent definitions
-│   ├── Core.lean              — Core domain properties
-│   ├── Identities.lean        — Resolvent identity and related equations
-│   ├── LowerBound.lean        — Lower bounds on resolvent norms
-│   ├── NormExpansion.lean     — Norm estimates and expansions
+│   ├── Basic.lean             
+│   ├── Core.lean             
+│   ├── Identities.lean        
+│   ├── LowerBound.lean        
+│   ├── NormExpansion.lean    
 │   ├── Range.lean             — Range characterization (main results)
-│   └── SpecialCases.lean      — Special cases and simplifications
+│   └── SpecialCases.lean      
 │
 ├── Yosida/
 │   ├── Convergence/
-│   │   ├── Approximants.lean  — Yosida approximant sequence
-│   │   ├── JNegOperator.lean  — Negative parameter approximants
-│   │   └── JOperator.lean     — Core J_λ operator construction
+│   │   ├── Approximants.lean  
+│   │   ├── JNegOperator.lean  
+│   │   └── JOperator.lean     
 │   ├── Duhamel/
-│   │   ├── Commutation.lean   — Commutation relations
-│   │   ├── Estimate.lean      — Error estimates for Duhamel
+│   │   ├── Commutation.lean  
+│   │   ├── Estimate.lean      
 │   │   ├── Formula.lean       — The Duhamel formula
-│   │   └── Helpers.lean       — Supporting lemmas
+│   │   └── Helpers.lean       
 │   ├── ExpBounded/
-│   │   ├── Adjoint.lean       — Adjoint preservation properties
-│   │   ├── Basic.lean         — Exponential boundedness definitions
-│   │   └── Unitary.lean       — Unitary case specialization
-│   ├── Basic.lean             — Core Yosida construction
-│   ├── Bounds.lean            — Boundedness results
-│   ├── Convergence.lean       — Main convergence theorems
-│   ├── Defs.lean              — Fundamental definitions
+│   │   ├── Adjoint.lean       
+│   │   ├── Basic.lean         
+│   │   └── Unitary.lean       
+│   ├── Basic.lean             
+│   ├── Bounds.lean           
+│   ├── Convergence.lean       — (Main convergence theorems)
+│   ├── Defs.lean             
 │   ├── Duhamel.lean           — Duhamel formula (main entry point)
 │   ├── ExpBounded.lean        — Exponential bounds (main entry point)
 │   ├── Exponential.lean       — Exponential map properties
-│   └── Symmetry.lean          — Symmetry of the generator
+│   └── Symmetry.lean          
 │
 ├── Bochner.lean               — Bochner construction (main entry point)
 ├── Generator.lean             — The infinitesimal generator
