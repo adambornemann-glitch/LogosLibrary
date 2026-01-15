@@ -160,5 +160,4 @@ it is equivalent to these two requirements.
 - Stone, M. H. "On one-parameter unitary groups in Hilbert space" (1932)
 - von Neumann, J. "Über Funktionen von Funktionaloperatoren" (1932)
 - Reed, M. & Simon, B. *Methods of Modern Mathematical Physics I* (1980), Ch. VIII
-- Hall, B. C. *Quantum Theory for Mathematicians* (2013), Ch. 10
 - Kato, T. *Perturbation Theory for Linear Operators* (1995), Ch. IX
