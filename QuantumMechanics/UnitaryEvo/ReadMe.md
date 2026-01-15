@@ -17,16 +17,62 @@ $$A\psi = \lim_{t \to 0} \frac{U(t)\psi - \psi}{it}$$
 on the domain of vectors where this limit exists.
 
 ## File structure
-
-| File | Description |
-|------|-------------|
-| `Generator.lean` | One-parameter unitary groups and infinitesimal generators |
-| `Bochner.lean` | Forward direction: unitary group ⟹ self-adjoint generator |
-| `Resolvent.lean` | Resolvent operators and analytic properties |
-| `Yosida.lean` | Reverse direction: self-adjoint operator ⟹ unitary group |
-| `Stone.lean` | Complete theorem assembly and bijection |
-| `Schrodinger.lean` | The Schrödinger equation as a corollary |
-
+```
+UnitaryEvo/
+├── Bochner/
+│   ├── Limits/
+│   │   ├── Helpers.lean       — Auxiliary lemmas for limit interchange
+│   │   ├── Minus.lean         — Left-sided limit constructions
+│   │   └── Plus.lean          — Right-sided limit constructions
+│   ├── Basic.lean             — Core Bochner integral definitions
+│   ├── Domain.lean            — Domain characterization of the generator
+│   ├── Limits.lean            — Main limit theorems for Bochner integrals
+│   └── Resolvent.lean         — Connection to resolvent operators
+│
+├── Resolvent/
+│   ├── Range/
+│   │   ├── ClosedRange.lean   — The resolvent has closed range
+│   │   ├── Orthogonal.lean    — Orthogonality properties of range
+│   │   └── Surjectivity.lean  — Surjectivity of the resolvent
+│   ├── Analytic.lean          — Analyticity of the resolvent map
+│   ├── Basic.lean             — Core resolvent definitions
+│   ├── Core.lean              — Core domain properties
+│   ├── Identities.lean        — Resolvent identity and related equations
+│   ├── LowerBound.lean        — Lower bounds on resolvent norms
+│   ├── NormExpansion.lean     — Norm estimates and expansions
+│   ├── Range.lean             — Range characterization (main results)
+│   └── SpecialCases.lean      — Special cases and simplifications
+│
+├── Yosida/
+│   ├── Convergence/
+│   │   ├── Approximants.lean  — Yosida approximant sequence
+│   │   ├── JNegOperator.lean  — Negative parameter approximants
+│   │   └── JOperator.lean     — Core J_λ operator construction
+│   ├── Duhamel/
+│   │   ├── Commutation.lean   — Commutation relations
+│   │   ├── Estimate.lean      — Error estimates for Duhamel
+│   │   ├── Formula.lean       — The Duhamel formula
+│   │   └── Helpers.lean       — Supporting lemmas
+│   ├── ExpBounded/
+│   │   ├── Adjoint.lean       — Adjoint preservation properties
+│   │   ├── Basic.lean         — Exponential boundedness definitions
+│   │   └── Unitary.lean       — Unitary case specialization
+│   ├── Basic.lean             — Core Yosida construction
+│   ├── Bounds.lean            — Boundedness results
+│   ├── Convergence.lean       — Main convergence theorems
+│   ├── Defs.lean              — Fundamental definitions
+│   ├── Duhamel.lean           — Duhamel formula (main entry point)
+│   ├── ExpBounded.lean        — Exponential bounds (main entry point)
+│   ├── Exponential.lean       — Exponential map properties
+│   └── Symmetry.lean          — Symmetry of the generator
+│
+├── Bochner.lean               — Bochner construction (main entry point)
+├── Generator.lean             — The infinitesimal generator
+├── Resolvent.lean             — Resolvent construction (main entry point)
+├── Schrodinger.lean           — Connection to Schrödinger equation
+├── Stone.lean                 — Stone's theorem (main result)
+└── Yosida.lean                — Yosida construction (main entry point)
+```
 ## Dependency graph
 ```
 Generator
