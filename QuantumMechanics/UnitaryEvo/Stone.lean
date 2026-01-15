@@ -70,12 +70,12 @@ open QuantumMechanics.Yosida QuantumMechanics.Resolvent QuantumMechanics.Bochner
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
 
-theorem stone_existence (U_grp : OneParameterUnitaryGroup (H := H)) :
+lemma stone_existence (U_grp : OneParameterUnitaryGroup (H := H)) :
     ∃ (gen : Generator U_grp), gen.IsSelfAdjoint :=
   ⟨Generator.ofUnitaryGroup U_grp, Generator.ofUnitaryGroup_isSelfAdjoint U_grp⟩
 
 
-theorem stone_uniqueness
+lemma stone_uniqueness
     (U_grp : OneParameterUnitaryGroup (H := H))
     (gen₁ gen₂ : Generator U_grp)
     (hsa₁ : gen₁.IsSelfAdjoint)
@@ -94,7 +94,7 @@ theorem stone_uniqueness
   exact ⟨h_op, h_dom⟩
 
 
-theorem stone_part_one (U_grp : OneParameterUnitaryGroup (H := H)) :
+lemma stone_part_one (U_grp : OneParameterUnitaryGroup (H := H)) :
     ∃! (gen : Generator U_grp), gen.IsSelfAdjoint := by
   obtain ⟨gen, hsa⟩ := stone_existence U_grp
   refine ⟨gen, hsa, ?_⟩
@@ -111,7 +111,7 @@ theorem stone_part_one (U_grp : OneParameterUnitaryGroup (H := H)) :
       rfl
 
 
-theorem stone_exponential_eq_group
+lemma stone_exponential_eq_group
     (U_grp : OneParameterUnitaryGroup (H := H))
     (gen : Generator U_grp)
     (hsa : gen.IsSelfAdjoint)
@@ -169,7 +169,7 @@ theorem stone_exponential_eq_group
     _ = ε := by ring
 
 
-theorem stone_exponential_is_unitary_group
+lemma stone_exponential_is_unitary_group
     (U_grp : OneParameterUnitaryGroup (H := H))
     (gen : Generator U_grp)
     (hsa : gen.IsSelfAdjoint)
@@ -185,7 +185,7 @@ theorem stone_exponential_is_unitary_group
   · exact fun ψ => exponential_strong_continuous gen hsa h_dense ψ
 
 
-theorem stone_generator_of_exponential
+lemma stone_generator_of_exponential
     (U_grp : OneParameterUnitaryGroup (H := H))
     (gen : Generator U_grp)
     (hsa : gen.IsSelfAdjoint)
