@@ -72,10 +72,6 @@ This formalization depends on:
 - Domain characterization
 - Inverse transform construction
 
-⚠️ **Axiomatized (pending spectral theorem):**
-- `exists_compatible_spectral_measures` — existence of compatible spectral measures for $A$ and $U$
-
-The spectral measure correspondence is stated but relies on an axiom pending the full spectral theorem, which is being developed via parallel approaches in this library.
 
 ## References
 
