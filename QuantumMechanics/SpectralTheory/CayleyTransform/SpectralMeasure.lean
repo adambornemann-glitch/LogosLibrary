@@ -37,6 +37,8 @@ namespace QuantumMechanics.Cayley
 
 open InnerProductSpace MeasureTheory Complex Filter Topology QuantumMechanics.Bochner QuantumMechanics.Generators
 
+
+    
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
 /-- The inverse Möbius image of a set of complex numbers. -/
@@ -109,6 +111,26 @@ lemma inverseMobius_mobius (μ : ℝ) :
 lemma Complex.eq_coe_re_of_im_eq_zero {z : ℂ} (hz : z.im = 0) : z = ↑z.re := by
   exact ext rfl hz
 
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
+
+/-- The Möbius image of a set of reals under `μ ↦ (μ - i)/(μ + i)`. -/
+def cayleyImage (B : Set ℝ) : Set ℂ :=
+  {w : ℂ | ∃ μ ∈ B, w = (↑μ - I) * (↑μ + I)⁻¹}
+
+/-- Predicate asserting that spectral measures for `A` and `U` are compatible. -/
+def SpectralMeasuresCompatible {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (_ : gen.IsSelfAdjoint)
+    (E_A : Set ℝ → (H →L[ℂ] H)) (E_U : Set ℂ → (H →L[ℂ] H)) : Prop :=
+  ∀ B : Set ℝ, E_A B = E_U (cayleyImage B)
+
+/-- Compatible spectral measures satisfy `E_A(B) = E_U(cayleyImage B)`. -/
+theorem spectralMeasure_cayley_correspondence {U_grp : OneParameterUnitaryGroup (H := H)}
+    (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
+    (E_A : Set ℝ → (H →L[ℂ] H)) (E_U : Set ℂ → (H →L[ℂ] H))
+    (hcompat : SpectralMeasuresCompatible gen hsa E_A E_U)
+    (B : Set ℝ) :
+    E_A B = E_U (cayleyImage B) := hcompat B
+
 /-- `cayleyImage` and `inverseCayleyImage` are inverses on the unit circle minus {1}. -/
 lemma cayleyImage_inverseCayleyImage (S : Set ℂ) (hS : S ⊆ {w | ‖w‖ = 1 ∧ w ≠ 1}) :
     cayleyImage (inverseCayleyImage S) = S := by
@@ -135,24 +157,5 @@ lemma cayleyImage_inverseCayleyImage (S : Set ℂ) (hS : S ⊆ {w | ‖w‖ = 1 
   exact h_mobius_eq.symm
 
 
-variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
-
-/-- The Möbius image of a set of reals under `μ ↦ (μ - i)/(μ + i)`. -/
-def cayleyImage (B : Set ℝ) : Set ℂ :=
-  {w : ℂ | ∃ μ ∈ B, w = (↑μ - I) * (↑μ + I)⁻¹}
-
-/-- Predicate asserting that spectral measures for `A` and `U` are compatible. -/
-def SpectralMeasuresCompatible {U_grp : OneParameterUnitaryGroup (H := H)}
-    (gen : Generator U_grp) (_ : gen.IsSelfAdjoint)
-    (E_A : Set ℝ → (H →L[ℂ] H)) (E_U : Set ℂ → (H →L[ℂ] H)) : Prop :=
-  ∀ B : Set ℝ, E_A B = E_U (cayleyImage B)
-
-/-- Compatible spectral measures satisfy `E_A(B) = E_U(cayleyImage B)`. -/
-theorem spectralMeasure_cayley_correspondence {U_grp : OneParameterUnitaryGroup (H := H)}
-    (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
-    (E_A : Set ℝ → (H →L[ℂ] H)) (E_U : Set ℂ → (H →L[ℂ] H))
-    (hcompat : SpectralMeasuresCompatible gen hsa E_A E_U)
-    (B : Set ℝ) :
-    E_A B = E_U (cayleyImage B) := hcompat B
 
 end QuantumMechanics.Cayley
