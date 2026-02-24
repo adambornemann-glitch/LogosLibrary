@@ -6,7 +6,7 @@ package «logos_library» where
  moreLinkArgs := #["build/midi_interface.o", "-lportmidi"]
 
 
- require mathlib from git
+require mathlib from git
   "https://github.com/leanprover-community/mathlib4.git" @ "3eca3de90b3f0b590906b26176e9069107272165"
 
 
