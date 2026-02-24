@@ -383,12 +383,12 @@ is required.
 ## Architecture
 
 ```
-ThermalTime ──────────┐
-       │              │
-       ▼              ▼
+ThermalTime ─────────────┐
+       │                 │
+       ▼                 ▼
 NanoThermodynamics   EProcess
-       │              │
-       ▼              ▼
+       │                 │
+       ▼                 ▼
        └──►  CProcess ◄──┘
               │
               ▼
