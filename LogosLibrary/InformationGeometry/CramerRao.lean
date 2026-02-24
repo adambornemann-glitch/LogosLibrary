@@ -1,0 +1,4 @@
+import LogosLibrary.InformationGeometry.CramerRoa.Basic
+import LogosLibrary.InformationGeometry.CramerRoa.Cross
+import LogosLibrary.InformationGeometry.CramerRoa.CauchySchwarz
+import LogosLibrary.InformationGeometry.CramerRoa.Bound
