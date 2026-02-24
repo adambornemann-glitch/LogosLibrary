@@ -131,12 +131,13 @@ curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf 
 # Get mathlib cache
 lake exe cache get
 
+# Do a lake update
+lake update
+
 # Build
 lake build
 
 # Verify specific theorems
-lake build LogosLibrary.QuantumMechanics.Evolution.Stone
-lake build LogosLibrary.QuantumMechanics.Robertson.Core
 lake build LogosLibrary.Relativity.LorentzBoost.Ott
 lake build LogosLibrary.Relativity.LorentzBoost.ConnesRovelli
 ```
