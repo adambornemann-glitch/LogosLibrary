@@ -1,8 +1,8 @@
-# Split Mechanics: It From Split
+# Introduction to Split Mechanics
 
-**The Subsystem Pentagon, formalized in Lean 4**
+**The science of subsystems, formalized in Lean 4**
 
-*Adam Bornemann, 2026*
+*Adam Bornemann, Founder 2026*
 
 ---
 
@@ -38,7 +38,13 @@ The name is a play on Wheeler's "It From Bit." The "it" — physics, time, proba
 unitarity — comes from the "split" — the act of drawing a boundary between system
 and environment.
 
-## The Subsystem Pentagon
+---
+
+## Part I: The Subsystem Pentagon
+
+**File: `ItFromSplit.lean` — Foundations of Split Mechanics #1**
+
+### The Pentagon
 
 ```
                     KMS
@@ -64,7 +70,7 @@ is the von Neumann entropy S_A = −Tr(ρ_A log ρ_A) = ⟨K⟩_ω, which measur
 Δ ≠ 1. The pentagon is not binary; it breathes with S_A, which breathes with the
 gravitational coupling G.
 
-## The Chain of Reasoning
+### The Chain of Reasoning
 
 ```
 Total universe in pure state (HΨ = 0)
@@ -93,39 +99,33 @@ ALL FIVE VERTICES simultaneously:
 τ_C · T = 1/(2π)       (modular_identity)
 ```
 
-## What Is Proved
+### Key Results
 
-### The Pentagon Theorem (`pentagon_theorem`)
+**The Pentagon Theorem** (`pentagon_theorem`). For any faithful normal state with
+nontrivial modular operator, all five vertices of the Subsystem Pentagon are
+simultaneously nontrivial. Δ ≠ 1 implies everything.
 
-For any faithful normal state with nontrivial modular operator, all five vertices
-of the Subsystem Pentagon are simultaneously nontrivial. This is the forward
-direction: Δ ≠ 1 implies everything.
+**The Collapse Theorem** (`pentagon_collapse`). When Δ = 1, the modular flow is the
+identity and all five vertices degenerate. Spectral invariance holds vacuously (because
+nothing moves). Unitarity is trivially true (the identity is unitary). The KMS condition
+degenerates (the analytic function is constant). The Born rule loses its measurement
+context. Time stops flowing.
 
-### The Collapse Theorem (`pentagon_collapse`)
+**The Emergence Theorem** (`emergence`). Given a pure state on a total system and an
+entangled subsystem decomposition, the partial trace simultaneously creates:
+faithfulness, normality, the Born rule form, modular data with KMS at β = 1, and
+mixedness of the reduced state.
 
-When Δ = 1, the modular flow is the identity and all five vertices degenerate.
-Spectral invariance holds vacuously (because nothing moves). Unitarity is trivially
-true (the identity is unitary). The KMS condition degenerates (the analytic function
-is constant). The Born rule loses its measurement context. Time stops flowing.
+**The Master Theorem** (`it_from_split`). Given a universe in a pure state and a
+subsystem decomposition with physical parameters, the partial trace simultaneously
+creates all five pentagon vertices, the non-purity of the reduced state, and the
+modular identity τ_C · T = 1/(2π).
 
-### The Emergence Theorem (`emergence`)
+**The Modulus Theorem** (`entropy_pos_iff_nontrivial`). S_A > 0 if and only if Δ ≠ 1
+if and only if the pentagon is inflated. The von Neumann entropy is the quantitative
+measure of how much physics the subsystem has.
 
-Given a pure state on a total system and an entangled subsystem decomposition, the
-partial trace simultaneously creates: faithfulness, normality, the Born rule form,
-modular data with KMS at β = 1, and mixedness of the reduced state.
-
-### The Master Theorem (`it_from_split`)
-
-The complete result. Given a universe in a pure state and a subsystem decomposition
-with physical parameters, the partial trace simultaneously creates all five pentagon
-vertices, the non-purity of the reduced state, and the modular identity τ_C · T = 1/(2π).
-
-### The Modulus Theorem (`entropy_pos_iff_nontrivial`)
-
-S_A > 0 if and only if Δ ≠ 1 if and only if the pentagon is inflated. The von Neumann
-entropy is the quantitative measure of how much physics the subsystem has.
-
-### Pentagon Edges (Biconditionals)
+### Pentagon Edges
 
 | Edge | Theorem |
 |------|---------|
@@ -147,22 +147,14 @@ entropy is the quantitative measure of how much physics the subsystem has.
 | G → 0 ⟹ T → 0 | `wdw_limit_T` |
 | G → ∞ ⟹ τ_C → 0 | `classical_limit_τ` |
 
-### Degenerate Cases
+### Axioms (Part I)
 
-| Result | Theorem |
-|--------|---------|
-| Pure state ⟹ trivial modular flow | `pure_state_no_time` |
-| Trivial flow ⟹ vacuous invariance | `trivial_flow_trivial_invariance` |
-| Trivial flow + tracial ⟹ degenerate KMS | `trivial_flow_degenerate_kms` |
+The file axiomatizes standard theorems of operator algebra that would require a full
+formalization of von Neumann algebras in Lean to prove from scratch:
 
-## What Is Axiomatized
-
-The file axiomatizes the standard theorems of operator algebra theory that would require
-a full formalization of von Neumann algebras in Lean to prove from scratch:
-
-| Axiom | Mathematical content | Status |
-|-------|---------------------|--------|
-| `gns_construction` | The GNS theorem: every state has a Hilbert space representation | Textbook (1940s) |
+| Axiom | Content | Status |
+|-------|---------|--------|
+| `gns_construction` | GNS theorem | Textbook (1940s) |
 | `tomita_takesaki` | Faithful normal states have unique modular data | Textbook (1967/1970) |
 | `pure_state_trivial_modular` | Pure states on factors have Δ = 1 | Standard |
 | `restriction_faithful` | Reduced state of entangled pure state is faithful | Standard |
@@ -171,30 +163,183 @@ a full formalization of von Neumann algebras in Lean to prove from scratch:
 | `nontrivial_implies_dynamically_nontrivial` | Δ ≠ 1 implies observables move | From faithfulness |
 | `modular_hamiltonian_exists` | Modular Hamiltonian has well-defined entropy | Standard |
 
-These are all established results in the mathematical literature. None encode physical
-assumptions beyond standard quantum mechanics. The load-bearing content of Split Mechanics
-is not hidden in the axioms — it is in the *architecture*: the recognition that these
-standard results, composed correctly, produce the entire structure of quantum mechanics
-from one act (the partial trace).
+None of these encode physical assumptions beyond standard quantum mechanics. The
+load-bearing content of Split Mechanics is not hidden in the axioms — it is in the
+*architecture*: the recognition that these standard results, composed correctly,
+produce the entire structure of quantum mechanics from one act.
 
-## Relationship to the Rest of the Library
+---
 
-This file is **Foundations of Split Mechanics #1**. It provides the base on which:
+## Part II: Lorentz-Covariant Bohmian Mechanics
 
-- **#2 (BohmianMechanics.lean)**: The `born_rule_is_kms` axiom in the Bohmian file
-  is the content of `kms_iff_born` here — a *theorem*, not an axiom. The Bohmian
-  file's single axiom is discharged by the Split Mechanics foundation. Lorentz
-  covariance, measurement as thermalization, and the thermal duality all sit on
-  the pentagon.
+**File: `BohmianMechanics.lean` — Foundations of Split Mechanics #2**
 
-- **#3 (EProcess.lean)**: The objective reduction threshold (2π nats of entropy
-  production) is the completion of one modular cycle — one trip around the KMS strip.
-  The pentagon's modular flow provides the dynamical context in which decoherence
-  occurs. The entropy modulus S_A determines the decoherence timescale.
+### The Foliation Problem
 
-- **The nanothermodynamics files**: Hill's subdivision potential as restricted modular
-  flow is the *physical conversion* arm of the pentagon: τ_C · T = 1/(2π) expressed
-  in thermodynamic language.
+Bohmian mechanics requires evaluating all particle positions "at the same time."
+The guiding equation is defined on a simultaneity surface — a spacelike hypersurface
+where "now" is. But special relativity says simultaneity is frame-dependent.
+
+This is the **foliation problem**: Bohmian mechanics appears to require a preferred
+foliation of spacetime, breaking Lorentz covariance. The problem has been open since
+Bohm's original 1952 formulation. The standard position in the literature is that
+Bohmian mechanics is empirically compatible with Lorentz covariance but not manifestly
+covariant.
+
+### The Resolution
+
+Two ingredients, both from thermodynamic first principles:
+
+1. **The Ott transformation**: Temperature transforms as energy under Lorentz boosts:
+   T' = γT.
+2. **Thermal time**: Physical time is derived from modular flow: t = τ/T, where τ is
+   the modular parameter (Lorentz invariant) and T is temperature (frame dependent).
+
+From these two facts:
+
+| Quantity | Rest frame | Boosted frame | Transformation |
+|----------|-----------|---------------|----------------|
+| Energy H | H | γH | Covariant |
+| Temperature T | T | γT | Covariant (Ott) |
+| Modular Hamiltonian K = H/T | K | γH/γT = K | **Invariant** |
+| Quantum potential κ = U_Q/T | κ | γU_Q/γT = κ | **Invariant** |
+| Modular parameter τ | τ | τ | **Invariant** |
+| Coordinate time t = τ/T | t | τ/γT = t/γ | Time dilation |
+
+The modular parameter τ is Lorentz invariant. "Simultaneity" in the guiding equation
+means equal τ, not equal t. All observers agree on τ. The proof is one algebraic
+cancellation: K = H/T → γH/(γT) = H/T. In Lean 4, this is `field_simp`.
+
+**There is no foliation problem.** The foliation was never physical. It was an artifact
+of writing the guiding equation in coordinate time instead of modular time.
+
+### Connection to the Pentagon
+
+The Bohmian file uses one axiom: `born_rule_is_kms`, the identification of quantum
+equilibrium (ρ = |ψ|²) with the KMS condition for the modular Hamiltonian.
+
+**This axiom is discharged by Part I.** In `ItFromSplit.lean`, the theorem
+`kms_iff_born` proves that the Born rule form and the KMS condition at β = 1 are
+equivalent for any faithful normal state — which is exactly what a subsystem's
+reduced state is when entanglement is present.
+
+The Bohmian file's single axiom is a theorem one level down. The foliation problem
+was sitting on top of the pentagon the whole time.
+
+### The Thermal Duality
+
+The classical CHSH bound (|S| ≤ 2) and the Tsirelson quantum bound (|S| ≤ 2√2)
+are the antisymmetric and symmetric combinations of a single thermal parameter
+β = √2 − 1:
+
+| Identity | Value | Physical meaning |
+|----------|-------|-----------------|
+| β + 1/β | 2√2 | Quantum (Tsirelson) bound |
+| 1/β − β | 2 | Classical (Bell) bound |
+| β · (1/β) | 1 | Conjugate identity |
+
+The Tsirelson bound is a thermodynamic constraint: the KMS condition limits thermal
+correlations to ε ≤ (√2 − 1)/2, giving |S| ≤ 2 + 4ε = 2√2. Classical and quantum
+mechanics are not different theories. They are the antisymmetric and symmetric sectors
+of one thermal duality.
+
+### Bohm's Implicate and Explicate Orders
+
+Bohm's philosophical distinction is given precise type-theoretic content:
+
+- **Implicate order** = `ImplicateOrder`: the Lorentz-invariant modular variables K, κ
+- **Explicate order** = `ExplicateOrder`: the frame-dependent quantities H, U_Q, T, t
+- **Unfolding** = multiplication by temperature: `ImplicateOrder.unfold`
+- **Enfolding** = division by temperature: `ExplicateOrder.enfold`
+
+The round-trip theorem `enfold_unfold_id` proves the implicate order is the fixed
+point of the unfold/enfold cycle. Different temperatures (different frames) produce
+different explicate orders from the same implicate order. The implicate order is prior.
+
+### Measurement as Thermalization
+
+Measurement is not instantaneous collapse. It is a thermodynamic process requiring
+at least 2π nats of entropy production — one modular cycle. This connects directly
+to Part I: one trip around the KMS strip of the pentagon's modular flow.
+
+- `no_instantaneous_measurement`: every measurement takes strictly positive time
+- `measurement_time_transforms`: measurement time dilates correctly under boosts
+- `bitsPerMeasurement`: one measurement establishes 2π/ln(2) ≈ 9.06 bits
+
+### Key Theorems (Part II)
+
+| Theorem | Statement |
+|---------|-----------|
+| `modular_hamiltonian_boost_invariant` | K = H/T is Lorentz invariant |
+| `modular_quantum_potential_invariant` | κ = U_Q/T is Lorentz invariant |
+| `modular_velocity_invariant` | v_mod = v_guide/T is Lorentz invariant |
+| `physical_time_dilation` | t' = t/γ derived from Ott + thermal time |
+| `implicate_order_boost_invariant` | Boosted system has same implicate order |
+| `enfold_unfold_id` | Implicate order is fixed point of frame changes |
+| `covariance_complete` | All covariance results simultaneously |
+| `tsirelson_from_thermal_constraint` | 2 + 4ε = 2√2 |
+| `quantum_bound_from_duality` | β + 1/β = 2√2 |
+| `classical_bound_from_duality` | 1/β − β = 2 |
+| `chsh_tsirelson_bound` | Any thermal HV model satisfies \|S\| ≤ 2√2 |
+| `no_instantaneous_measurement` | Measurement takes positive time |
+| `lorentz_covariant_bohmian_mechanics` | The complete master synthesis |
+
+---
+
+## Part III: Objective Reduction
+
+**File: `EProcess.lean` — Foundations of Split Mechanics #3**
+
+The 2π nat entropy threshold from Part II's measurement theory is not specific to
+measurement. It is the universal decoherence threshold: the completion of one modular
+cycle. In `EProcess.lean`, this is formalized as Diósi-Penrose gravitational
+decoherence with a Compton wavelength UV regularization, proving that the same 2π
+threshold governs gravitational collapse, chemical decoherence (via `ChemicalMeasurement.lean`),
+and nanothermodynamic subdivision (via `CProcess.lean`).
+
+The pentagon's modular flow provides the dynamical context. The entropy modulus S_A
+determines the decoherence timescale. The 2π cycle is one trip around the KMS strip.
+
+---
+
+## The Complete Architecture
+
+```
+    GENERATOR:     Entanglement (causes the split)
+                        │
+                        ↓
+    MODULUS:        S_A = ⟨K⟩_ω ∈ [0, ∞)
+                   │                          │
+                   │  S_A = 0 ⟺ Δ = 1        │
+                   │  (pentagon collapse)     │
+                   │                          │
+                   │  S_A > 0 ⟺ Δ ≠ 1        │
+                   │  (pentagon theorem)      │
+                   │                          │
+                   ↓                          ↓
+    PENTAGON:       KMS ↔ Born ↔ Modular ↔ Unitarity ↔ Spectral
+                        │
+                        ↓
+    CONVERSION:     τ_C · T = 1/(2π)
+                        │
+              ┌─────────┼──────────┐
+              ↓         ↓          ↓
+         COVARIANCE  DUALITY   MEASUREMENT
+          K → K     β+1/β=2√2  ΔS ≥ 2π
+         (Part II)  (Part II)  (Part II/III)
+```
+
+### The Dependency Chain
+
+1. **#1: ItFromSplit.lean** — The Subsystem Pentagon. Five faces of Δ ≠ 1 from
+   one cause: subsystem decomposition. Proves KMS ↔ Born.
+2. **#2: BohmianMechanics.lean** — Uses KMS = Born (now a theorem, not an axiom)
+   to ground quantum equilibrium, then resolves the foliation problem via Ott +
+   thermal time. Derives the Tsirelson bound thermodynamically.
+3. **#3: EProcess.lean** — The 2π nat threshold as one modular cycle. Diósi-Penrose
+   regularization. Connects to chemistry and nanothermodynamics.
+
+---
 
 ## What Is and Isn't Claimed
 
@@ -204,8 +349,11 @@ Split Mechanics claims that the five standard features of quantum mechanics (Bor
 unitarity, KMS condition, spectral invariance, nontrivial time evolution) are not
 independent postulates but logically equivalent consequences of subsystem decomposition.
 This is a structural observation about the existing mathematical framework of algebraic
-quantum field theory (Tomita-Takesaki, GNS, Stone's theorem). It reorganizes known
-mathematics; it does not introduce new physics.
+quantum field theory. It reorganizes known mathematics; it does not introduce new physics.
+
+Additionally, the foliation problem of Bohmian mechanics is dissolved by writing the
+guiding equation in modular time rather than coordinate time, using the Ott temperature
+transformation to ensure the modular variables are Lorentz invariant.
 
 ### What is not claimed
 
@@ -214,22 +362,57 @@ mathematics; it does not introduce new physics.
   conceptual clarity, not empirical novelty.
 
 - **Resolution of all interpretive questions.** The measurement problem is reframed
-  (measurement is thermalization, taking positive time proportional to 1/T) but
-  the question of why *this* subsystem decomposition rather than another is not
-  addressed. The preferred split is an input.
+  (measurement is thermalization, taking positive time proportional to 1/T) but the
+  question of why *this particular* subsystem decomposition rather than another is
+  not addressed. The preferred split is an input.
 
-- **Full formalization of the axiomatized results.** The GNS theorem, Tomita-Takesaki
-  theorem, and related operator-algebraic results are axiomatized, not proved from
-  first principles in Lean. A complete formalization would require building the
-  theory of von Neumann algebras in Mathlib, which is a separate (large) project.
+- **Empirical distinguishability from standard QM.** In quantum equilibrium, the
+  covariant Bohmian theory makes the same predictions as standard Bohmian mechanics,
+  which makes the same predictions as standard quantum mechanics.
+
+- **Full formalization of operator algebra.** The GNS and Tomita-Takesaki theorems are
+  axiomatized, not proved from Lean primitives. A complete formalization would require
+  building von Neumann algebra theory in Mathlib.
+
+---
 
 ## Statistics
 
-| Metric | Value |
-|--------|-------|
-| Theorems | ~35 |
-| `sorry` | 0 |
-| Axioms | 8 (all standard operator algebra results) |
+| | ItFromSplit.lean (#1) | BohmianMechanics.lean (#2) | Combined |
+|--|----------------------|---------------------------|----------|
+| Theorems | ~35 | ~40 | ~75 |
+| `sorry` | 0 | 0 | **0** |
+| Axioms | 8 (standard operator algebra) | 1 (discharged by #1) | 8 |
+
+All axioms encode established results from the mathematical literature (GNS construction,
+Tomita-Takesaki theorem, properties of partial traces). None encode physical assumptions
+beyond standard quantum mechanics.
+
+---
+
+## References
+
+**Operator Algebras**
+- M. Tomita, "Quasi-standard von Neumann algebras" (1967)
+- M. Takesaki, "Tomita's theory of modular Hilbert algebras" (1970)
+- A. Connes, *Noncommutative Geometry* (1994), Chapter V
+
+**Thermal Time**
+- A. Connes & C. Rovelli, "Von Neumann algebra automorphisms and
+  time-thermodynamics relation," Class. Quant. Grav. 11 (1994)
+
+**Bohmian Mechanics**
+- D. Bohm, "A suggested interpretation of the quantum theory in terms
+  of hidden variables," Phys. Rev. 85 (1952)
+- D. Bohm, *Wholeness and the Implicate Order* (1980)
+- D. Dürr, S. Goldstein, N. Zanghì, "Quantum equilibrium and the origin
+  of absolute uncertainty," J. Stat. Phys. 67 (1992)
+
+**Relativistic Thermodynamics**
+- H. Ott, "Lorentz-Transformation der Wärme und der Temperatur,"
+  Z. Physik 175 (1963)
+
+---
 
 ## The Punchline
 
@@ -240,8 +423,13 @@ Quantum mechanics is what happens when you look at part of a system instead of t
 
 The Born rule is the KMS condition. Unitarity is the First Law. Time is modular flow.
 Temperature is how far you are from the global pure state. Entropy measures how much
-physics your subsystem has. And all of it — every feature we have spent a century
-arguing about — comes from one act: drawing a boundary.
+physics your subsystem has. The foliation problem disappears because the modular
+parameter doesn't care about your reference frame. The Tsirelson bound is thermodynamic.
+Classical and quantum are two sectors of one duality.
+
+And all of it — every feature we have spent a century arguing about — comes from one act:
+
+Drawing a boundary.
 
 It from split.
 
@@ -254,6 +442,14 @@ MIT. See `LICENSE`.
 ---
 
 *"The notion that all these fragments are separately existent is evidently
-an illusion."* — David Bohm
+an illusion, and this illusion cannot do other than lead to endless conflict
+and confusion."*
+— David Bohm, *Wholeness and the Implicate Order* (1980)
 
-*"Time is the modular flow of a faithful normal state."* — Connes & Rovelli
+*"Time is the modular flow of a faithful normal state."*
+— Connes & Rovelli (1994)
+
+*"If your theory is found to be against the second law of thermodynamics
+I can give you no hope; there is nothing for it but to collapse in
+deepest humiliation."*
+— Arthur Stanley Eddington
