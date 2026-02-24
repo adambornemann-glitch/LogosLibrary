@@ -210,8 +210,6 @@ Start with `SpectralDefs.lean`. Read the sign table. Understand *why* KO-dim 1 m
 
 ---
 
-*The alphabet is written. The mechanism is complete. The concrete spectrum is computed.*
-
 **Author:** Adam Bornemann
 **License:** MIT
 **Year:** 2026
