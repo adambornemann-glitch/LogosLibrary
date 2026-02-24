@@ -122,8 +122,8 @@ Key results:
 ## Quick Start
 ```bash
 # Clone
-git clone https://github.com/adambornemann-glitch/LogosLibrary
-cd LogosLibrary
+git clone https://github.com/adambornemann-glitch/Logos_Library
+cd Logos_Library
 
 # Install Lean 4 (if needed)
 curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh
