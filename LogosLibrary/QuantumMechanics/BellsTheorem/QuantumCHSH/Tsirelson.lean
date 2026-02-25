@@ -4,7 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Adam Bornemann
 -/
 import LogosLibrary.QuantumMechanics.BellsTheorem.QuantumCHSH.Violation
-import LogosLibrary.QuantumMechanics.BellsTheorem.CHSH_bounds.TsirelsonClassical
+import LogosLibrary.QuantumMechanics.BellsTheorem.CHSH_bounds.Tsirelson
 
 open Matrix Complex MatrixGroups QuantumInfo
 namespace QuantumCHSH
