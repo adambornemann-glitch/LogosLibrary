@@ -137,6 +137,9 @@ lake update
 # Build
 lake build
 
+# Veryify in Batches
+lake build LogosLibrary.Superior
+
 # Verify specific theorems
 lake build LogosLibrary.Relativity.LorentzBoost.Ott
 lake build LogosLibrary.Relativity.LorentzBoost.ConnesRovelli
