@@ -28,7 +28,7 @@ namespace QuantumMechanics.Cayley
 
 open InnerProductSpace MeasureTheory Complex Filter Topology QuantumMechanics.Bochner QuantumMechanics.Generators
 
-variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
 
 /-- Formula for `(I - U)φ` where `φ = (A + iI)ψ`. -/
 lemma one_minus_cayley_apply {U_grp : OneParameterUnitaryGroup (H := H)}
@@ -235,8 +235,6 @@ theorem inverseCayleyOp_symmetric (U : H →L[ℂ] H)
   simp only [RCLike.star_def, conj_I, sub_add_sub_cancel, neg_mul]
   ring
 
-
-variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 /-- The domain of `A` equals the range of `I - U`. -/
 theorem generator_domain_eq_range_one_minus_cayley {U_grp : OneParameterUnitaryGroup (H := H)}
     (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint) :
