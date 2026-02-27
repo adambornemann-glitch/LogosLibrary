@@ -10,10 +10,8 @@ import LogosLibrary.QuantumMechanics.BellsTheorem.CHSH_bounds.Tsirelson.Tsirelso
 import LogosLibrary.QuantumMechanics.BellsTheorem.CHSH_bounds.Tsirelson.UnitaryBounds
 import LogosLibrary.QuantumMechanics.BellsTheorem.LHV
 import LogosLibrary.QuantumMechanics.BellsTheorem.OtherInequalities.CGLMP
-import LogosLibrary.QuantumMechanics.BellsTheorem.OtherInequalities.CGLMPExtras
 import LogosLibrary.QuantumMechanics.BellsTheorem.OtherInequalities.KCBS
 import LogosLibrary.QuantumMechanics.BellsTheorem.OtherInequalities.LeggettGarg
-import LogosLibrary.QuantumMechanics.BellsTheorem.OtherInequalities.MerminExtras
 import LogosLibrary.QuantumMechanics.BellsTheorem.OtherInequalities.Qutrit
 import LogosLibrary.QuantumMechanics.BellsTheorem.OtherInequalities.ThermMerm
 import LogosLibrary.QuantumMechanics.BellsTheorem.OtherInequalities.Unity
