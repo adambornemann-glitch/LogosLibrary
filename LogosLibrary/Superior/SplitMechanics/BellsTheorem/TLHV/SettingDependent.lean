@@ -42,7 +42,7 @@ import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 
 -- Import the existing Bell machinery
 import LogosLibrary.QuantumMechanics.BellsTheorem.LHV
-import LogosLibrary.Relativity.LorentzBoost.Ott
+import LogosLibrary.Relativity.Thermodynamics.Ott
 
 open scoped ENNReal NNReal BigOperators
 open MeasureTheory ProbabilityTheory Set Real BellTheorem
