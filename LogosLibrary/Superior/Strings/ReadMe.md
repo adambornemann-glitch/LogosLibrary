@@ -415,7 +415,7 @@ not yet addressed and represent the path forward:
 ## Building
 
 Requires Lean 4 and Mathlib. The framework additionally depends on
-`LogosLibrary.Relativity.LorentzBoost.Ott` and
+`LogosLibrary.Relativity.Thermodynamics.Ott` and
 `LogosLibrary.Superior.ThermalTime.Basic` from the parent library.
 
 ---
