@@ -34,7 +34,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 noncomputable def cayleyTransform {U_grp : OneParameterUnitaryGroup (H := H)}
     (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) : H →L[ℂ] H :=
   ContinuousLinearMap.id ℂ H - (2 * I) • Resolvent.resolvent_at_neg_i gen hsa
-
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
 /-- The Cayley transform maps `(A + iI)ψ` to `(A - iI)ψ`. -/
 lemma cayleyTransform_apply {U_grp : OneParameterUnitaryGroup (H := H)}
     (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (φ : H) :
@@ -190,6 +190,8 @@ theorem cayleyTransform_surjective {U_grp : OneParameterUnitaryGroup (H := H)}
         subst hψ_eq
         simp_all only [map_add, map_smul, φ]
     _ = χ := hψ_eq
+
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
 /-- The Cayley transform of a self-adjoint operator is unitary. -/
 theorem cayleyTransform_unitary {U_grp : OneParameterUnitaryGroup (H := H)}
@@ -424,7 +426,7 @@ lemma self_adjoint_norm_sq_add {U_grp : OneParameterUnitaryGroup (H := H)}
   ring
 
 
-variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
 /-- The Cayley transform maps `(A + iI)ψ` to `(A - iI)ψ` for domain elements. -/
 lemma cayleyTransform_apply_resolvent {U_grp : OneParameterUnitaryGroup (H := H)}
     (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen)
