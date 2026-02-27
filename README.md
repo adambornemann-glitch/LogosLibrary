@@ -5,6 +5,37 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Lean 4](https://img.shields.io/badge/Lean-4-blue.svg)](https://leanprover.github.io/lean4/doc/)
 
+---
+
+## Quick Start
+```bash
+# Clone
+git clone https://github.com/adambornemann-glitch/Logos_Library
+cd Logos_Library
+
+# Install Lean 4 (if needed)
+curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh
+
+# Get mathlib cache
+lake exe cache get
+
+# Do a lake update
+lake update
+
+# Build
+lake build
+
+# Veryify in Batches
+lake build LogosLibrary.QuantumMechanics
+lake build LogosLibrary.Relativity
+lake build LogosLibrary.Superior
+
+# Verify specific theorems
+lake build LogosLibrary.Relativity.LorentzBoost.Ott
+```
+
+---
+
 ## Highlights
 
 **First-ever formalizations in any theorem prover:**
@@ -119,33 +150,6 @@ Key results:
 
 ---
 
-## Quick Start
-```bash
-# Clone
-git clone https://github.com/adambornemann-glitch/Logos_Library
-cd Logos_Library
-
-# Install Lean 4 (if needed)
-curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh
-
-# Get mathlib cache
-lake exe cache get
-
-# Do a lake update
-lake update
-
-# Build
-lake build
-
-# Veryify in Batches
-lake build LogosLibrary.Superior
-
-# Verify specific theorems
-lake build LogosLibrary.Relativity.LorentzBoost.Ott
-lake build LogosLibrary.Relativity.LorentzBoost.ConnesRovelli
-```
-
----
 
 ## Dependencies
 
