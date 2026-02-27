@@ -85,7 +85,7 @@ D_spatial = 3 is the critical dimension.
 ## Dependencies
 
 - `Mathlib`: real analysis, quaternion algebra, trigonometry
-- `LogosLibrary.Relativity.LorentzBoost.Ott`: Lorentz γ, Ott transformation
+- `LogosLibrary.Relativity.Thermodynamics.Ott`: Lorentz γ, Ott transformation
 - `LogosLibrary.ThermalTime.Basic` (via Thermal): thermal time framework
 
 ## References
