@@ -2,7 +2,7 @@
 
 A formal development of **P ≠ NP as a thermodynamic impossibility** in [Lean 4](https://lean-lang.org/) with [Mathlib4](https://github.com/leanprover-community/mathlib4).
 
-**Author:** Doctor Professor Baron von Wobble-Bob
+**Author:** Doctor Professor Baron von Wobble-Bob (Adam Bornemann)
 
 ## The Thesis in One Sentence
 
