@@ -302,10 +302,41 @@ determines the decoherence timescale. The 2π cycle is one trip around the KMS s
 
 ---
 
+## Part IV: Bell's Theorem and Quantum Contextuality
+Directory: `BellsTheorem/` — 26 files, 8,139 lines. Zero `sorry`. One axiom.
+Part II derived the Tsirelson bound from thermal duality as a single result inside
+`BohmianMechanics.lean`. This directory is the full expansion of that idea: a complete
+formalization of Bell's theorem and quantum contextuality bounds within the thermal
+framework.
+The foundation is an 11-file Lean 4 port of Echenim & Mhalla's Isabelle/HOL
+formalization of Bell's theorem and the CHSH inequality (housed in
+`QuantumMechanics.BellsTheorem`). The thermal extension adds 8,139 lines across
+three subdirectories:
+
+TLHV/ — The thermal hidden variable model. CHSH decomposes as
+S = S_classical + S_thermal. The bound |S| ≤ 2 + 4ε recovers Bell (ε = 0) and
+Tsirelson (ε = ε_tsirelson) as special cases.
+ThermalBell/ — The hidden structure. The classical bound (2) and quantum
+bound (2√2) are the antisymmetric and symmetric combinations of the conjugate
+pair β = √2 − 1 and 1/β = √2 + 1. Separable states enhance correlations as
+O(ε²); entangled states as O(ε). No-signaling forces balanced marginals at
+optimality.
+OtherInequalities/ — The universal formula. Six additional inequalities
+(Mermin, Leggett-Garg, KCBS, CGLMP, I₃₃₂₂) all follow from one principle:
+Quantum Bound = Classical Bound / cos(2π / slots), where slots is
+determined by the measurement structure. The capstone theorem
+`second_law_of_entanglement` unifies all of them.
+
+The single axiom (`kms_constrains_correlation`) states that KMS periodicity
+constrains ε ≤ (√2 − 1)/2. All other results — the decomposition, the duality,
+the universal formula — are unconditional theorems.
+See `BellsTheorem/ReadMe.md` for the full directory
+guide, theorem tables, and reading order.
+
 ## The Complete Architecture
 
 ```
-    GENERATOR:     Entanglement (causes the split)
+GENERATOR:     Entanglement (causes the split)
                         │
                         ↓
     MODULUS:        S_A = ⟨K⟩_ω ∈ [0, ∞)
@@ -327,6 +358,18 @@ determines the decoherence timescale. The 2π cycle is one trip around the KMS s
          COVARIANCE  DUALITY   MEASUREMENT
           K → K     β+1/β=2√2  ΔS ≥ 2π
          (Part II)  (Part II)  (Part II/III)
+                        │
+                        ↓
+                   BELL (Part IV)
+              26 files, 8,139 lines
+                        │
+              ┌─────────┼──────────┐
+              ↓         ↓          ↓
+           CHSH    UNIVERSAL    DUALITY
+          |S|≤2+4ε  Q=C/cos θ  β ↔ 1/β
+              ↓         ↓          ↓
+           Mermin   Leggett    KCBS
+           CGLMP    -Garg     I₃₃₂₂
 ```
 
 ### The Dependency Chain
@@ -338,6 +381,10 @@ determines the decoherence timescale. The 2π cycle is one trip around the KMS s
    thermal time. Derives the Tsirelson bound thermodynamically.
 3. **#3: EProcess.lean** — The 2π nat threshold as one modular cycle. Diósi-Penrose
    regularization. Connects to chemistry and nanothermodynamics.
+4. **IV: BellsTheorem/** — Expands the thermal duality from Part II into a complete
+   formalization of Bell's theorem and six additional contextuality inequalities.
+   Proves the universal formula: Quantum Bound = Classical Bound / cos(2π/slots).
+   26 files, 8,139 lines, one axiom.
 
 ---
 
@@ -378,15 +425,18 @@ transformation to ensure the modular variables are Lorentz invariant.
 
 ## Statistics
 
-| | ItFromSplit.lean (#1) | BohmianMechanics.lean (#2) | Combined |
-|--|----------------------|---------------------------|----------|
-| Theorems | ~35 | ~40 | ~75 |
-| `sorry` | 0 | 0 | **0** |
-| Axioms | 8 (standard operator algebra) | 1 (discharged by #1) | 8 |
+| | ItFromSplit (#1) | BohmianMechanics (#2) | EProcess (#3) | BellsTheorem (IV) | Total |
+|--|-----------------|----------------------|---------------|-------------------|-------|
+| Files | 1 | 1 | 1 | 26 | 29 |
+| Lines | — | — | — | 8,139 | — |
+| Theorems | ~35 | ~40 | — | ~200+ | ~275+ |
+| `sorry` | 0 | 0 | 0 | 0 | **0** |
+| Axioms | 8 (operator algebra) | 1 (discharged by #1) | — | 1 (KMS constraint) | 9 |
 
-All axioms encode established results from the mathematical literature (GNS construction,
-Tomita-Takesaki theorem, properties of partial traces). None encode physical assumptions
-beyond standard quantum mechanics.
+All axioms in Parts I–III encode established results from the mathematical literature.
+The single Bell axiom (`kms_constrains_correlation`) is a physical claim: that KMS
+periodicity constrains thermal correlations. Everything else is proved from Mathlib
+foundations.
 
 ---
 
