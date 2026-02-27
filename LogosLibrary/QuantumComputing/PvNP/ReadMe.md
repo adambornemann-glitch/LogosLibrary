@@ -218,7 +218,7 @@ None of the sorries are in the critical proof chain.  Both are standard results 
 
 ```
                     ┌─────────────────────────────────────────┐
-                    │       Information Geometry Library       │
+                    │       Information Geometry Library      │
                     │                                         │
                     │  StatisticalModel ─► Score              │
                     │       ─► FisherInformation              │
