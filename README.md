@@ -197,10 +197,10 @@ for details.
 ```
                          Logos Library
                               │
-          ┌───────────────────┼───────────────────┐
-          │                   │                   │
-          ▼                   ▼                   ▼
- InformationGeometry    QuantumMechanics      Relativity
+          ┌───────────────────┼──────────────────────┐
+          │                   │                      │
+          ▼                   ▼                      ▼
+ InformationGeometry    QuantumMechanics        Relativity
  (Fisher–Rao metric)    (operator theory      (Minkowski, Kerr,
                          → spectral thm)       Ott, Jacobson,
                               │                thermal time)
