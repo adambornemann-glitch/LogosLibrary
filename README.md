@@ -31,7 +31,7 @@ pretending everything is bounded. It is also correct.
 | [**InformationGeometry/**](LogosLibrary/InformationGeometry/) | ~2,000 | 0 | Fisher–Rao metric from first principles, statistical manifolds, score functions |
 | [**Relativity/**](LogosLibrary/Relativity/) | ~12,800 | ~14 | Minkowski spacetime, Kerr metric, Ott–Landsberg resolution, Jacobson's derivation, thermal time uniqueness, SdS instability (original) |
 | [**QuantumComputing/**](LogosLibrary/QuantumComputing/) | ~2,500 | 8 | Thermal Turing machine, conditional P ≠ NP from information geometry *(experimental)* |
-| **Total** | **~39,400** | **~80** | |
+| **Total** | **~39,400** | **~90** | |
 
 Each module has its own detailed README. This document describes the
 architecture connecting them.
