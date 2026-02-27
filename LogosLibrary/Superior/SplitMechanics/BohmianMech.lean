@@ -9,7 +9,7 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 import Mathlib.Analysis.InnerProductSpace.Basic
 import LogosLibrary.Superior.ObjectiveReduction.EProcess
-import LogosLibrary.QuantumMechanics.BellsTheorem.OtherInequalities.Unity
+import LogosLibrary.Superior.SplitMechanics.BellsTheorem.OtherInequalities.Unity
 /-!
 =====================================================================
 # LORENTZ COVARIANT BOHMIAN MECHANICS
