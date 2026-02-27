@@ -98,7 +98,7 @@ The development draws on three areas of Mathlib:
 Requires Lean 4 and Mathlib4. With [elan](https://github.com/leanprover/elan) installed:
 
 ```bash
-lake build
+lake build LogosLibrary.InformationGeometry
 ```
 
 The files live under `LogosLibrary/InformationGeometry/` and import each other linearly as shown in the architecture diagram above.
