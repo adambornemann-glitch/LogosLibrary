@@ -961,7 +961,7 @@ This is not merely "J=0 is unlikely" — it's "J=0 is unmeasurable in principle.
 
 namespace MeasurementTheorem
 
-open ThermalTime QuantumMechanics.Bornemann SdS_Forbidden
+open ThermalTimeBasic QuantumMechanics.Bornemann SdS_Forbidden
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
