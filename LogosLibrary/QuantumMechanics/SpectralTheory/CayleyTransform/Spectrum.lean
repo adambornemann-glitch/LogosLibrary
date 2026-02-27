@@ -135,6 +135,8 @@ theorem cayley_maps_resolvent {U_grp : OneParameterUnitaryGroup (H := H)} [Nontr
                 ContinuousLinearMap.id_apply, ContinuousLinearMap.one_apply,
                 smul_smul, inv_mul_cancel₀ (neg_ne_zero.mpr hw_ne), one_smul]
 
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
+
 /-- If `U - w` is invertible, then `A - μ` is bounded below. -/
 lemma cayley_spectrum_backward {U_grp : OneParameterUnitaryGroup (H := H)} [Nontrivial H]
     (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (μ : ℝ)
@@ -325,7 +327,7 @@ lemma approx_eigenvalue_norm_lower_bound {U_grp : OneParameterUnitaryGroup (H :=
     _ ≥ t_plus := h_x_ge_t_plus
     _ = (Real.sqrt (1 + μ^2 - δ^2) - |μ| * δ) / (1 + μ^2) := htplus_def
 
-variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+
 /-- Approximate eigenvalues of `U` give approximate eigenvalues of `A`. -/
 lemma cayley_approx_eigenvalue_backward {U_grp : OneParameterUnitaryGroup (H := H)}
     (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (μ : ℝ)
@@ -566,6 +568,8 @@ lemma cayley_approx_eigenvalue_forward {U_grp : OneParameterUnitaryGroup (H := H
         apply mul_le_mul_of_nonneg_left _ (inv_nonneg.mpr (norm_nonneg _))
         apply mul_le_mul_of_nonneg_left hφ'_norm_ge_ψ (le_of_lt hε)
     _ = ε := by field_simp [ne_of_gt hφ'_norm_pos]
+
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
 /-- Full spectral correspondence: bounded below for `A - μ` iff `U - w` is invertible. -/
 theorem cayley_spectrum_correspondence {U_grp : OneParameterUnitaryGroup (H := H)} [Nontrivial H]
