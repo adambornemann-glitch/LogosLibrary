@@ -328,6 +328,71 @@ In this sense, **quantum uncertainty is a corollary of the
 second law**: Fisher information is entropy production rate,
 and Cramér–Rao says no estimator can beat the entropic cost
 of distinguishing nearby distributions.  The second law does
-not merely permit quantum uncertainty — it *requires* it. -/
+not merely permit quantum uncertainty — it *requires* it. 
+
+## References
+
+### Foundational — Statistical Distance and Quantum States
+* W. K. Wootters, "Statistical distance and Hilbert space",
+  *Phys. Rev. D* **23** (1981), 357–362.
+  — First identification of statistical distinguishability distance
+  with Hilbert space geometry (Fubini-Study metric).
+
+### Quantum Estimation Theory
+* C. W. Helstrom, "Quantum detection and estimation theory",
+  *J. Stat. Phys.* **1** (1969), 231–252.
+  — First quantum Cramér-Rao bound. Introduced the symmetric
+  logarithmic derivative (SLD) Fisher information for quantum states.
+
+* C. W. Helstrom, *Quantum Detection and Estimation Theory*,
+  Academic Press, New York, 1976.
+  — Monograph. Chapter 8: quantum Cramér-Rao inequality in full
+  generality.
+
+* A. S. Holevo, *Probabilistic and Statistical Aspects of Quantum
+  Theory*, North-Holland, Amsterdam, 1982.
+  — Systematic development of quantum statistical models, quantum
+  Fisher information, and the quantum Cramér-Rao approach.
+
+### The Braunstein-Caves Bridge (Primary Source for This File)
+* S. L. Braunstein, C. M. Caves, "Statistical distance and the
+  geometry of quantum states", *Phys. Rev. Lett.* **72** (1994),
+  3439–3443.
+  — Proved quantum Fisher information = max over measurements of
+  classical Fisher information. Defined Riemannian metric on density
+  operators via statistical distinguishability. Derived uncertainty
+  principles stronger than Robertson from this framework.
+
+### Monotone Metrics and Uniqueness
+* N. N. Čencov (Chentsov), *Statistical Decision Rules and Optimal
+  Inference*, Amer. Math. Soc., Providence, 1982.
+  — Uniqueness of the Fisher-Rao metric (classical case): the only
+  Riemannian metric on probability simplices monotone under
+  coarse-graining.
+
+* D. Petz, "Monotone metrics on matrix spaces",
+  *Linear Algebra Appl.* **244** (1996), 81–96.
+  — Quantum Chentsov theorem: classified ALL monotone metrics on
+  quantum state spaces via operator monotone functions. The SLD
+  (Bures) metric is the maximal element.
+
+### Information-Geometric Uncertainty Relations
+* P. Gibilisco, T. Isola, "Uncertainty principle and quantum Fisher
+  information", *Ann. Inst. Stat. Math.* **59** (2007), 147–159.
+  — Geometric formulation of Robertson via quantum Fisher information
+  as area in the tangent space to the state manifold.
+
+* P. Gibilisco, F. Hiai, D. Petz, "Quantum covariance, quantum
+  Fisher information, and the uncertainty relations",
+  *IEEE Trans. Inform. Theory* **55** (2009), 439–443.
+
+### Information Geometry (General)
+* S. Amari, *Information Geometry and Its Applications*,
+  Springer, 2016, §2–3.
+
+### Robertson's Original
+* H. P. Robertson, "The uncertainty principle",
+  *Phys. Rev.* **34** (1929), 163–164.
+-/
 
 end QuantumMechanics.CramerRao
