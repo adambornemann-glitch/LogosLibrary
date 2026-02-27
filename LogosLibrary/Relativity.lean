@@ -1,12 +1,6 @@
 import LogosLibrary.Relativity.GR.KerrMetric
-import LogosLibrary.Relativity.GR.KerrMetric.Complexity
-import LogosLibrary.Relativity.GR.KerrMetric.Components
-import LogosLibrary.Relativity.GR.KerrMetric.Extensions.Exploration
-import LogosLibrary.Relativity.GR.KerrMetric.Extensions.VacuumFailure
-import LogosLibrary.Relativity.GR.KerrMetric.HorizonsErgospheres
-import LogosLibrary.Relativity.GR.KerrMetric.RingSingularity
-import LogosLibrary.Relativity.GR.KerrMetric.Thermodynamics
-import LogosLibrary.Relativity.LorentzBoost.Jacobson
-import LogosLibrary.Relativity.LorentzBoost.Ott
-import LogosLibrary.Relativity.LorentzBoost.TTime
+import LogosLibrary.Relativity.GR.SdS.Bornemann
 import LogosLibrary.Relativity.SR.MinkowskiSpacetime
+import LogosLibrary.Relativity.Thermodynamics.Jacobson
+import LogosLibrary.Relativity.Thermodynamics.Ott
+import LogosLibrary.Relativity.Thermodynamics.ConnesRovelli
