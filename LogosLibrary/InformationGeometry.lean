@@ -1,0 +1,2 @@
+import LogosLibrary.InformationGeometry.CramerRao
+import LogosLibrary.InformationGeometry.Fisher
