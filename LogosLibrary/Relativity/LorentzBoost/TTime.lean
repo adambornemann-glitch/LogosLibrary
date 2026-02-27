@@ -8,7 +8,7 @@ import Mathlib.Analysis.Real.Pi.Bounds
 
 open RelativisticTemperature MinkowskiSpace
 
-namespace ThermalTime
+namespace ThermalTimeBasic
 set_option linter.unusedVariables false
 
 /-- Thermal time: the relationship between coordinate time,
@@ -303,7 +303,7 @@ theorem thermal_time_physical_units (T : ℝ) (hT : T > 0) :
 
 namespace ThermalTimeConsequences
 
-open ThermalTime MinkowskiSpace RelativisticTemperature
+open ThermalTimeBasic MinkowskiSpace RelativisticTemperature
 
 noncomputable def inverse_temperature (T : ℝ) : ℝ := 1 / T
 
@@ -432,7 +432,7 @@ end ThermalTimeConsequences
 
 namespace MeasurementTheorem
 
-open ThermalTime
+open ThermalTimeBasic
 
 /-!
 # The Measurement Theorem
@@ -762,4 +762,4 @@ theorem holevo_consistency (m : Measurement)
 
 end InformationTheory
 
-end ThermalTime
+end ThermalTimeBasic
