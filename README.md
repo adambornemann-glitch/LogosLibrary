@@ -30,7 +30,7 @@ pretending everything is bounded. It is also correct.
 | [**QuantumMechanics/**](LogosLibrary/QuantumMechanics/) | ~22,100 | 66 | Stone's theorem, spectral theorem (3 routes), uncertainty relations, Bell's theorem, Dirac equation, unitarity ↔ first law |
 | [**InformationGeometry/**](LogosLibrary/InformationGeometry/) | ~2,000 | 0 | Fisher–Rao metric from first principles, statistical manifolds, score functions |
 | [**Relativity/**](LogosLibrary/Relativity/) | ~4,500 | 1 | Ott–Landsberg resolution (7 proofs), thermal time uniqueness, Kerr black hole application |
-| **Total** | **~28,600** | **66** | |
+| **Total** | **~28,600** | **67** | |
 
 Each module has its own detailed README. This document describes the
 architecture connecting them.
