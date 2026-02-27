@@ -22,10 +22,11 @@ lake exe cache get
 # Do a lake update
 lake update
 
-# Build
+# Build all of Logos
 lake build
 
 # Veryify in Batches
+lake build LogosLibrary.InformationGeometry
 lake build LogosLibrary.QuantumMechanics
 lake build LogosLibrary.Relativity
 lake build LogosLibrary.Superior
