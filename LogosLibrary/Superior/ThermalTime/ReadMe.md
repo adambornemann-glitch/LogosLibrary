@@ -104,7 +104,7 @@ With Landsberg (T → T):
 
 ### The Resolution
 
-The formalization in `LogosLibrary.Relativity.LorentzBoost.Ott` proves through **seven independent arguments** that Ott is uniquely correct:
+The formalization in `LogosLibrary.Relativity.Thermodynamics.Ott` proves through **seven independent arguments** that Ott is uniquely correct:
 
 1. **Landauer's Principle**: Information erasure bound must be frame-independent
 2. **Entropy Invariance**: S = k ln Ω counts microstates (integers don't Lorentz transform)
