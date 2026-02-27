@@ -13,9 +13,9 @@
   the deviation ε is bounded by ε_tsirelson = (√2 - 1)/2.
 -/
 import Mathlib.Data.Complex.Basic
-import LogosLibrary.QuantumMechanics.BellsTheorem.TLHV
-import LogosLibrary.QuantumMechanics.BellsTheorem.ThermalBell.NoSignaling
-import LogosLibrary.QuantumMechanics.BellsTheorem.ThermalBell.OptimalBudget
+import LogosLibrary.Superior.SplitMechanics.BellsTheorem.TLHV
+import LogosLibrary.Superior.SplitMechanics.BellsTheorem.ThermalBell.NoSignaling
+import LogosLibrary.Superior.SplitMechanics.BellsTheorem.ThermalBell.OptimalBudget
 import LogosLibrary.QuantumMechanics.ModularTheory.KMS.Condition
 import LogosLibrary.QuantumMechanics.ModularTheory.KMS.PeriodicStrip
 
