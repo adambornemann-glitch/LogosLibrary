@@ -1,5 +1,5 @@
 /-
-Copyright (c) 2026 KMS Formalization Project. All rights reserved.
+Copyright (c) 2026 LogosLibrary Formalization Project. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Adam Bornemann
 SplitMechanics.
@@ -61,7 +61,7 @@ This file **closes the square** into a pentagon by proving:
 - What replaces it is modular structure — and that structure simultaneously
   IS the KMS condition, the Born rule, nontrivial time, and unitarity
 
-The key insight (due to the Connes roleplay):
+The key insight:
 **Unitarity is not a postulate. It is the unique dynamics compatible with
 the First Law. And the First Law is a consequence of being a subsystem.**
 
@@ -81,7 +81,7 @@ First Law: U(t) unitary ↔ μ_{U(t)ψ} = μ_ψ
 τ_C · T = 1/(2π)  (physical units)
 ```
 
-## The Answer to Connes' Question
+## Q and A!
 
 **Q**: Is there a spectral invariance that does NOT imply unitarity — one that
 holds even when Δ = 1?
@@ -318,7 +318,7 @@ theorem pure_state_no_time {A : Type*} [CStarAlgebra A] [IsVonNeumannAlgebra A]
 /-!
 ### Trivial Spectral Invariance
 
-This answers Connes' question: when Δ = 1, spectral invariance holds
+This answers the question: when Δ = 1, spectral invariance holds
 trivially because σ_t = id. The First Law is satisfied vacuously.
 -/
 
@@ -476,7 +476,7 @@ theorem born_iff_spectral_invariance {A : Type*} [CStarAlgebra A] [IsVonNeumannA
 
     This is the positive formulation of Δ ≠ 1. Instead of negating
     triviality, we assert: there exists a correlation function that
-    the dynamics actually moves. (Suggested by Connes.) -/
+    the dynamics actually moves. -/
 def IsModularNontrivial {A : Type*} [CStarAlgebra A]
     (ω : State A) (α : Dynamics A) : Prop :=
   ∃ a b : A, ∃ t : ℝ, ω (a * α.evolve t b) ≠ ω (a * b)
@@ -888,7 +888,7 @@ The pentagon is not binary. It breathes with S_A, which breathes with G.
 
 **τ_C · T = 1/(2π)** — proved by field_simp, because it is inevitable.
 
-### Connes' Question, Answered
+### Question, Answered
 
 When Δ = 1: spectral invariance trivial, unitarity vacuous,
 KMS degenerate, Born contextless, time frozen.
