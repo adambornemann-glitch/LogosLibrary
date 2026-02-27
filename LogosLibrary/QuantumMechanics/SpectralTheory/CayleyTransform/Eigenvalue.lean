@@ -105,6 +105,8 @@ lemma cayley_shift_identity {U_grp : OneParameterUnitaryGroup (H := H)}
     _ = (1 - w) • (gen.op ⟨ψ, hψ⟩ - ↑μ • ψ) := by rw [smul_sub]
   simp only
 
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
+
 /-- Real eigenvalues of `A` correspond to eigenvalues of `U` via the Möbius map. -/
 theorem cayley_eigenvalue_correspondence {U_grp : OneParameterUnitaryGroup (H := H)}
     (gen : Generator U_grp) (hsa : Generator.IsSelfAdjoint gen) (μ : ℝ) :
