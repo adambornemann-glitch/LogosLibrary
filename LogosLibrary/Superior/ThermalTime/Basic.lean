@@ -3,7 +3,7 @@ Copyright (c) 2026 Adam Bornemann. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Adam Bornemann
 -/
-import LogosLibrary.Relativity.LorentzBoost.Ott
+import LogosLibrary.Relativity.Thermodynamics.Ott
 import Mathlib.Analysis.Real.Pi.Bounds
 
 open RelativisticTemperature MinkowskiSpace
