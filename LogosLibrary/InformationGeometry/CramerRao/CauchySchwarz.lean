@@ -1,4 +1,4 @@
-import LogosLibrary.InformationGeometry.CramerRoa.Cross
+import LogosLibrary.InformationGeometry.CramerRao.Cross
 
 noncomputable section
 
