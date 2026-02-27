@@ -18,7 +18,6 @@ import LogosLibrary.QuantumMechanics.ModularTheory.KMS.Condition
 import LogosLibrary.QuantumMechanics.ModularTheory.KMS.KMSBirdge
 import LogosLibrary.QuantumMechanics.ModularTheory.KMS.Modular
 import LogosLibrary.QuantumMechanics.ModularTheory.KMS.PeriodicStrip
-import LogosLibrary.QuantumMechanics.ModularTheory.SubsystemEmergence
 import LogosLibrary.QuantumMechanics.NeumannSeries
 import LogosLibrary.QuantumMechanics.SpectralTheory.BochnerRoute
 import LogosLibrary.QuantumMechanics.SpectralTheory.BochnerRoute.PositiveDefinite
