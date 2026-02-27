@@ -1,4 +1,4 @@
-import LogosLibrary.InformationGeometry.CramerRoa.CauchySchwarz
+import LogosLibrary.InformationGeometry.CramerRao.CauchySchwarz
 
 noncomputable section
 
