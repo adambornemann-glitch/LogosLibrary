@@ -23,7 +23,7 @@ import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.Analysis.Real.Pi.Bounds
 import Mathlib.Tactic.NormNum.Prime  -- for extended norm_num
 import Mathlib.Tactic.Polyrith
-import LogosLibrary.Relativity.LorentzBoost.ConnesRovelli
+import LogosLibrary.Relativity.Thermodynamics.ConnesRovelli
 import LogosLibrary.QuantumMechanics.Uncertainty.Schrodinger -- For unbounded operators
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
