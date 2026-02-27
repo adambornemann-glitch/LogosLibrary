@@ -15,7 +15,6 @@ import LogosLibrary.QuantumMechanics.BellsTheorem.QuantumCHSH.Q_CHSH_Basic
 import LogosLibrary.QuantumMechanics.BellsTheorem.QuantumCHSH.Tsirelson
 import LogosLibrary.QuantumMechanics.BellsTheorem.QuantumCHSH.Violation
 import LogosLibrary.QuantumMechanics.ModularTheory.KMS.Condition
-import LogosLibrary.QuantumMechanics.ModularTheory.KMS.KMSBirdge
 import LogosLibrary.QuantumMechanics.ModularTheory.KMS.Modular
 import LogosLibrary.QuantumMechanics.ModularTheory.KMS.PeriodicStrip
 import LogosLibrary.QuantumMechanics.NeumannSeries
