@@ -1,4 +1,4 @@
-# Logos Library
+# Logos Library v1.3
 
 **Formally Verified Foundations for Quantum Mechanics, Information Geometry, Relativistic Thermodynamics, and Thermodynamic Computation**
 
@@ -6,6 +6,9 @@
 [![Lean 4](https://img.shields.io/badge/Lean-4-blue.svg)](https://leanprover.github.io/lean4/doc/)
 
 ---
+
+**Note:** v2.0 using the newest stable release of Mathlib currently in production.
+
 
 ## What This Is
 
@@ -29,7 +32,7 @@ pretending everything is bounded. It is also correct.
 |--------|------:|-------:|----------|
 | [**QuantumMechanics/**](LogosLibrary/QuantumMechanics/) | ~22,100 | 66 | Stone's theorem, spectral theorem (3 routes), uncertainty relations, Bell's theorem, Dirac equation, unitarity ↔ first law |
 | [**InformationGeometry/**](LogosLibrary/InformationGeometry/) | ~2,000 | 0 | Fisher–Rao metric from first principles, statistical manifolds, score functions |
-| [**Relativity/**](LogosLibrary/Relativity/) | ~12,800 | ~14 | Minkowski spacetime, Kerr metric, Ott–Landsberg resolution, Jacobson's derivation, thermal time uniqueness, SdS instability (original) |
+| [**Relativity/**](LogosLibrary/Relativity/) | ~12,800 | ~14 | Minkowski spacetime, Kerr metric, Ott–Landsberg resolution, thermal time uniqueness, SdS instability (original) |
 | [**QuantumComputing/**](LogosLibrary/QuantumComputing/) | ~2,500 | 8 | Thermal Turing machine, conditional P ≠ NP from information geometry *(experimental)* |
 | **Total** | **~39,400** | **~90** | |
 
@@ -127,15 +130,6 @@ specific heat — each forcing Ott's law T → γT and each refuting Landsberg.
 A unification theorem shows all seven reduce to: information is physical
 (Landauer) + physics is covariant (Lorentz) ⟹ T → γT. Applied to Kerr
 black holes with explicit proofs for strictly subextremal cases.
-
-### Jacobson's Derivation Requires Ott (~2,250 lines, 2 axioms)
-
-Jacobson (1995) derived Einstein's field equations from thermodynamics.
-This library proves the derivation *requires* Ott and is *incompatible*
-with Landsberg: the Clausius ratio δQ/T is Lorentz invariant under Ott,
-not under Landsberg, and Ott is *uniquely determined* by requiring this
-invariance. Downstream: Carnot efficiency is frame-invariant, the Unruh
-relation T ∝ a is preserved, Wien's law is consistent with Doppler.
 
 ### Thermal Time Uniqueness (~3,800 lines, axiom-free beyond the ansatz)
 
