@@ -1,1 +1,0 @@
-{"version":4,"references":{},"module":"LogosLibrary.Superior.ThermalTime","directImports":[["LogosLibrary.Superior.ThermalTime.Basic",false,false,false],["LogosLibrary.Superior.ThermalTime.Consistency",false,false,false],["LogosLibrary.Superior.ThermalTime.InfoTheory",false,false,false],["LogosLibrary.Superior.ThermalTime.Measurement",false,false,false]]}
