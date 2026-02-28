@@ -44,7 +44,7 @@ lemma duhamel_estimate
   have h_isometric : ∀ τ v, ‖expBounded B τ v‖ = ‖v‖ := by
     intro τ v
     have h_unitary := expBounded_mem_unitary B hB τ
-    exact unitary.norm_map ⟨expBounded B τ, h_unitary⟩ v
+    exact Unitary.norm_map ⟨expBounded B τ, h_unitary⟩ v
   have h_bound := intervalIntegral.norm_integral_le_of_norm_le_const (a := 0) (b := t) (C := C)
                     (f := duhamelIntegrand gen hsa n t φ hφ)
   calc ‖∫ s in (0)..t, duhamelIntegrand gen hsa n t φ hφ s‖
@@ -155,12 +155,14 @@ lemma expBounded_yosidaApproxSym_tendsto_unitary
       _ < |t| * (ε / (|t| + 1)) := by
           apply mul_lt_mul_of_pos_left _ (abs_pos.mpr ht)
           specialize hN n hn
-          simp only [dist_zero_right, Real.norm_eq_abs] at hN
-          rw [abs_of_nonneg] at hN
-          · exact hN
-          · apply Real.iSup_nonneg
-            intro s
-            exact norm_nonneg _
+          rw [show dist (⨆ s : Set.Icc 0 |t|,
+            ‖gen.op ⟨U_grp.U s.val φ, gen.domain_invariant s.val φ hφ⟩ -
+             yosidaApproxSym gen hsa n (U_grp.U s.val φ)‖) 0 =
+            |⨆ s : Set.Icc 0 |t|,
+            ‖gen.op ⟨U_grp.U s.val φ, gen.domain_invariant s.val φ hφ⟩ -
+             yosidaApproxSym gen hsa n (U_grp.U s.val φ)‖| from Real.dist_0_eq_abs _] at hN
+          rw [abs_of_nonneg (Real.iSup_nonneg fun s => norm_nonneg _)] at hN
+          exact hN
       _ < (|t| + 1) * (ε / (|t| + 1)) := by
           apply mul_lt_mul_of_pos_right _ hεt
           linarith
@@ -197,7 +199,7 @@ theorem expBounded_yosidaApproxSym_cauchy
         ‖expBounded (I • yosidaApproxSym gen hsa m) t φ - expBounded (I • yosidaApproxSym gen hsa n) t φ‖ +
         ‖expBounded (I • yosidaApproxSym gen hsa n) t φ - expBounded (I • yosidaApproxSym gen hsa n) t ψ‖ := by
           apply le_trans (norm_add_le _ _)
-          apply add_le_add_right
+          gcongr
           exact norm_add_le _ _
     _ = ‖expBounded (I • yosidaApproxSym gen hsa m) t (ψ - φ)‖ +
         ‖expBounded (I • yosidaApproxSym gen hsa m) t φ - expBounded (I • yosidaApproxSym gen hsa n) t φ‖ +

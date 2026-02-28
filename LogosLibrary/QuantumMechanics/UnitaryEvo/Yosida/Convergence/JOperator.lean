@@ -88,52 +88,39 @@ lemma yosidaJ_tendsto_on_domain
     use 1
     intro n _
     rw [yosidaJ_eq_sub_resolvent_A gen hsa n φ hφ]
-    have h_Aφ_eq_zero : gen.op ⟨φ, hφ⟩ = 0 := norm_eq_zero.mp h_Aφ_zero
-    simp only [h_Aφ_eq_zero, map_zero, sub_zero]
-    rw [dist_self]
-    exact hε
+    simp [norm_eq_zero.mp h_Aφ_zero, dist_self, hε]
   · -- Case: ‖Aφ‖ > 0
-    have h_Aφ_pos : 0 < ‖gen.op ⟨φ, hφ⟩‖ := lt_of_le_of_ne (norm_nonneg _) (Ne.symm h_Aφ_zero)
-    -- Choose N > ‖Aφ‖/ε
+    have h_Aφ_pos : 0 < ‖gen.op ⟨φ, hφ⟩‖ := (norm_nonneg _).lt_of_ne' h_Aφ_zero
     use ⟨Nat.ceil (‖gen.op ⟨φ, hφ⟩‖ / ε) + 1, Nat.add_one_pos _⟩
     intro n hn
-    calc dist ((-I * (n : ℂ)) • Resolvent.resolvent gen (I * (n : ℂ)) (I_mul_pnat_im_ne_zero n) hsa φ) φ
-        = ‖(-I * (n : ℂ)) • Resolvent.resolvent gen (I * (n : ℂ)) (I_mul_pnat_im_ne_zero n) hsa φ - φ‖ :=
-            dist_eq_norm _ _
-      _ = ‖(φ - Resolvent.resolvent gen (I * (n : ℂ)) (I_mul_pnat_im_ne_zero n) hsa (gen.op ⟨φ, hφ⟩)) - φ‖ := by
-            rw [yosidaJ_eq_sub_resolvent_A gen hsa n φ hφ]
-      _ = ‖-Resolvent.resolvent gen (I * (n : ℂ)) (I_mul_pnat_im_ne_zero n) hsa (gen.op ⟨φ, hφ⟩)‖ := by
-            congr 1; abel
-      _ = ‖Resolvent.resolvent gen (I * (n : ℂ)) (I_mul_pnat_im_ne_zero n) hsa (gen.op ⟨φ, hφ⟩)‖ :=
-            norm_neg _
-      _ ≤ ‖Resolvent.resolvent gen (I * (n : ℂ)) (I_mul_pnat_im_ne_zero n) hsa‖ * ‖gen.op ⟨φ, hφ⟩‖ :=
-            ContinuousLinearMap.le_opNorm _ _
+    -- Rewrite Jₙφ - φ = -R(in)(Aφ) and take norms
+    have h_eq : dist ((-I * (n : ℂ)) • Resolvent.resolvent gen (I * (n : ℂ))
+        (I_mul_pnat_im_ne_zero n) hsa φ) φ =
+        ‖Resolvent.resolvent gen (I * (n : ℂ)) (I_mul_pnat_im_ne_zero n) hsa
+        (gen.op ⟨φ, hφ⟩)‖ := by
+      rw [dist_eq_norm, yosidaJ_eq_sub_resolvent_A gen hsa n φ hφ]
+      simp [norm_neg]
+    rw [h_eq]
+    -- ‖R(in)(Aφ)‖ ≤ ‖R(in)‖ · ‖Aφ‖ ≤ (1/n) · ‖Aφ‖ < ε
+    have hn_pos : (0 : ℝ) < (n : ℝ) := Nat.cast_pos.mpr n.pos
+    calc ‖Resolvent.resolvent gen (I * (n : ℂ)) (I_mul_pnat_im_ne_zero n) hsa
+            (gen.op ⟨φ, hφ⟩)‖
+        ≤ ‖Resolvent.resolvent gen (I * (n : ℂ)) (I_mul_pnat_im_ne_zero n) hsa‖ *
+            ‖gen.op ⟨φ, hφ⟩‖ :=
+          ContinuousLinearMap.le_opNorm _ _
       _ ≤ (1 / (n : ℝ)) * ‖gen.op ⟨φ, hφ⟩‖ := by
-            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
-            calc ‖Resolvent.resolvent gen (I * (n : ℂ)) (I_mul_pnat_im_ne_zero n) hsa‖
-                ≤ 1 / |(I * (n : ℂ)).im| := resolvent_bound gen hsa _ _
-              _ = 1 / (n : ℝ) := by rw [abs_I_mul_pnat_im]
+          gcongr
+          calc ‖Resolvent.resolvent gen (I * (n : ℂ)) (I_mul_pnat_im_ne_zero n) hsa‖
+              ≤ 1 / |(I * (n : ℂ)).im| := resolvent_bound gen hsa _ _
+            _ = 1 / (n : ℝ) := by rw [abs_I_mul_pnat_im]
       _ < ε := by
-            have hn_pos : (0 : ℝ) < n := Nat.cast_pos.mpr n.pos
-            have h_n_bound : ‖gen.op ⟨φ, hφ⟩‖ / ε + 1 ≤ (n : ℝ) := by
-              have h1 : (Nat.ceil (‖gen.op ⟨φ, hφ⟩‖ / ε) + 1 : ℕ) ≤ n := hn
-              calc ‖gen.op ⟨φ, hφ⟩‖ / ε + 1
-                  ≤ ↑(Nat.ceil (‖gen.op ⟨φ, hφ⟩‖ / ε)) + 1 :=
-                      add_le_add_right (Nat.le_ceil _) _
-                _ = ↑(Nat.ceil (‖gen.op ⟨φ, hφ⟩‖ / ε) + 1) := by norm_cast
-                _ ≤ (n : ℝ) := Nat.cast_le.mpr h1
-            have h_ratio_lt : ‖gen.op ⟨φ, hφ⟩‖ / ε < (n : ℝ) := by linarith
-            have h_prod_lt : ‖gen.op ⟨φ, hφ⟩‖ < (n : ℝ) * ε := by
-              calc ‖gen.op ⟨φ, hφ⟩‖
-                  = (‖gen.op ⟨φ, hφ⟩‖ / ε) * ε := by field_simp
-                _ < (n : ℝ) * ε := mul_lt_mul_of_pos_right h_ratio_lt hε
-            calc (1 / (n : ℝ)) * ‖gen.op ⟨φ, hφ⟩‖
-                = ‖gen.op ⟨φ, hφ⟩‖ / (n : ℝ) := by ring
-              _ = ‖gen.op ⟨φ, hφ⟩‖ * (1 / (n : ℝ)) := by ring
-              _ < ((n : ℝ) * ε) * (1 / (n : ℝ)) := by
-                  apply mul_lt_mul_of_pos_right h_prod_lt
-                  exact one_div_pos.mpr hn_pos
-              _ = ε := by field_simp
+          rw [one_div, inv_mul_lt_iff₀ hn_pos]
+          have h1 : (⌈‖gen.op ⟨φ, hφ⟩‖ / ε⌉₊ + 1 : ℕ) ≤ n := hn
+          calc ‖gen.op ⟨φ, hφ⟩‖
+              = (‖gen.op ⟨φ, hφ⟩‖ / ε) * ε := by field_simp
+            _ ≤ ↑⌈‖gen.op ⟨φ, hφ⟩‖ / ε⌉₊ * ε := by gcongr; exact Nat.le_ceil _
+            _ < (↑⌈‖gen.op ⟨φ, hφ⟩‖ / ε⌉₊ + 1) * ε := by nlinarith
+            _ ≤ (n : ℝ) * ε := by gcongr; exact_mod_cast h1
 
 theorem yosida_J_tendsto_id
     (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
@@ -146,34 +133,29 @@ theorem yosida_J_tendsto_id
   rw [Metric.tendsto_atTop]
   intro ε hε
   -- Step 1: Approximate ψ by domain element φ
-  have h_dense := gen.dense_domain
-  obtain ⟨φ, hφ_mem, hφ_close⟩ := Metric.mem_closure_iff.mp (h_dense.closure_eq ▸ Set.mem_univ ψ)
-                                    (ε / 3) (by linarith)
+  obtain ⟨φ, hφ_mem, hφ_close⟩ := Metric.mem_closure_iff.mp
+    (gen.dense_domain.closure_eq ▸ Set.mem_univ ψ) (ε / 3) (by linarith)
   -- Step 2: Get N such that Jₙφ is close to φ for n ≥ N
-  have h_domain_conv := yosidaJ_tendsto_on_domain gen hsa φ hφ_mem
-  rw [Metric.tendsto_atTop] at h_domain_conv
-  obtain ⟨N, hN⟩ := h_domain_conv (ε / 3) (by linarith)
-  -- Step 3: For n ≥ N, Jₙψ is close to ψ
+  obtain ⟨N, hN⟩ := (Metric.tendsto_atTop.mp
+    (yosidaJ_tendsto_on_domain gen hsa φ hφ_mem)) (ε / 3) (by linarith)
+  -- Step 3: Triangle inequality
   use N
   intro n hn
   calc dist (J n ψ) ψ
-      ≤ dist (J n ψ) (J n φ) + dist (J n φ) φ + dist φ ψ := dist_triangle4 _ _ _ _
-    _ = ‖J n ψ - J n φ‖ + dist (J n φ) φ + dist φ ψ := by rw [dist_eq_norm]
+      ≤ dist (J n ψ) (J n φ) + dist (J n φ) φ + dist φ ψ :=
+        dist_triangle4 _ _ _ _
     _ = ‖J n (ψ - φ)‖ + dist (J n φ) φ + dist φ ψ := by
-        congr 1
-        rw [ContinuousLinearMap.map_sub]
+        rw [dist_eq_norm, ContinuousLinearMap.map_sub]
     _ ≤ ‖J n‖ * ‖ψ - φ‖ + dist (J n φ) φ + dist φ ψ := by
-        apply add_le_add_right (add_le_add_right (ContinuousLinearMap.le_opNorm _ _) _)
+        gcongr; exact ContinuousLinearMap.le_opNorm _ _
     _ ≤ 1 * ‖ψ - φ‖ + dist (J n φ) φ + dist φ ψ := by
-        apply add_le_add_right (add_le_add_right _ _)
-        apply mul_le_mul_of_nonneg_right (yosidaJ_norm_bound gen hsa n) (norm_nonneg _)
-    _ = ‖ψ - φ‖ + dist (J n φ) φ + dist φ ψ := by rw [one_mul]
-    _ = dist ψ φ + dist (J n φ) φ + dist φ ψ := by rw [← dist_eq_norm]
+        gcongr; exact yosidaJ_norm_bound gen hsa n
+    _ = dist ψ φ + dist (J n φ) φ + dist φ ψ := by
+        rw [one_mul, ← dist_eq_norm]
     _ < ε / 3 + ε / 3 + ε / 3 := by
-        have h1 : dist ψ φ < ε / 3 := hφ_close
-        have h2 : dist (J n φ) φ < ε / 3 := hN n hn
-        have h3 : dist φ ψ < ε / 3 := by rw [dist_comm]; exact hφ_close
-        exact add_lt_add (add_lt_add h1 h2) h3
+        gcongr
+        · exact Metric.mem_ball.mp (hN n hn)
+        · exact Metric.mem_ball'.mp hφ_close
     _ = ε := by ring
 
 end QuantumMechanics.Yosida

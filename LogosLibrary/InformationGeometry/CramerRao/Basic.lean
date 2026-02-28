@@ -175,8 +175,20 @@ theorem variance_eq_centered {θ : ParamSpace n}
     integral_sub hf₁ hf₂
   rw [h1, h2, h3]
   -- Unfold f's, pull constants, normalize, fold ∫ Tp back to E_T
-  simp only [f₁, f₂, f₃, integral_const_mul,
-      M.toStatisticalModel.density_integral_one θ hθ, ← hE_def]
+  simp only [f₁, f₂, f₃]-- unused: integral_const_mul, M.toStatisticalModel.density_integral_one θ hθ, ← hE_def
+  ring_nf;
+  -- Pull constants out of the middle integral
+  have mid : ∫ ω, E_T * T ω * M.density θ ω * 2 ∂M.refMeasure =
+      2 * E_T * ∫ ω, T ω * M.density θ ω ∂M.refMeasure := by
+    rw [show (fun ω => E_T * T ω * M.density θ ω * 2) =
+        (fun ω => (2 * E_T) * (T ω * M.density θ ω)) from by ext; ring]
+    exact MeasureTheory.integral_const_mul _ _
+  -- Pull constant out of the last integral, use ∫ p = 1
+  have last : ∫ ω, E_T ^ 2 * M.density θ ω ∂M.refMeasure = E_T ^ 2 := by
+    trans (E_T ^ 2 * ∫ ω, M.density θ ω ∂M.refMeasure)
+    · exact MeasureTheory.integral_const_mul (E_T ^ 2) (M.density θ)
+    · rw [M.toStatisticalModel.density_integral_one θ hθ]; ring
+  rw [mid, hE_def, last]
   ring
 
   end RegularStatisticalModel

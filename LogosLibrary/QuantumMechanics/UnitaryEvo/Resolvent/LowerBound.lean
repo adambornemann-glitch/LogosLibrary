@@ -51,37 +51,12 @@ lemma lower_bound_estimate {U_grp : OneParameterUnitaryGroup (H := H)}
   have h_expand : ‖(gen.op ⟨ψ, hψ⟩ - x • ψ) - (y * I) • ψ‖^2 =
                 ‖gen.op ⟨ψ, hψ⟩ - x • ψ‖^2 + ‖(y * I) • ψ‖^2 +
                 2 * (⟪gen.op ⟨ψ, hψ⟩ - x • ψ, -((y * I) • ψ)⟫_ℂ).re := by
-    have h_formula : ∀ (a b : H), ‖a - b‖^2 = ‖a‖^2 + ‖b‖^2 - 2 * (⟪a, b⟫_ℂ).re := by
-      intro a b
-      have h_inner : (⟪a - b, a - b⟫_ℂ).re = ‖a - b‖ ^ 2 := by
-        have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (a - b)
-        rw [this]; norm_cast
-      rw [← h_inner, inner_sub_left, inner_sub_right, inner_sub_right]
-      simp only [Complex.sub_re]
-      have h1 : (⟪a, a⟫_ℂ).re = ‖a‖^2 := by
-        have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) a
-        rw [this]; norm_cast
-      have h2 : (⟪b, b⟫_ℂ).re = ‖b‖^2 := by
-        have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) b
-        rw [this]; norm_cast
-      rw [h1, h2]
-      have h_cross : (⟪a, b⟫_ℂ).re + (⟪b, a⟫_ℂ).re = 2 * (⟪a, b⟫_ℂ).re := by
-        have : (⟪b, a⟫_ℂ).re = (⟪a, b⟫_ℂ).re := by
-          calc (⟪b, a⟫_ℂ).re
-              = ((starRingEnd ℂ) ⟪a, b⟫_ℂ).re := by rw [inner_conj_symm]
-            _ = (⟪a, b⟫_ℂ).re := by simp only [Complex.conj_re]
-        rw [this]; ring
-      rw [h_cross.symm]; ring
-    calc ‖(gen.op ⟨ψ, hψ⟩ - x • ψ) - (y * I) • ψ‖^2
-        = ‖gen.op ⟨ψ, hψ⟩ - x • ψ‖^2 + ‖(y * I) • ψ‖^2 -
-          2 * (⟪gen.op ⟨ψ, hψ⟩ - x • ψ, (y * I) • ψ⟫_ℂ).re :=
-            h_formula (gen.op ⟨ψ, hψ⟩ - x • ψ) ((y * I) • ψ)
-      _ = ‖gen.op ⟨ψ, hψ⟩ - x • ψ‖^2 + ‖(y * I) • ψ‖^2 +
-          2 * (⟪gen.op ⟨ψ, hψ⟩ - x • ψ, -((y * I) • ψ)⟫_ℂ).re := by
-          have : (⟪gen.op ⟨ψ, hψ⟩ - x • ψ, -((y * I) • ψ)⟫_ℂ).re =
-                 -(⟪gen.op ⟨ψ, hψ⟩ - x • ψ, (y * I) • ψ⟫_ℂ).re := by
-            rw [inner_neg_right]; simp only [Complex.neg_re]
-          rw [this]; ring
+    rw [norm_sub_sq (𝕜 := ℂ)]
+    -- Goal is now: ‖a‖² - 2 * re⟪a,b⟫ + ‖b‖² = ‖a‖² + ‖b‖² + 2 * re⟪a,-b⟫
+    rw [inner_neg_right, Complex.neg_re]
+    ring_nf; exact
+      add_comm_sub (‖gen.op ⟨ψ, hψ⟩ - x • ψ‖ ^ 2)
+        (RCLike.re ⟪gen.op ⟨ψ, hψ⟩ - x • ψ, (↑y * I) • ψ⟫_ℂ * 2) (‖(↑y * I) • ψ‖ ^ 2)
   have h_norm_scale : ‖(y * I) • ψ‖ = |y| * ‖ψ‖ := by
     calc ‖(y * I) • ψ‖
         = ‖(y * I : ℂ)‖ * ‖ψ‖ := norm_smul _ _
@@ -106,7 +81,8 @@ lemma lower_bound_estimate {U_grp : OneParameterUnitaryGroup (H := H)}
         have h_inner_real : (⟪ψ, ψ⟫_ℂ).im = 0 := by
           have := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) ψ
           rw [this]; norm_cast
-        simp [h_inner_real]
+        simp only [Complex.conj_ofReal, Complex.mul_im, Complex.ofReal_re,
+                    Complex.ofReal_im, h_inner_real, mul_zero, zero_mul, add_zero]
       simp [h_Areal, h_xreal]
     have h_as_real : ⟪gen.op ⟨ψ, hψ⟩ - x • ψ, ψ⟫_ℂ =
         ((⟪gen.op ⟨ψ, hψ⟩ - x • ψ, ψ⟫_ℂ).re : ℂ) := by

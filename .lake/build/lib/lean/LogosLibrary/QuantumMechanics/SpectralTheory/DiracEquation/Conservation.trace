@@ -1,0 +1,31 @@
+{"synthetic": false,
+ "outputs":
+ {"o": ["13992267653810848605"],
+  "i": "405978575002819755",
+  "c": "16649061690643947278"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/Cli/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/batteries/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/Qq/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/aesop/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/proofwidgets/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/importGraph/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/plausible/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/mathlib/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/build/lib/lean /Users/augustusthwack/.elan/toolchains/leanprover--lean4---v4.23.0-rc2/bin/lean /Users/augustusthwack/Desktop/Logos_Library/LogosLibrary/QuantumMechanics/SpectralTheory/DiracEquation/Conservation.lean -o /Users/augustusthwack/Desktop/Logos_Library/.lake/build/lib/lean/LogosLibrary/QuantumMechanics/SpectralTheory/DiracEquation/Conservation.olean -i /Users/augustusthwack/Desktop/Logos_Library/.lake/build/lib/lean/LogosLibrary/QuantumMechanics/SpectralTheory/DiracEquation/Conservation.ilean -c /Users/augustusthwack/Desktop/Logos_Library/.lake/build/ir/LogosLibrary/QuantumMechanics/SpectralTheory/DiracEquation/Conservation.c --setup /Users/augustusthwack/Desktop/Logos_Library/.lake/build/ir/LogosLibrary/QuantumMechanics/SpectralTheory/DiracEquation/Conservation.setup.json --json",
+   "level": "trace"}],
+ "inputs":
+ [["LogosLibrary.QuantumMechanics.SpectralTheory.DiracEquation.Conservation:deps",
+   [["deps",
+     [["logos_library/LogosLibrary:extraDep",
+       [["@logos_library:extraDep", "1723"]]],
+      ["imports",
+       [["LogosLibrary.QuantumMechanics.SpectralTheory.DiracEquation.Current transitive imports (legacy)",
+         "2845604784390414340"],
+        ["LogosLibrary.QuantumMechanics.SpectralTheory.DiracEquation.Current:importAllArts",
+         "8869801674103926887"]]]]],
+    ["libs",
+     [["import dynlibs", "1723"],
+      ["package external libraries", "1723"],
+      ["module dynlibs", "1723"],
+      ["module plugins", "1723"]]]]],
+  ["Lean 4.23.0, commit ad1a017949674a947f0d6794cbf7130d642c6530",
+   "2372534101328293747"],
+  ["/Users/augustusthwack/Desktop/Logos_Library/LogosLibrary/QuantumMechanics/SpectralTheory/DiracEquation/Conservation.lean",
+   "6707501430514054764"],
+  ["options", "1723"],
+  ["Module.leanArgs: #[]", "1723"]],
+ "depHash": "500092302784752175"}

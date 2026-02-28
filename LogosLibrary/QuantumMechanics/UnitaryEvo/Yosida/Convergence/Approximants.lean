@@ -172,7 +172,7 @@ theorem yosidaApproxSym_tendsto_on_domain
       atTop (𝓝 ((1/2 : ℂ) • (gen.op ⟨φ, hφ⟩ + gen.op ⟨φ, hφ⟩))) := h_sum.const_smul (1/2 : ℂ)
   have h_simp : (1/2 : ℂ) • (gen.op ⟨φ, hφ⟩ + gen.op ⟨φ, hφ⟩) = gen.op ⟨φ, hφ⟩ := by
     rw [← two_smul ℂ (gen.op ⟨φ, hφ⟩), smul_smul]
-    norm_num
+    norm_num; exact MulAction.one_smul (gen.op ⟨φ, hφ⟩)
   rw [h_simp] at h_half
   exact h_half
 

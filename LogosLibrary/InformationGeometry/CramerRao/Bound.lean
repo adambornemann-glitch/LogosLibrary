@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Information Geometry Contributors. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Adam Bornemann & co.
+-/
 import LogosLibrary.InformationGeometry.CramerRao.CauchySchwarz
 
 noncomputable section
@@ -181,8 +186,10 @@ theorem cramerRao_saturated
           b ^ 2 *
             (M.score θ i ω ^ 2 * M.density θ ω) :=
         hab.mono (fun ω h => by rw [h]; ring)
-      rw [integral_congr_ae hae, integral_const_mul,
-          h_fisher]
+      rw [integral_congr_ae hae]
+      trans (b ^ 2 * ∫ ω, M.score θ i ω ^ 2 * M.density θ ω ∂M.refMeasure)
+      · exact MeasureTheory.integral_const_mul (b ^ 2) _
+      · rw [h_fisher]
     -- dτ = b·Iii
     -- From covariance–score identity + T = a + b·sᵢ:
     --   dτ = Cov(T, sᵢ) = E[T·sᵢ] (since E[sᵢ]=0)

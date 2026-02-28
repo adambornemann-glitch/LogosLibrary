@@ -702,7 +702,8 @@ theorem ergosphere_t_spacelike (p : KerrParams) (x : BoyerLindquistCoords)
   -- We need to show: -(1 - 2Mr/Σ) > 0
   -- Rewrite as: 2Mr/Σ - 1 > 0, i.e., 2Mr/Σ > 1, i.e., 2Mr > Σ
   rw [neg_sub]
-  rw [gt_iff_lt, sub_pos, one_lt_div hSigma_pos]
+  suffices 1 < 2 * p.M * x.r / Sigma_K p x.r x.θ by linarith
+  rw [one_lt_div hSigma_pos]
 
   -- Goal: Σ < 2Mr, i.e., r² + a²cos²θ < 2Mr
   unfold Sigma_K

@@ -159,7 +159,8 @@ lemma stone_exponential_eq_group
         ‖exponential gen hsa h_dense t φ - U_grp.U t φ‖ +
         ‖U_grp.U t φ - U_grp.U t ψ‖ := by
           apply le_trans (norm_add_le _ _)
-          apply add_le_add_right (norm_add_le _ _)
+          gcongr
+          exact norm_add_le _ _
     _ = ‖exponential gen hsa h_dense t (ψ - φ)‖ + 0 + ‖U_grp.U t (φ - ψ)‖ := by
           rw [← map_sub, ← map_sub, h_agree_on_domain φ hφ_mem, sub_self, norm_zero]
     _ = ‖ψ - φ‖ + 0 + ‖φ - ψ‖ := by

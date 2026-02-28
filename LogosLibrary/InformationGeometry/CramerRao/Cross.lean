@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Information Geometry Contributors. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Adam Bornemann & co.
+-/
 import LogosLibrary.InformationGeometry.CramerRao.Basic
 
 noncomputable section
@@ -49,8 +54,7 @@ theorem hasFDerivAt_integral_T_density
       θ₀ by
     simp only [smul_eq_mul] at h; exact h
   exact hasFDerivAt_integral_of_dominated_of_fderiv_le
-    hε
-    -- (hF_meas) ∀ᶠ θ in 𝓝 θ₀, AEStronglyMeasurable (T • p θ) μ
+    (Metric.ball_mem_nhds θ₀ hε)
     (eventually_of_mem (Metric.ball_mem_nhds θ₀ hε)
       (fun θ hθ =>
         (hReg.measurable.aestronglyMeasurable

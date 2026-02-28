@@ -221,16 +221,21 @@ def fisherLinearMap {θ : ParamSpace n}
     (_hθ : θ ∈ M.paramDomain)
     (_hSq : M.ScoreSqIntegrableModel θ) :
     ParamSpace n →ₗ[ℝ] ParamSpace n where
-  toFun v := fun j =>
-    ∑ i : Fin n, M.fisherMatrix θ j i * v i
+  toFun v := WithLp.toLp 2 (fun j =>
+    ∑ i : Fin n, M.fisherMatrix θ j i * v.ofLp i)
   map_add' v w := by
-    ext j; simp [Finset.sum_add_distrib, mul_add]
-  map_smul' c v := by
+    show WithLp.toLp 2 _ = WithLp.toLp 2 _
+    congr 1
     ext j
-    simp only [RingHom.id_apply, PiLp.smul_apply, smul_eq_mul]
+    simp [Finset.sum_add_distrib, mul_add]
+  map_smul' c v := by
+    show WithLp.toLp 2 _ = WithLp.toLp 2 _
+    congr 1
+    ext j
+    simp only [RingHom.id_apply]
+    simp only [PiLp.smul_apply, smul_eq_mul, WithLp.equiv_apply, Pi.smul_apply]
     rw [@mul_sum]
-    congr 1; ext i
-    ring
+    congr 1; ext i; ring
 
 /-- The linear map is self-adjoint with respect to the standard
 Euclidean inner product:
@@ -245,7 +250,7 @@ theorem fisherLinearMap_symm_apply {θ : ParamSpace n}
       ∑ j, v j * M.fisherLinearMap hθ hSq w j := by
   simp only [fisherLinearMap, LinearMap.coe_mk, AddHom.coe_mk]
   -- Expand products into double sums
-  simp only [Finset.mul_sum, Finset.sum_mul]
+  simp only [Finset.mul_sum, Finset.sum_mul] -- `simp` made no progress
   -- Both sides are now ∑_j ∑_i (stuff)
   -- Swap summation order on LHS
   rw [Finset.sum_comm]

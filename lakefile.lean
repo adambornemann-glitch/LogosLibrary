@@ -7,8 +7,7 @@ package «logos_library» where
 
 
 require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git" @ "3eca3de90b3f0b590906b26176e9069107272165"
-
+  "https://github.com/leanprover-community/mathlib4.git"
 
 
 @[default_target]

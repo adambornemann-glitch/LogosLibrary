@@ -1,0 +1,31 @@
+{"synthetic": false,
+ "outputs":
+ {"o": ["8578030780242307360"],
+  "i": "10769857656421103149",
+  "c": "4258482968501130882"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/Cli/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/batteries/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/Qq/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/aesop/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/proofwidgets/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/importGraph/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/plausible/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/mathlib/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/build/lib/lean /Users/augustusthwack/.elan/toolchains/leanprover--lean4---v4.23.0-rc2/bin/lean /Users/augustusthwack/Desktop/Logos_Library/LogosLibrary/QuantumMechanics/UnitaryEvo/Schrodinger.lean -o /Users/augustusthwack/Desktop/Logos_Library/.lake/build/lib/lean/LogosLibrary/QuantumMechanics/UnitaryEvo/Schrodinger.olean -i /Users/augustusthwack/Desktop/Logos_Library/.lake/build/lib/lean/LogosLibrary/QuantumMechanics/UnitaryEvo/Schrodinger.ilean -c /Users/augustusthwack/Desktop/Logos_Library/.lake/build/ir/LogosLibrary/QuantumMechanics/UnitaryEvo/Schrodinger.c --setup /Users/augustusthwack/Desktop/Logos_Library/.lake/build/ir/LogosLibrary/QuantumMechanics/UnitaryEvo/Schrodinger.setup.json --json",
+   "level": "trace"}],
+ "inputs":
+ [["LogosLibrary.QuantumMechanics.UnitaryEvo.Schrodinger:deps",
+   [["deps",
+     [["logos_library/LogosLibrary:extraDep",
+       [["@logos_library:extraDep", "1723"]]],
+      ["imports",
+       [["LogosLibrary.QuantumMechanics.UnitaryEvo.Stone transitive imports (legacy)",
+         "17998649808537577631"],
+        ["LogosLibrary.QuantumMechanics.UnitaryEvo.Stone:importAllArts",
+         "2467058193193516253"]]]]],
+    ["libs",
+     [["import dynlibs", "1723"],
+      ["package external libraries", "1723"],
+      ["module dynlibs", "1723"],
+      ["module plugins", "1723"]]]]],
+  ["Lean 4.23.0, commit ad1a017949674a947f0d6794cbf7130d642c6530",
+   "2372534101328293747"],
+  ["/Users/augustusthwack/Desktop/Logos_Library/LogosLibrary/QuantumMechanics/UnitaryEvo/Schrodinger.lean",
+   "9914730021038121129"],
+  ["options", "1723"],
+  ["Module.leanArgs: #[]", "1723"]],
+ "depHash": "14118675849147349191"}

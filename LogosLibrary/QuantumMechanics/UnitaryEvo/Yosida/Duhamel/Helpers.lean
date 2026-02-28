@@ -144,7 +144,7 @@ lemma resolvent_unique {U_grp : OneParameterUnitaryGroup (H := H)}
     | inl h => exact absurd h h7
     | inr h => exact h
   have h9 : ‖ψ‖ = 0 := by
-    have : (‖ψ‖ : ℂ) = 0 := pow_eq_zero h8
+    have : (‖ψ‖ : ℂ) = 0 := eq_zero_of_pow_eq_zero h8
     exact_mod_cast this
   exact norm_eq_zero.mp h9
 

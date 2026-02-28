@@ -164,15 +164,13 @@ lemma tendsto_integral_Ioc_exp_decay
     exact h_exp.const_mul M
   have h_tail_bound : ∀ T ≥ 0, ∫ t in Set.Ioi T, M * Real.exp (-t) = M * Real.exp (-T) := by
     intro T hT
-    have h_deriv : ∀ x ∈ Set.Ici T, HasDerivAt (fun t => -M * Real.exp (-t)) (M * Real.exp (-x)) x := by
+    have h_deriv : ∀ x ∈ Set.Ici T, HasDerivAt (fun t => -M * Real.exp (-t))
+        (M * Real.exp (-x)) x := by
       intro x _
-      have h1 : HasDerivAt (fun t => -t) (-1) x := hasDerivAt_neg x
-      have h2 : HasDerivAt Real.exp (Real.exp (-x)) (-x) := Real.hasDerivAt_exp (-x)
-      have h3 := h2.comp x h1
-      have h4 : HasDerivAt (fun t => M * Real.exp (-t)) (M * (Real.exp (-x) * -1)) x :=
-        h3.const_mul M
-      have h5 := h4.neg
-      convert h5 using 1 <;> ring_nf ; rfl
+      have := ((Real.hasDerivAt_exp (-x)).comp x (hasDerivAt_neg x)).const_mul M |>.neg
+      convert this using 1
+      · ext t; ring_nf; rfl
+      · ring
     have h_int : IntegrableOn (fun t => M * Real.exp (-t)) (Set.Ioi T) volume :=
       h_norm_int.mono_set (Set.Ioi_subset_Ioi hT)
     have h_tend : Tendsto (fun t => -M * Real.exp (-t)) atTop (𝓝 0) := by
@@ -232,11 +230,8 @@ lemma tendsto_integral_Ioc_exp_decay
           _ ≤ M := le_max_left _ _
     _ = M * Real.exp (-T) := h_tail_bound T hT_pos.le
     _ ≤ M * Real.exp (-(N : ℝ)) := by
-        apply mul_le_mul_of_nonneg_left _ hM_nonneg
-        apply Real.exp_le_exp.mpr
-        have h1 : (N : ℝ) ≤ max 1 N := Nat.cast_le.mpr (le_max_right 1 N)
-        simp_all only [ge_iff_le, gt_iff_lt, le_sup_right, sup_le_iff, sub_add_cancel_left, Nat.cast_max, Nat.cast_one,
-          neg_le_neg_iff, M]
+        gcongr
+        grind only [= max_def]
     _ < ε := hN
 
 lemma hasDerivAt_integral_of_exp_decay
@@ -255,16 +250,17 @@ lemma hasDerivAt_integral_of_exp_decay
   have hM_pos : 0 < M := lt_max_of_lt_right one_pos
   have hC_le_M : |C| ≤ M := le_max_left _ _
   have h := hasDerivAt_integral_of_dominated_loc_of_deriv_le
-    (μ := μ) (ε := 1) (x₀ := t)
+    (μ := μ) (x₀ := t)
     (F := fun τ s => Real.exp (-s) • f τ s)
     (F' := fun τ s => Real.exp (-s) • deriv (f · s) τ)
     (bound := fun s => M * Real.exp (-s))
-    one_pos ?hF_meas ?hF_int ?hF'_meas ?hF'_bound ?hbound_int ?hF_deriv
+    (Metric.ball_mem_nhds t one_pos)  -- was: (ε := 1) one_pos
+    ?hF_meas ?hF_int ?hF'_meas ?hF'_bound ?hbound_int ?hF_deriv
   exact h.2
   case hF_meas =>
     filter_upwards with τ
     apply AEStronglyMeasurable.smul
-    · exact (Real.continuous_exp.comp continuous_neg).aestronglyMeasurable
+    · exact (Real.continuous_exp.comp continuous_neg).aestronglyMeasurable.restrict
     · exact (hf_cont.comp (continuous_const.prodMk continuous_id)).aestronglyMeasurable
   case hF_int =>
     have hf_t_cont : Continuous (fun s => f t s) :=
@@ -278,11 +274,10 @@ lemma hasDerivAt_integral_of_exp_decay
   case hF'_bound =>
     filter_upwards [ae_restrict_mem measurableSet_Ici] with s hs τ _
     rw [norm_smul, Real.norm_of_nonneg (le_of_lt (Real.exp_pos _))]
-    have h1 : ‖deriv (f · s) τ‖ ≤ C := hC' τ s hs
     calc Real.exp (-s) * ‖deriv (f · s) τ‖
         ≤ Real.exp (-s) * M := by
           apply mul_le_mul_of_nonneg_left
-          exact h1.trans ((le_abs_self C).trans hC_le_M)
+          exact (hC' τ s hs).trans ((le_abs_self C).trans hC_le_M)
           exact le_of_lt (Real.exp_pos _)
       _ = M * Real.exp (-s) := mul_comm _ _
   case hbound_int =>

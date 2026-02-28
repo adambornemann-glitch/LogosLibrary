@@ -126,7 +126,6 @@ lemma yosidaJNeg_tendsto_on_domain
     simp only [sub_zero] at h_sub
     exact h_sub
   exact h_tendsto.congr (fun n => (h_identity n).symm)
-
 lemma yosidaJNeg_tendsto_id
     (gen : Generator U_grp) (hsa : gen.IsSelfAdjoint)
     (h_dense : Dense (gen.domain : Set H))
@@ -134,15 +133,12 @@ lemma yosidaJNeg_tendsto_id
     Tendsto (fun n : ℕ+ => yosidaJNeg gen hsa n ψ) atTop (𝓝 ψ) := by
   apply Metric.tendsto_atTop.mpr
   intro ε hε
-  -- Step 1: Approximate ψ by φ ∈ D(A) with ‖ψ - φ‖ < ε/3
   have hε3 : ε / 3 > 0 := by linarith
   obtain ⟨φ, hφ_mem, hφ_close⟩ := Metric.mem_closure_iff.mp
     (h_dense.closure_eq ▸ Set.mem_univ ψ) (ε / 3) hε3
   rw [dist_eq_norm] at hφ_close
-  -- Step 2: For φ ∈ D(A), Jₙ⁻φ → φ
-  have h_conv_φ := yosidaJNeg_tendsto_on_domain gen hsa φ hφ_mem
-  rw [Metric.tendsto_atTop] at h_conv_φ
-  obtain ⟨N, hN⟩ := h_conv_φ (ε / 3) hε3
+  obtain ⟨N, hN⟩ := (Metric.tendsto_atTop.mp
+    (yosidaJNeg_tendsto_on_domain gen hsa φ hφ_mem)) (ε / 3) hε3
   use N
   intro n hn
   rw [dist_eq_norm]
@@ -151,29 +147,24 @@ lemma yosidaJNeg_tendsto_id
          (yosidaJNeg gen hsa n φ - φ) + (φ - ψ)‖ := by abel_nf
     _ ≤ ‖yosidaJNeg gen hsa n ψ - yosidaJNeg gen hsa n φ‖ +
         ‖yosidaJNeg gen hsa n φ - φ‖ + ‖φ - ψ‖ := by
-          apply le_trans (norm_add_le _ _)
-          apply add_le_add_right
-          exact norm_add_le _ _
+          calc _ ≤ ‖yosidaJNeg gen hsa n ψ - yosidaJNeg gen hsa n φ +
+                    (yosidaJNeg gen hsa n φ - φ)‖ + ‖φ - ψ‖ := norm_add_le _ _
+            _ ≤ _ := by gcongr; exact norm_add_le _ _
     _ = ‖yosidaJNeg gen hsa n (ψ - φ)‖ +
         ‖yosidaJNeg gen hsa n φ - φ‖ + ‖φ - ψ‖ := by
-          congr 2
-          simp only [map_sub]
+          congr 2; simp only [map_sub]
     _ ≤ ‖yosidaJNeg gen hsa n‖ * ‖ψ - φ‖ +
         ‖yosidaJNeg gen hsa n φ - φ‖ + ‖φ - ψ‖ := by
-          apply add_le_add_right
-          apply add_le_add_right
-          exact ContinuousLinearMap.le_opNorm _ _
+          gcongr; exact ContinuousLinearMap.le_opNorm _ _
     _ ≤ 1 * ‖ψ - φ‖ + ‖yosidaJNeg gen hsa n φ - φ‖ + ‖φ - ψ‖ := by
-          apply add_le_add_right
-          apply add_le_add_right
-          apply mul_le_mul_of_nonneg_right (yosidaJNeg_norm_bound gen hsa n) (norm_nonneg _)
+          gcongr; exact yosidaJNeg_norm_bound gen hsa n
     _ = ‖ψ - φ‖ + ‖yosidaJNeg gen hsa n φ - φ‖ + ‖φ - ψ‖ := by ring
     _ < ε / 3 + ε / 3 + ε / 3 := by
-          apply add_lt_add
-          apply add_lt_add
-          · exact hφ_close
-          · rw [← dist_eq_norm]; exact hN n hn
-          · rw [norm_sub_rev]; exact hφ_close
+          gcongr
+          · exact mem_ball_iff_norm.mp (hN n hn)
+          · rw [← dist_eq_norm, ← @Metric.mem_ball']
+            exact mem_ball_iff_norm.mpr hφ_close
     _ = ε := by ring
+
 
 end QuantumMechanics.Yosida

@@ -64,14 +64,15 @@ lemma duhamelIntegrand_continuous
   have h_exp_cont_τ : Continuous (fun τ : ℝ => expBounded B τ) := by
     unfold expBounded
     have h_eq : ∀ τ : ℝ, (∑' k : ℕ, (1 / k.factorial : ℂ) • ((τ : ℂ) • B) ^ k) =
-                NormedSpace.exp ℂ ((τ : ℂ) • B) := by
+                NormedSpace.exp ((τ : ℂ) • B) := by
       intro τ
-      rw [NormedSpace.exp_eq_tsum]
+      rw [NormedSpace.exp_eq_tsum ℂ]
       congr 1; ext k; simp only [one_div]
     simp_rw [h_eq]
     have h_smul_cont : Continuous (fun τ : ℝ => (τ : ℂ) • B) :=
       continuous_ofReal.smul continuous_const
-    have h_exp_cont : Continuous (fun T : H →L[ℂ] H => NormedSpace.exp ℂ T) :=
+    haveI : NormedAlgebra ℚ (H →L[ℂ] H) := NormedAlgebra.restrictScalars ℚ ℂ _
+    have h_exp_cont : Continuous (fun T : H →L[ℂ] H => NormedSpace.exp T) :=
       NormedSpace.exp_continuous
     exact h_exp_cont.comp h_smul_cont
   have h_exp_cont_s : Continuous (fun s : ℝ => expBounded B (t - s)) :=
@@ -100,6 +101,7 @@ lemma unitary_hasDerivAt_zero
     have := U_grp.identity
     simp only [this, ContinuousLinearMap.id_apply]
   have h_gen := gen.generator_formula ⟨φ, hφ⟩
+  haveI : IsScalarTower ℝ ℂ H := RestrictScalars.isScalarTower ℝ ℂ H
   have h_slope_eq : ∀ t : ℝ, t ≠ 0 →
     slope (fun t => U_grp.U t φ) 0 t = (t : ℂ)⁻¹ • (U_grp.U t φ - φ) := by
     intro t ht
@@ -141,6 +143,7 @@ lemma unitary_hasDerivAt
       simp only [sub_self]
       exact unitary_hasDerivAt_zero gen φ hφ
     exact h0.comp_sub_const s s
+  haveI : IsScalarTower ℝ ℂ H := RestrictScalars.isScalarTower ℝ ℂ H
   have h_comp : HasDerivAt (fun t => U_grp.U s (U_grp.U (t - s) φ))
                          (U_grp.U s (I • gen.op ⟨φ, hφ⟩)) s := by
     let L := (U_grp.U s).restrictScalars ℝ
@@ -184,11 +187,12 @@ theorem duhamel_identity
   have h_U_deriv : ∀ s, HasDerivAt (fun s => U_grp.U s φ)
                          (I • gen.op ⟨U_grp.U s φ, gen.domain_invariant s φ hφ⟩) s :=
     fun s => unitary_hasDerivAt gen hsa s φ hφ
+  haveI : IsScalarTower ℝ ℂ H := RestrictScalars.isScalarTower ℝ ℂ H
   have h_deriv : ∀ s, HasDerivAt f (duhamelIntegrand gen hsa n t φ hφ s) s := by
     intro s
     have h_bil : IsBoundedBilinearMap ℝ (fun p : (H →L[ℂ] H) × H => p.1 p.2) := {
       add_left := fun T₁ T₂ v => by simp only [ContinuousLinearMap.add_apply]
-      smul_left := fun c T v => by simp only [ContinuousLinearMap.smul_apply]
+      smul_left := fun c T v => by simp only; rfl
       add_right := fun T v₁ v₂ => T.map_add v₁ v₂
       smul_right := fun c T v => by
         rw [RCLike.real_smul_eq_coe_smul (K := ℂ), T.map_smul]
@@ -243,17 +247,20 @@ theorem duhamel_identity
           rw [this]
           exact continuous_const.sub continuous_ofReal
         · exact continuous_const
-      have h_exp : Continuous (NormedSpace.exp ℂ : (H →L[ℂ] H) → (H →L[ℂ] H)) :=
+      haveI : NormedAlgebra ℚ (H →L[ℂ] H) := NormedAlgebra.restrictScalars ℚ ℂ _
+      have h_exp : Continuous (NormedSpace.exp : (H →L[ℂ] H) → (H →L[ℂ] H)) :=
         NormedSpace.exp_continuous
       have h_comp := h_exp.comp h_smul
       convert h_comp using 1
       ext s v
-      simp only [Function.comp_apply, expBounded, NormedSpace.exp_eq_tsum]
+      simp only [Function.comp_apply, expBounded]
       congr 1
       ext k
       congr 1
       field_simp
       rw [ofReal_sub]
+      rw [NormedSpace.exp_eq_tsum ℂ]
+      congr 1; ext k; simp only [one_div]
     have h2 : Continuous (fun s => U_grp.U s φ) := U_grp.strong_continuous φ
     exact h1.clm_apply h2
   have h_int : IntervalIntegrable (duhamelIntegrand gen hsa n t φ hφ) MeasureTheory.volume 0 t :=

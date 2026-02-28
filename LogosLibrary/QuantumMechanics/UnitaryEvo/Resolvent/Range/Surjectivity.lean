@@ -116,15 +116,7 @@ lemma solution_unique {U_grp : OneParameterUnitaryGroup (H := H)}
   simp only [norm_zero, ge_iff_le] at h_bound
   have h_im_pos : 0 < |z.im| := abs_pos.mpr hz
   have h_norm_zero : ‖(ψ : H) - (ψ' : H)‖ = 0 := by
-    by_contra h_ne
-    have h_pos : 0 < ‖(ψ : H) - (ψ' : H)‖ := by
-      cases' (norm_nonneg ((ψ : H) - (ψ' : H))).lt_or_eq with h h
-      · exact h
-      · exact absurd h.symm h_ne
-    have : 0 < |z.im| * ‖(ψ : H) - (ψ' : H)‖ := mul_pos h_im_pos h_pos
-    linarith
-  rw [norm_sub_rev] at h_norm_zero
-  symm
+    nlinarith [norm_nonneg ((ψ : H) - (ψ' : H))]
   exact Subtype.ext (sub_eq_zero.mp (norm_eq_zero.mp h_norm_zero))
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]

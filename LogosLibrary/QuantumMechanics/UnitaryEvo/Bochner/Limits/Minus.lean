@@ -46,11 +46,10 @@ lemma unitary_shift_resolventIntegralMinus (φ : H) (h : ℝ) (hh : h > 0) :
   have h_shift : ∀ t, U_grp.U h (Real.exp (-t) • U_grp.U (-t) φ) =
                       Real.exp (-t) • U_grp.U (h - t) φ := by
     intro t
-    rw [ContinuousLinearMap.map_smul_of_tower]
-    congr 1
-    have := U_grp.group_law h (-t)
-    simp only at this
-    exact congrFun (congrArg DFunLike.coe this).symm φ
+    have hlaw' : U_grp.U h ∘L U_grp.U (-t) = U_grp.U (h - t) := by
+      rw [show h - t = h + (-t) from sub_eq_add_neg h t]; exact Eq.symm (U_grp.group_law h (-t))
+    rw [← hlaw', ContinuousLinearMap.comp_apply]
+    exact map_smul (U_grp.U h) _ _
   simp_rw [h_shift]
   have h_exp : ∀ t, Real.exp (-t) • U_grp.U (h - t) φ =
                     Real.exp (-h) • (Real.exp (-(t - h)) • U_grp.U (-(t - h)) φ) := by
@@ -58,7 +57,7 @@ lemma unitary_shift_resolventIntegralMinus (φ : H) (h : ℝ) (hh : h > 0) :
     rw [← smul_assoc, smul_eq_mul, ← Real.exp_add]
     congr 1
     · ring_nf
-    · ring_nf
+    · · congr 1; abel_nf
   simp_rw [h_exp]
   have h_smul_comm : ∫ t in Set.Ici 0, Real.exp (-h) • (Real.exp (-(t - h)) • U_grp.U (-(t - h)) φ) =
                      Real.exp (-h) • ∫ t in Set.Ici 0, Real.exp (-(t - h)) • U_grp.U (-(t - h)) φ := by
@@ -140,11 +139,10 @@ lemma unitary_shift_resolventIntegralMinus_neg (φ : H) (h : ℝ) (hh : h < 0) :
   have h_shift : ∀ t, U_grp.U h (Real.exp (-t) • U_grp.U (-t) φ) =
                       Real.exp (-t) • U_grp.U (h - t) φ := by
     intro t
-    rw [ContinuousLinearMap.map_smul_of_tower]
-    congr 1
-    have := U_grp.group_law h (-t)
-    simp only at this
-    exact congrFun (congrArg DFunLike.coe (id (Eq.symm this))) φ
+    have hlaw : U_grp.U h ∘L U_grp.U (-t) = U_grp.U (h - t) := by
+      rw [show h - t = h + (-t) from sub_eq_add_neg h t]; exact Eq.symm (U_grp.group_law h (-t))
+    rw [← hlaw, ContinuousLinearMap.comp_apply]
+    exact map_smul (U_grp.U h) _ _
   simp_rw [h_shift]
   have h_exp : ∀ t, Real.exp (-t) • U_grp.U (h - t) φ =
                     Real.exp (-h) • (Real.exp (-(t - h)) • U_grp.U (-(t - h)) φ) := by
@@ -152,7 +150,7 @@ lemma unitary_shift_resolventIntegralMinus_neg (φ : H) (h : ℝ) (hh : h < 0) :
     rw [← smul_assoc, smul_eq_mul, ← Real.exp_add]
     congr 1
     · ring_nf
-    · ring_nf
+    · congr 1; abel_nf
   simp_rw [h_exp]
   have h_smul_comm : ∫ t in Set.Ici 0, Real.exp (-h) • (Real.exp (-(t - h)) • U_grp.U (-(t - h)) φ) =
                      Real.exp (-h) • ∫ t in Set.Ici 0, Real.exp (-(t - h)) • U_grp.U (-(t - h)) φ := by
@@ -398,8 +396,8 @@ lemma generator_limit_resolventIntegralMinus (φ : H) :
               simp
             exact this.mono_left nhdsWithin_le_nhds
           · filter_upwards [self_mem_nhdsWithin] with h hh
-            simp only [Set.mem_Ioi, Left.neg_pos_iff]
-            exact hh
+            simp only [Set.mem_Ioi]
+            exact Left.neg_pos_iff.mpr hh
         have h1 : Tendsto (fun h : ℝ => (Real.exp (-h) - 1) / (-h) * (-1)) (𝓝[<] 0) (𝓝 (1 * (-1))) := by
           apply Tendsto.mul
           · have := (tendsto_exp_sub_one_div.mono_left (nhdsWithin_mono 0 (fun x hx => ne_of_gt hx))).comp tendsto_neg_Iio
@@ -545,8 +543,8 @@ lemma generator_limit_resolventIntegralMinus (φ : H) :
             simp
           exact this.mono_left nhdsWithin_le_nhds
         · filter_upwards [self_mem_nhdsWithin] with h hh
-          simp only [Set.mem_Ioi, Left.neg_pos_iff]
-          exact hh
+          simp only [Set.mem_Ioi]
+          exact Left.neg_pos_iff.mpr hh
       have h_comp := h_avg.comp tendsto_neg_Iio
       apply Tendsto.congr' _ h_comp
       filter_upwards [self_mem_nhdsWithin] with h hh

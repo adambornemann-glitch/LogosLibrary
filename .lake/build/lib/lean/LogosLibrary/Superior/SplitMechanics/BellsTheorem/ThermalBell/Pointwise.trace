@@ -1,0 +1,31 @@
+{"synthetic": false,
+ "outputs":
+ {"o": ["1310513966342429072"],
+  "i": "7547252025045990042",
+  "c": "11451312334979913600"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/Cli/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/batteries/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/Qq/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/aesop/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/proofwidgets/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/importGraph/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/plausible/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/mathlib/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/build/lib/lean /Users/augustusthwack/.elan/toolchains/leanprover--lean4---v4.23.0-rc2/bin/lean /Users/augustusthwack/Desktop/Logos_Library/LogosLibrary/Superior/SplitMechanics/BellsTheorem/ThermalBell/Pointwise.lean -o /Users/augustusthwack/Desktop/Logos_Library/.lake/build/lib/lean/LogosLibrary/Superior/SplitMechanics/BellsTheorem/ThermalBell/Pointwise.olean -i /Users/augustusthwack/Desktop/Logos_Library/.lake/build/lib/lean/LogosLibrary/Superior/SplitMechanics/BellsTheorem/ThermalBell/Pointwise.ilean -c /Users/augustusthwack/Desktop/Logos_Library/.lake/build/ir/LogosLibrary/Superior/SplitMechanics/BellsTheorem/ThermalBell/Pointwise.c --setup /Users/augustusthwack/Desktop/Logos_Library/.lake/build/ir/LogosLibrary/Superior/SplitMechanics/BellsTheorem/ThermalBell/Pointwise.setup.json --json",
+   "level": "trace"}],
+ "inputs":
+ [["LogosLibrary.Superior.SplitMechanics.BellsTheorem.ThermalBell.Pointwise:deps",
+   [["deps",
+     [["logos_library/LogosLibrary:extraDep",
+       [["@logos_library:extraDep", "1723"]]],
+      ["imports",
+       [["LogosLibrary.Superior.SplitMechanics.BellsTheorem.ThermalBell.SharedEnBudget transitive imports (legacy)",
+         "7287069961833106998"],
+        ["LogosLibrary.Superior.SplitMechanics.BellsTheorem.ThermalBell.SharedEnBudget:importAllArts",
+         "16851531244398966649"]]]]],
+    ["libs",
+     [["import dynlibs", "1723"],
+      ["package external libraries", "1723"],
+      ["module dynlibs", "1723"],
+      ["module plugins", "1723"]]]]],
+  ["Lean 4.23.0, commit ad1a017949674a947f0d6794cbf7130d642c6530",
+   "2372534101328293747"],
+  ["/Users/augustusthwack/Desktop/Logos_Library/LogosLibrary/Superior/SplitMechanics/BellsTheorem/ThermalBell/Pointwise.lean",
+   "11259325345356304114"],
+  ["options", "1723"],
+  ["Module.leanArgs: #[]", "1723"]],
+ "depHash": "10973215523504664939"}

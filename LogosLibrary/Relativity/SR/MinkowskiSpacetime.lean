@@ -397,7 +397,8 @@ noncomputable def lorentzGamma (v : ℝ) (_ /-hv-/ : |v| < 1) : ℝ :=
 theorem lorentzGamma_ge_one (v : ℝ) (hv : |v| < 1) :
     lorentzGamma v hv ≥ 1 := by
   unfold lorentzGamma
-  have h1 : 1 - v^2 > 0 := by simp_all only [gt_iff_lt, sub_pos, sq_lt_one_iff_abs_lt_one]
+  have hv_sq : v^2 < 1 := by exact (sq_lt_one_iff_abs_lt_one v).mpr hv
+  have h1 : 1 - v^2 > 0 := sub_pos.mpr hv_sq
   have h2 : 1 - v^2 ≤ 1 := by nlinarith [sq_nonneg v]
   have h3 : Real.sqrt (1 - v^2) ≤ 1 := by
     rw [@Real.sqrt_le_one]

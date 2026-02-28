@@ -81,30 +81,30 @@ theorem expBounded_skewAdjoint_unitary (B : H →L[ℂ] H) (hB : B.adjoint = -B)
 
 lemma expBounded_mem_unitary (B : H →L[ℂ] H) (hB : ContinuousLinearMap.adjoint B = -B) (t : ℝ) :
     expBounded B t ∈ unitary (H →L[ℂ] H) := by
-  rw [unitary.mem_iff]
+  haveI : NormedAlgebra ℚ (H →L[ℂ] H) :=
+    NormedAlgebra.restrictScalars ℚ ℂ _
+  rw [Unitary.mem_iff]
   constructor
   · -- star (exp B t) * exp B t = 1
     have h1 : star (expBounded B t) = expBounded (-B) t := by
       rw [ContinuousLinearMap.star_eq_adjoint, adjoint_expBounded, hB]
-    rw [h1]
-    rw [expBounded_eq_exp, expBounded_eq_exp]
+    rw [h1, expBounded_eq_exp, expBounded_eq_exp]
     have h_comm : Commute ((t : ℂ) • (-B)) ((t : ℂ) • B) := by
       unfold Commute SemiconjBy
       simp_all only [smul_neg, coe_smul, Algebra.mul_smul_comm, neg_mul,
         Algebra.smul_mul_assoc, mul_neg]
-    have h2 := (@NormedSpace.exp_add_of_commute ℂ (H →L[ℂ] H) _ _ _ _ _ _ h_comm).symm
+    have h2 := (NormedSpace.exp_add_of_commute h_comm).symm
     simp only [smul_neg, neg_add_cancel, NormedSpace.exp_zero] at h2
     simp_all only [smul_neg, coe_smul, Commute.neg_left_iff, Commute.refl]
   · -- exp B t * star (exp B t) = 1
     have h1 : star (expBounded B t) = expBounded (-B) t := by
       rw [ContinuousLinearMap.star_eq_adjoint, adjoint_expBounded, hB]
-    rw [h1]
-    rw [expBounded_eq_exp, expBounded_eq_exp]
+    rw [h1, expBounded_eq_exp, expBounded_eq_exp]
     have h_comm : Commute ((t : ℂ) • B) ((t : ℂ) • (-B)) := by
       unfold Commute SemiconjBy
       simp_all only [coe_smul, smul_neg, mul_neg, Algebra.mul_smul_comm,
         Algebra.smul_mul_assoc, neg_mul]
-    have h2 := (@NormedSpace.exp_add_of_commute ℂ (H →L[ℂ] H) _ _ _ _ _ _ h_comm).symm
+    have h2 := (NormedSpace.exp_add_of_commute h_comm).symm
     simp only [smul_neg, add_neg_cancel, NormedSpace.exp_zero] at h2
     simp_all only [smul_neg, coe_smul]
 
@@ -156,46 +156,31 @@ theorem expBounded_yosida_norm_le
 /-- Key lemma: derivative of exp at 0 along the direction B. -/
 lemma expBounded_hasDerivAt_zero (B : H →L[ℂ] H) :
     HasDerivAt (fun τ : ℝ => expBounded B τ) B 0 := by
-  rw [hasDerivAt_iff_tendsto_slope]
-  have h_exp_zero : expBounded B 0 = 1 := expBounded_at_zero' B
-  have h_eq_exp : ∀ h : ℝ, expBounded B h = NormedSpace.exp ℂ ((h : ℂ) • B) := by
-    intro h
-    unfold expBounded
-    rw [NormedSpace.exp_eq_tsum]
-    congr 1; ext k; simp only [one_div]
-  have h_deriv_smul : HasDerivAt (fun t : ℝ => (t : ℂ) • B) B 0 := by
-    have h1 : HasDerivAt (fun t : ℝ => (t : ℂ)) 1 0 := by
-      have := ContinuousLinearMap.hasDerivAt ofRealCLM (x := 0)
-      simp only [ofRealCLM_apply] at this
-      exact this
-    convert h1.smul_const B using 1
-    simp only [one_smul]
-  have h_exp_deriv : HasDerivAt (fun t : ℝ => NormedSpace.exp ℂ ((t : ℂ) • B)) B 0 := by
-    have h1 : HasFDerivAt (fun T : H →L[ℂ] H => NormedSpace.exp ℂ T)
-                          (1 : (H →L[ℂ] H) →L[ℂ] (H →L[ℂ] H)) (0 : H →L[ℂ] H) :=
-      hasFDerivAt_exp_zero
-    have h1' : HasFDerivAt (fun T : H →L[ℂ] H => NormedSpace.exp ℂ T)
-                           ((1 : (H →L[ℂ] H) →L[ℂ] (H →L[ℂ] H)).restrictScalars ℝ)
-                           (0 : H →L[ℂ] H) :=
-      h1.restrictScalars ℝ
-    have h2 := h_deriv_smul
-    have h_f0 : (0 : ℂ) • B = 0 := zero_smul ℂ B
-    simp only at h_f0
-    have h1'' : HasFDerivAt (fun T : H →L[ℂ] H => NormedSpace.exp ℂ T)
-                            ((1 : (H →L[ℂ] H) →L[ℂ] (H →L[ℂ] H)).restrictScalars ℝ)
-                            ((fun t : ℝ => (t : ℂ) • B) 0) := by
-      simp only [ofReal_zero, zero_smul]
-      exact h1'
-    have h_comp := h1''.comp_hasDerivAt (0 : ℝ) h2
-    convert h_comp using 1
-  rw [hasDerivAt_iff_tendsto_slope] at h_exp_deriv
-  apply h_exp_deriv.congr
-  intro h
-  simp_all only [ofReal_zero, zero_smul, NormedSpace.exp_zero, coe_smul]
+  haveI : IsScalarTower ℝ ℂ H := RestrictScalars.isScalarTower ℝ ℂ H
+  haveI : CompleteSpace (H →L[ℂ] H) := inferInstance
+  letI : NormedAlgebra ℝ (H →L[ℂ] H) := NormedAlgebra.restrictScalars ℝ ℂ _  -- letI not haveI!
+  haveI : IsScalarTower ℝ ℂ (H →L[ℂ] H) :=
+    ⟨fun r c f => ContinuousLinearMap.ext fun x => smul_assoc r c (f x)⟩
+  simp_rw [expBounded_eq_exp]
+  have h_path : HasDerivAt (fun t : ℝ => (t : ℂ) • B) B 0 := by
+    have h := (ofRealCLM.hasDerivAt (x := (0 : ℝ))).smul_const B
+    convert h using 1
+    exact (one_smul ℂ B).symm
+  have h_fderiv : HasFDerivAt NormedSpace.exp
+      (1 : (H →L[ℂ] H) →L[ℝ] (H →L[ℂ] H)) ((fun t : ℝ => (t : ℂ) • B) 0) := by
+    simp only [ofReal_zero, zero_smul]
+    show HasFDerivAt NormedSpace.exp (1 : (H →L[ℂ] H) →L[ℝ] (H →L[ℂ] H)) 0
+    exact hasFDerivAt_exp_zero (𝕂 := ℝ) (𝔸 := H →L[ℂ] H)
+  have h_comp := h_fderiv.comp_hasDerivAt (0 : ℝ) h_path
+  convert h_comp using 1
 
 /-- Derivative of the bounded exponential at any point. -/
 lemma expBounded_hasDerivAt (B : H →L[ℂ] H) (τ : ℝ) :
     HasDerivAt (fun t : ℝ => expBounded B t) (B.comp (expBounded B τ)) τ := by
+  haveI : IsScalarTower ℝ ℂ H := RestrictScalars.isScalarTower ℝ ℂ H
+  letI : NormedAlgebra ℝ (H →L[ℂ] H) := NormedAlgebra.restrictScalars ℝ ℂ _
+  haveI : IsScalarTower ℝ ℂ (H →L[ℂ] H) :=
+    ⟨fun r c f => ContinuousLinearMap.ext fun x => smul_assoc r c (f x)⟩
   have h_eq : ∀ t, expBounded B t = (expBounded B τ).comp (expBounded B (t - τ)) := by
     intro t
     rw [← expBounded_add_smul]
@@ -208,11 +193,12 @@ lemma expBounded_hasDerivAt (B : H →L[ℂ] H) (τ : ℝ) :
   have h_val : expBounded B (τ - τ) = 1 := by simp only [sub_self, expBounded_at_zero']
   have h_post : HasDerivAt (fun t => (expBounded B τ).comp (expBounded B (t - τ)))
                            ((expBounded B τ).comp B) τ := by
-    have h_clm : HasFDerivAt (fun T : H →L[ℂ] H => (expBounded B τ).comp T)
-                             ((ContinuousLinearMap.compL ℂ H H H) (expBounded B τ))
+    set A := expBounded B τ
+    have h_clm : HasFDerivAt (fun T : H →L[ℂ] H => A.comp T)
+                             ((ContinuousLinearMap.compL ℂ H H H) A)
                              (expBounded B (τ - τ)) :=
-      ((ContinuousLinearMap.compL ℂ H H H) (expBounded B τ)).hasFDerivAt
-    have h_clm' := h_clm.restrictScalars ℝ
+      ((ContinuousLinearMap.compL ℂ H H H) A).hasFDerivAt
+    have h_clm' := h_clm.restrictScalars ℝ   -- was: ℂ (no-op)
     have h_comp := h_clm'.comp_hasDerivAt τ h_shift
     convert h_comp using 1
   have h_comm : (expBounded B τ).comp B = B.comp (expBounded B τ) := by

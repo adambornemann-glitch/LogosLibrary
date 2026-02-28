@@ -1,0 +1,1 @@
+{"version":4,"references":{},"module":"LogosLibrary.Superior.NanoThermo","directImports":[["LogosLibrary.Superior.NanoThermo.Definition",false,false,false],["LogosLibrary.Superior.NanoThermo.Limits",false,false,false],["LogosLibrary.Superior.NanoThermo.Monotonicity",false,false,false],["LogosLibrary.Superior.NanoThermo.PageCurve",false,false,false]]}

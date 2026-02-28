@@ -1,0 +1,31 @@
+{"synthetic": false,
+ "outputs":
+ {"o": ["16057719803733808362"],
+  "i": "4081380801733062092",
+  "c": "8155797358344142178"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/Cli/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/batteries/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/Qq/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/aesop/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/proofwidgets/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/importGraph/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/plausible/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/mathlib/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/build/lib/lean /Users/augustusthwack/.elan/toolchains/leanprover--lean4---v4.23.0-rc2/bin/lean /Users/augustusthwack/Desktop/Logos_Library/LogosLibrary/QuantumMechanics/BellsTheorem/CHSH_bounds/Tsirelson.lean -o /Users/augustusthwack/Desktop/Logos_Library/.lake/build/lib/lean/LogosLibrary/QuantumMechanics/BellsTheorem/CHSH_bounds/Tsirelson.olean -i /Users/augustusthwack/Desktop/Logos_Library/.lake/build/lib/lean/LogosLibrary/QuantumMechanics/BellsTheorem/CHSH_bounds/Tsirelson.ilean -c /Users/augustusthwack/Desktop/Logos_Library/.lake/build/ir/LogosLibrary/QuantumMechanics/BellsTheorem/CHSH_bounds/Tsirelson.c --setup /Users/augustusthwack/Desktop/Logos_Library/.lake/build/ir/LogosLibrary/QuantumMechanics/BellsTheorem/CHSH_bounds/Tsirelson.setup.json --json",
+   "level": "trace"}],
+ "inputs":
+ [["LogosLibrary.QuantumMechanics.BellsTheorem.CHSH_bounds.Tsirelson:deps",
+   [["deps",
+     [["logos_library/LogosLibrary:extraDep",
+       [["@logos_library:extraDep", "1723"]]],
+      ["imports",
+       [["LogosLibrary.QuantumMechanics.BellsTheorem.CHSH_Bounds.Tsirelson.Tsirelson transitive imports (legacy)",
+         "10449410398379537628"],
+        ["LogosLibrary.QuantumMechanics.BellsTheorem.CHSH_Bounds.Tsirelson.Tsirelson:importAllArts",
+         "17741695652399203938"]]]]],
+    ["libs",
+     [["import dynlibs", "1723"],
+      ["package external libraries", "1723"],
+      ["module dynlibs", "1723"],
+      ["module plugins", "1723"]]]]],
+  ["Lean 4.23.0, commit ad1a017949674a947f0d6794cbf7130d642c6530",
+   "2372534101328293747"],
+  ["/Users/augustusthwack/Desktop/Logos_Library/LogosLibrary/QuantumMechanics/BellsTheorem/CHSH_bounds/Tsirelson.lean",
+   "17896369012961408359"],
+  ["options", "1723"],
+  ["Module.leanArgs: #[]", "1723"]],
+ "depHash": "3936759373234405451"}

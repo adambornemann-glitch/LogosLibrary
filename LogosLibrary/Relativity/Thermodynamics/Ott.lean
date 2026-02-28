@@ -219,43 +219,30 @@ Contrapositive: Landsberg (T' = T) would violate Landauer covariance
 -/
 theorem landsberg_violates_landauer
     (T : ℝ) (hT : T > 0) (ΔE : ℝ) (hΔE : ΔE > 0)
-    (h_landauer : ΔE = landauerBound T)  -- Exactly at the bound
+    (h_landauer : ΔE = landauerBound T)
     (v : ℝ) (hv : |v| < 1) (hv_nonzero : v ≠ 0) :
     let γ := lorentzGamma v hv
-    let ΔE' := γ * ΔE                     -- Energy transforms
-    let T'_landsberg := T                  -- Landsberg: T unchanged
-    ΔE' > landauerBound T'_landsberg := by  -- Bound EXCEEDED (not violated, but shows asymmetry)
+    let ΔE' := γ * ΔE
+    let T'_landsberg := T
+    ΔE' > landauerBound T'_landsberg := by
   simp only [landauerBound]
+  -- γ > 1 for any nonzero subluminal velocity
   have hγ : lorentzGamma v hv > 1 := by
     unfold lorentzGamma
-    have h1 : 1 - v^2 < 1 := by
-      rw [@sq]
-      subst h_landauer
-      simp_all only [gt_iff_lt, ne_eq, sub_lt_self_iff, mul_self_pos, not_false_eq_true]
-    have h2 : 1 - v^2 > 0 := by
-      subst h_landauer
-      simp_all only [gt_iff_lt, ne_eq, sub_lt_self_iff, sub_pos, sq_lt_one_iff_abs_lt_one]
-    have h3 : Real.sqrt (1 - v^2) < 1 := by
-      refine (Real.sqrt_lt ?_ ?_).mpr ?_
-      rw [@sub_nonneg]
-      subst h_landauer
-      simp_all only [gt_iff_lt, ne_eq, sub_lt_self_iff, sub_pos, sq_lt_one_iff_abs_lt_one, sq_le_one_iff_abs_le_one]
-      exact le_of_lt hv
-      exact zero_le_one' ℝ
-      subst h_landauer
-      simp_all only [gt_iff_lt, ne_eq, sub_lt_self_iff, sub_pos, sq_lt_one_iff_abs_lt_one, one_pow]
-    have h4 : Real.sqrt (1 - v^2) > 0 := Real.sqrt_pos.mpr h2
-    calc 1 / Real.sqrt (1 - v^2) > 1 / 1 := by
-          exact one_div_lt_one_div_of_lt h4 h3
-        _ = 1 := by ring
-  calc lorentzGamma v hv * ΔE = lorentzGamma v hv * (T * Real.log 2) := by rw [h_landauer]; unfold landauerBound ; exact rfl
-       _ = (lorentzGamma v hv * T) * Real.log 2 := by ring
-       _ > (1 * T) * Real.log 2 := by {
-           have hlog : Real.log 2 > 0 := Real.log_pos (by norm_num : (1:ℝ) < 2)
-           subst h_landauer
-           simp_all only [gt_iff_lt, ne_eq, one_mul, mul_lt_mul_right, lt_mul_iff_one_lt_left]
-         }
-       _ = T * Real.log 2 := by ring
+    have hv_sq : v ^ 2 < 1 := (sq_lt_one_iff_abs_lt_one v).mpr hv
+    have h_vsq_pos : (0 : ℝ) < v ^ 2 := by positivity
+    have h_pos : (0 : ℝ) < 1 - v ^ 2 := by linarith
+    have h_sqrt_pos : 0 < Real.sqrt (1 - v ^ 2) := Real.sqrt_pos.mpr h_pos
+    have h_sqrt_lt : Real.sqrt (1 - v ^ 2) < 1 := by
+      have h : Real.sqrt (1 - v ^ 2) < Real.sqrt 1 :=
+        Real.sqrt_lt_sqrt h_pos.le (by linarith)
+      rwa [Real.sqrt_one] at h
+    rw [gt_iff_lt, lt_div_iff₀ h_sqrt_pos, one_mul]
+    exact h_sqrt_lt
+  -- γ * ΔE > ΔE = landauerBound T since γ > 1 and T * log 2 > 0
+  have hlog : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  subst h_landauer; unfold landauerBound
+  nlinarith [mul_pos (sub_pos.mpr hγ) (mul_pos hT hlog)]
 
 /--
 Under Landsberg, a process at the Landauer bound in a moving frame
@@ -592,7 +579,8 @@ theorem landsberg_irreversibility_frame_dependent
                 sq_nonneg (Real.sqrt (1 - v^2))]
     calc 1 / Real.sqrt (1 - v^2) > 1 / 1 := one_div_lt_one_div_of_lt h_sqrt_pos h_sqrt_lt_one
       _ = 1 := one_div_one
-  calc lorentzGamma v hv * ΔS > 1 * ΔS := by exact (mul_lt_mul_right hΔS).mpr hγ_gt_one
+  calc lorentzGamma v hv * ΔS > 1 * ΔS := by exact
+      MulPosStrictMono.mul_lt_mul_of_pos_right hΔS hγ_gt_one
     _ = ΔS := one_mul ΔS
 
 /--
@@ -1505,7 +1493,8 @@ theorem physical_interpretation (p : KerrParams)
         > 1 / 1 := one_div_lt_one_div_of_lt (Real.sqrt_pos.mpr h_pos) h_sqrt_lt_one
       _ = 1 := one_div_one
   calc lorentzGamma v hv * hawkingTemperature p
-      > 1 * hawkingTemperature p := (mul_lt_mul_right hT_pos).mpr hγ_gt_one
+      > 1 * hawkingTemperature p := by exact
+        MulPosStrictMono.mul_lt_mul_of_pos_right hT_pos hγ_gt_one
     _ = hawkingTemperature p := one_mul _
 
 
@@ -1659,7 +1648,8 @@ theorem falling_observer_temperature (p : KerrParams)
       _ < 1 / Real.sqrt (1 - v_fall^2) := one_div_lt_one_div_of_lt h_sqrt_pos h_sqrt_lt_one
   constructor
   · calc lorentzGamma v_fall hv * hawkingTemperature p
-        > 1 * hawkingTemperature p := by exact (mul_lt_mul_right hT_pos).mpr hγ_gt_one
+        > 1 * hawkingTemperature p := by exact
+          MulPosStrictMono.mul_lt_mul_of_pos_right hT_pos hγ_gt_one
       _ = hawkingTemperature p := one_mul _
   · field_simp
 
@@ -2490,7 +2480,7 @@ theorem irreversibility_frame_dependent (v : ℝ) (hv : |v| < 1) (hv_ne : v ≠ 
     transformedProduction ep v hv > ep.ΔS := by
   unfold transformedProduction
   have hγ : γ v hv > 1 := γ_gt_one v hv hv_ne
-  calc γ v hv * ep.ΔS > 1 * ep.ΔS := (mul_lt_mul_right h_irrev).mpr hγ
+  calc γ v hv * ep.ΔS > 1 * ep.ΔS := by exact MulPosStrictMono.mul_lt_mul_of_pos_right h_irrev hγ
     _ = ep.ΔS := one_mul _
 
 /-!
@@ -2576,7 +2566,7 @@ theorem more_erased_than_existed (v : ℝ) (hv : |v| < 1) (hv_ne : v ≠ 0)
     effectiveEntropyErased be v hv > be.ΔS_magnitude := by
   unfold effectiveEntropyErased
   have hγ : γ v hv > 1 := γ_gt_one v hv hv_ne
-  calc γ v hv * be.ΔS_magnitude > 1 * be.ΔS_magnitude := (mul_lt_mul_right h_pos).mpr hγ
+  calc γ v hv * be.ΔS_magnitude > 1 * be.ΔS_magnitude := by exact MulPosStrictMono.mul_lt_mul_of_pos_right h_pos hγ
     _ = be.ΔS_magnitude := one_mul _
 
 /-- Standard bit erasure has positive entropy change -/

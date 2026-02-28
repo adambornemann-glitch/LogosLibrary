@@ -239,7 +239,8 @@ for each `ω`. Since `Θ` is open, membership suffices. -/
 theorem density_differentiableAt {θ : ParamSpace n}
     (hθ : θ ∈ M.paramDomain) (ω : Ω) :
     DifferentiableAt ℝ (fun θ' => M.density θ' ω) θ := by
-  exact ((M.density_smooth ω).differentiableOn le_top).differentiableAt
+  have h : (⊤ : WithTop ℕ∞) ≠ 0 := WithTop.top_ne_zero
+  exact ((M.density_smooth ω).differentiableOn h).differentiableAt
     (M.isOpen_paramDomain.mem_nhds hθ)
 
 /-! ### Identifiability -/

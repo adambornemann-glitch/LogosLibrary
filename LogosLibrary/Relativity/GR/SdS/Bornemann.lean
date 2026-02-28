@@ -830,8 +830,7 @@ lemma solar_mass_SdS_lifetime_bound :
   -- excitation_rate = rate * 0.5 > 10^24 * 0.5 = 5 * 10^23
   have h_exc : photon_interaction_rate M_sun * (1/2 : ℝ) > 5 * 10^23 := by
     have h1 : photon_interaction_rate M_sun * (1/2) > (10 : ℝ)^24 * (1/2) := by
-      apply (mul_lt_mul_right (by norm_num : (0 : ℝ) < 1/2)).mpr
-      exact h_rate
+      grind => linarith
     calc photon_interaction_rate M_sun * (1/2)
         > (10 : ℝ)^24 * (1/2) := h1
       _ = 5 * 10^23 := by norm_num
@@ -887,40 +886,39 @@ lemma SdS_lifetime_less_than_one_second (M : ℝ) (h_M : M > (10 : ℝ)^22) :
 
 /-- For stellar mass and above, lifetime is less than a NANOSECOND -/
 theorem stellar_BH_SdS_lifetime_less_than_nanosecond (M : ℝ) (h_M : M > (1/10) * M_sun) :
-    SdS_lifetime M (by unfold M_sun at h_M; linarith) < 1 / (10 : ℝ)^9 := by
+    SdS_lifetime M (by unfold M_sun at h_M; grind) < 1 / (10 : ℝ)^9 := by
   unfold SdS_lifetime excitation_rate photon_interaction_rate
   unfold BH_cross_section schwarzschild_radius angular_momentum_transfer_prob
   unfold n_CMB c_cm
-
-  -- Unfold M_sun in the hypothesis
   unfold M_sun at h_M
 
   have h_half : (0.5 : ℝ) = 1/2 := by norm_num
   rw [h_half]
-
   have h_G : (6674e-11 : ℝ) = 6674 / 10^11 := by norm_num
   rw [h_G]
 
-  -- M > 0.1 * M_sun = (1/10) * 1989 * 10^30 > 1989 * 10^28
   have h_M' : M > 1989 * (10 : ℝ)^28 := by
-    calc M > (1/10) * (1989 * (10 : ℝ)^30) := h_M
-      _ = 1989 * (10 : ℝ)^29 := by norm_num;
-      _ > 1989 * (10 : ℝ)^28 := by nlinarith
+    have : (1 : ℝ) / 10 * (1989 * 10 ^ 30) > 1989 * 10 ^ 28 := by norm_num
+    grind only
 
-  suffices h : 411 * (Real.pi * (2 * (6674/10^11) * M / ((2998 * 10^7)^2))^2) * (2998 * 10^7) * (1/2) > (10 : ℝ)^9 by
-    have h_ten_pos : (10 : ℝ)^9 > 0 := by positivity
-    exact one_div_lt_one_div_of_lt h_ten_pos h
+  suffices h : 411 * (Real.pi * (2 * (6674/10^11) * M / ((2998 * 10^7)^2))^2) *
+    (2998 * 10^7) * (1/2) > (10 : ℝ)^9 by
+    exact one_div_lt_one_div_of_lt (by positivity) h
 
-  have hπ : Real.pi > 3 := Real.pi_gt_three
-
-  calc 411 * (Real.pi * (2 * (6674/10^11) * M / ((2998 * 10^7)^2))^2) * (2998 * 10^7) * (1/2)
-      > 411 * (3 * (2 * (6674/10^11) * (1989 * (10 : ℝ)^28) / ((2998 * 10^7)^2))^2) * (2998 * 10^7) * (1/2) := by
-        have h2 : 2 * (6674/10^11) * M / ((2998 * 10^7)^2) > 2 * (6674/10^11) * (1989 * (10 : ℝ)^28) / ((2998 * 10^7)^2) := by
-          apply div_lt_div_of_pos_right _ (by positivity)
-          apply mul_lt_mul_of_pos_left h_M' (by positivity)
-        nlinarith [sq_nonneg (2 * (6674/10^11) * M / ((2998 * 10^7)^2)),
-                   sq_nonneg (2 * (6674/10^11) * (1989 * (10 : ℝ)^28) / ((2998 * 10^7)^2)),
-                   Real.pi_gt_three]
+  /-  Three-step calc: (1) replace π with 3, (2) replace M with M₀, (3) norm_num
+      Each step is one clean monotonicity argument instead of one impossible nlinarith -/
+  calc 411 * (Real.pi * (2 * (6674/10^11) * M / ((2998 * 10^7)^2))^2) *
+        (2998 * 10^7) * (1/2)
+      -- Step 1: π ≥ 3 (everything else fixed, all factors nonneg)
+      ≥ 411 * (3 * (2 * (6674/10^11) * M / ((2998 * 10^7)^2))^2) *
+        (2998 * 10^7) * (1/2) := by
+        gcongr
+        exact le_of_lt Real.pi_gt_three
+      -- Step 2: M > 1989 * 10^28 (strict, through the square)
+    _ > 411 * (3 * (2 * (6674/10^11) * (1989 * (10 : ℝ)^28) /
+        ((2998 * 10^7)^2))^2) * (2998 * 10^7) * (1/2) := by
+        gcongr
+      -- Step 3: pure numerics, no π, no M
     _ > (10 : ℝ)^9 := by norm_num
 
 /-! ### The Final Theorem -/

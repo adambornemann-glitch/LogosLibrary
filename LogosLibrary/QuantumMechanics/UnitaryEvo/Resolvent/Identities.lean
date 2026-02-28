@@ -116,7 +116,7 @@ theorem resolvent_identity {U_grp : OneParameterUnitaryGroup (H := H)}
       = ψ_z - (ψ_z + (w - z) • η) := by rw [h_eq_vals]
     _ = -((w - z) • η) := by abel
     _ = (-(w - z)) • η := by rw [neg_smul]
-    _ = (z - w) • η := by ring_nf
+    _ = (z - w) • η := by abel_nf
 
 /-- The resolvent adjoint relation: `R(z)* = R(z̄)`. -/
 theorem resolvent_adjoint {U_grp : OneParameterUnitaryGroup (H := H)}

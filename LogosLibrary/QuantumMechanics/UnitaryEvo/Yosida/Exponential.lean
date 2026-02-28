@@ -168,7 +168,7 @@ noncomputable def exponential
             -(I • yosidaApproxSym gen hsa n) :=
           smul_I_skewSelfAdjoint (A := yosidaApproxSym gen hsa n) h_sa
         have h_unitary := expBounded_mem_unitary (I • yosidaApproxSym gen hsa n) h_skew t
-        exact unitary.norm_map ⟨_, h_unitary⟩ ψ
+        exact Unitary.norm_map ⟨_, h_unitary⟩ ψ
       have h_tendsto_norm : Tendsto
           (fun n => ‖expBounded (I • yosidaApproxSym gen hsa n) t ψ‖) atTop (𝓝 ‖L‖) :=
         tendsto_norm.comp hL
@@ -360,7 +360,7 @@ theorem exponential_strong_continuous
         ‖exponential gen hsa h_dense s φ - exponential gen hsa h_dense t φ‖ +
         ‖exponential gen hsa h_dense t φ - exponential gen hsa h_dense t ψ‖ := by
           apply le_trans (norm_add_le _ _)
-          apply add_le_add_right
+          gcongr
           exact norm_add_le _ _
     _ = ‖exponential gen hsa h_dense s (ψ - φ)‖ +
         ‖exponential gen hsa h_dense s φ - exponential gen hsa h_dense t φ‖ +

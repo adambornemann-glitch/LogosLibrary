@@ -1,0 +1,31 @@
+{"synthetic": false,
+ "outputs":
+ {"o": ["5025006138887776466"],
+  "i": "18180834165900789049",
+  "c": "402293339534420104"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/Cli/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/batteries/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/Qq/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/aesop/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/proofwidgets/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/importGraph/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/plausible/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/packages/mathlib/.lake/build/lib/lean:/Users/augustusthwack/Desktop/Logos_Library/.lake/build/lib/lean /Users/augustusthwack/.elan/toolchains/leanprover--lean4---v4.23.0-rc2/bin/lean /Users/augustusthwack/Desktop/Logos_Library/LogosLibrary/Superior/ShapeDynamics/EntropicTime.lean -o /Users/augustusthwack/Desktop/Logos_Library/.lake/build/lib/lean/LogosLibrary/Superior/ShapeDynamics/EntropicTime.olean -i /Users/augustusthwack/Desktop/Logos_Library/.lake/build/lib/lean/LogosLibrary/Superior/ShapeDynamics/EntropicTime.ilean -c /Users/augustusthwack/Desktop/Logos_Library/.lake/build/ir/LogosLibrary/Superior/ShapeDynamics/EntropicTime.c --setup /Users/augustusthwack/Desktop/Logos_Library/.lake/build/ir/LogosLibrary/Superior/ShapeDynamics/EntropicTime.setup.json --json",
+   "level": "trace"}],
+ "inputs":
+ [["LogosLibrary.Superior.ShapeDynamics.EntropicTime:deps",
+   [["deps",
+     [["logos_library/LogosLibrary:extraDep",
+       [["@logos_library:extraDep", "1723"]]],
+      ["imports",
+       [["Mathlib.Analysis.SpecialFunctions.Log.Basic transitive imports (legacy)",
+         "5215274181969507508"],
+        ["Mathlib.Analysis.SpecialFunctions.Log.Basic:importAllArts",
+         "12020104577274532022"]]]]],
+    ["libs",
+     [["import dynlibs", "1723"],
+      ["package external libraries", "1723"],
+      ["module dynlibs", "1723"],
+      ["module plugins", "1723"]]]]],
+  ["Lean 4.23.0, commit ad1a017949674a947f0d6794cbf7130d642c6530",
+   "2372534101328293747"],
+  ["/Users/augustusthwack/Desktop/Logos_Library/LogosLibrary/Superior/ShapeDynamics/EntropicTime.lean",
+   "17521996663613415234"],
+  ["options", "1723"],
+  ["Module.leanArgs: #[]", "1723"]],
+ "depHash": "12258719257649692790"}

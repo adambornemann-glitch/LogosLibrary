@@ -73,7 +73,7 @@ lemma preimage_cauchySeq {U_grp : OneParameterUnitaryGroup (H := H)}
       _ < |z.im| * ε := h_ubound
   have h_pos : 0 < |z.im| := abs_pos.mpr hz
   rw [dist_eq_norm]
-  exact (mul_lt_mul_left h_pos).mp h_chain
+  exact (mul_lt_mul_iff_of_pos_left h_pos).mp h_chain
 
 /-- The limit of a convergent sequence in ran(A - zI) is in ran(A - zI). -/
 lemma range_limit_mem {U_grp : OneParameterUnitaryGroup (H := H)}

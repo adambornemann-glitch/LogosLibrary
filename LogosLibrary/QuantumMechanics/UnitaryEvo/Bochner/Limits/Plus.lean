@@ -46,10 +46,9 @@ lemma unitary_shift_resolventIntegralPlus (φ : H) (h : ℝ) (hh : h > 0) :
   have h_shift : ∀ t, U_grp.U h (Real.exp (-t) • U_grp.U t φ) =
                       Real.exp (-t) • U_grp.U (t + h) φ := by
     intro t
-    have := U_grp.group_law h t
-    rw [add_comm] at this
-    rw [this]
-    exact ContinuousLinearMap.map_smul_of_tower (U_grp.U h) (Real.exp (-t)) ((U_grp.U t) φ)
+    have hlaw := U_grp.group_law h t
+    rw [add_comm] at hlaw; rw [hlaw, ContinuousLinearMap.comp_apply]
+    exact map_smul (U_grp.U h) _ _
   simp_rw [h_shift]
   have h_exp : ∀ t, Real.exp (-t) • U_grp.U (t + h) φ =
                   Real.exp h • (Real.exp (-(t + h)) • U_grp.U (t + h) φ) := by
@@ -128,11 +127,9 @@ lemma unitary_shift_resolventIntegralPlus_neg (φ : H) (h : ℝ) (hh : h < 0) :
   have h_shift : ∀ t, U_grp.U h (Real.exp (-t) • U_grp.U t φ) =
                       Real.exp (-t) • U_grp.U (t + h) φ := by
     intro t
-    rw [ContinuousLinearMap.map_smul_of_tower]
-    congr 1
-    have := U_grp.group_law h t
-    rw [add_comm] at this
-    exact congrFun (congrArg DFunLike.coe this).symm φ
+    have hlaw := U_grp.group_law h t
+    rw [add_comm] at hlaw; rw [hlaw, ContinuousLinearMap.comp_apply]
+    exact map_smul (U_grp.U h) _ _
   simp_rw [h_shift]
   have h_exp : ∀ t, Real.exp (-t) • U_grp.U (t + h) φ =
                     Real.exp h • (Real.exp (-(t + h)) • U_grp.U (t + h) φ) := by

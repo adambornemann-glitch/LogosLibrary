@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Information Geometry Contributors. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Adam Bornemann & co.
+-/
 import LogosLibrary.InformationGeometry.CramerRao.Cross
 
 noncomputable section
@@ -80,12 +85,16 @@ theorem integral_mul_sq_eq_iff
           ∫ ω, q₂ ω ∂M.refMeasure :=
         integral_add hq₁ hq₂
       rw [h1, h2, h3]
-      simp only [q₁, q₂, q₃, integral_const_mul]
+      simp only [q₁, q₂, q₃]
+      have pull_mid : ∫ ω, 2 * t * (f ω * g ω * M.density θ ω) ∂M.refMeasure = 2 * t * B :=
+        MeasureTheory.integral_const_mul (2 * t) _
+      have pull_last : ∫ ω, t ^ 2 * (g ω ^ 2 * M.density θ ω) ∂M.refMeasure = t ^ 2 * C :=
+        MeasureTheory.integral_const_mul (t ^ 2) _
       -- Goal: A + 2*t*B + t²*C = 0
       have key : A + 2 * t * B + t ^ 2 * C =
           (A * C - B ^ 2) / C := by
         simp only [t]; field_simp; ring
-      rw [key, heq, sub_self, zero_div]
+      rw [pull_mid, pull_last, key, heq, sub_self, zero_div]
     -- (f + tg)²p ≥ 0 pointwise and integrates to 0 ⟹ = 0 a.e.
     have hnn : ∀ ω, 0 ≤ (f ω + (-B / C) * g ω) ^ 2 *
         M.density θ ω :=
@@ -128,8 +137,8 @@ theorem integral_mul_sq_eq_iff
             integral_congr_ae
               (hcg.mono fun ω h => by simp; rw [h]; ring)
         _ = c * ∫ ω, g ω ^ 2 * M.density θ ω
-            ∂M.refMeasure := by
-            rw [integral_const_mul]
+            ∂M.refMeasure :=
+            MeasureTheory.integral_const_mul c _
     have hA : A = c ^ 2 * C := by
       simp only [A, C]
       calc ∫ ω, f ω ^ 2 * M.density θ ω
@@ -139,8 +148,8 @@ theorem integral_mul_sq_eq_iff
             integral_congr_ae
               (hcg.mono fun ω h => by simp; rw [h]; ring)
         _ = c ^ 2 * ∫ ω, g ω ^ 2 * M.density θ ω
-            ∂M.refMeasure := by
-            rw [integral_const_mul]
+            ∂M.refMeasure :=
+            MeasureTheory.integral_const_mul (c ^ 2) _
     rw [hB, hA]; ring
 
 
@@ -213,7 +222,12 @@ theorem integral_mul_sq_le
             ∫ ω, t ^ 2 * (g ω ^ 2 * M.density θ ω)
               ∂M.refMeasure :=
           integral_add (hfg.const_mul _) (hg.const_mul _)
-        rw [h1, h2, integral_const_mul, integral_const_mul]
+        rw [h1, h2]
+        have pull1 : ∫ ω, 2 * t * (f ω * g ω * M.density θ ω) ∂M.refMeasure = 2 * t * B :=
+          MeasureTheory.integral_const_mul (2 * t) _
+        have pull2 : ∫ ω, t ^ 2 * (g ω ^ 2 * M.density θ ω) ∂M.refMeasure = t ^ 2 * C :=
+          MeasureTheory.integral_const_mul (t ^ 2) _
+        rw [pull1, pull2]
         ring
     linarith [hexpand ▸ hint]
   -- Case split on C
@@ -244,12 +258,10 @@ theorem integral_mul_sq_le
       simp [hω]
     rw [hB, hC]; ring_nf; rfl
   · -- Case C > 0
-    have hC_pos : 0 < C := by
-      rcases (integral_nonneg (fun ω =>
-        mul_nonneg (sq_nonneg (g ω))
-          (M.density_nonneg θ hθ ω))).lt_or_eq with h | h
-      · exact h
-      · exact absurd h.symm hC
+    have hC_pos : 0 < C := lt_of_le_of_ne
+      (integral_nonneg fun ω =>
+        mul_nonneg (sq_nonneg (g ω)) (M.density_nonneg θ hθ ω))
+      (Ne.symm hC)
     -- Specialise Q at t = −B/C
     -- A + 2·(−B/C)·B + (−B/C)²·C ≥ 0
     -- = A − 2B²/C + B²/C = A − B²/C ≥ 0

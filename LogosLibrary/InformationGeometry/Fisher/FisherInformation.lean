@@ -329,12 +329,11 @@ theorem fisherBilin_eq_sum_fisherMatrix {θ : ParamSpace n}
     · congr 1; ext j
       -- Factor out constants vᵢ and wⱼ
       -- Need to massage the expression to match integral_mul_left pattern
-      have factorize : ∀ ω,
-          v i * w j * M.score θ i ω * M.score θ j ω * M.density θ ω =
-          (v i * w j) * (M.score θ i ω * M.score θ j ω * M.density θ ω) := by
-        intro ω; ring
+      have factorize : (fun a => v.ofLp i * w.ofLp j * M.score θ i a * M.score θ j a * M.density θ a) =
+          (fun a => (v.ofLp i * w.ofLp j) * (M.score θ i a * M.score θ j a * M.density θ a)) := by
+        ext a; ring
       simp only [factorize]
-      rw [MeasureTheory.integral_const_mul]
+      exact MeasureTheory.integral_const_mul (v.ofLp i * w.ofLp j) _
     · -- Integrability for inner sum
       intro j _
       -- Show: Integrable (fun a => v i * w j * M.score θ i a * M.score θ j a * M.density θ a)

@@ -109,11 +109,7 @@ lemma tendsto_integral_Ici_exp_unitary (φ : H) :
           | inl hx => exact hx.1
           | inr hx => linarith [hh, hx]
       have h_disj : Disjoint (Set.Ico h 0) (Set.Ici 0) := by
-        rw [Set.disjoint_iff]
-        intro x ⟨hx1, hx2⟩
-        simp only [Set.mem_Ico] at hx1
-        simp only [Set.mem_Ici] at hx2
-        linarith [hx1.2, hx2]
+        grind only [= Set.disjoint_left, = Set.mem_Ico, = Set.mem_Ici]
       have h_eq1 : ∫ t in Set.Ici h, Real.exp (-t) • U_grp.U t φ =
                    (∫ t in Set.Ico h 0, Real.exp (-t) • U_grp.U t φ) +
                    ∫ t in Set.Ici 0, Real.exp (-t) • U_grp.U t φ := by

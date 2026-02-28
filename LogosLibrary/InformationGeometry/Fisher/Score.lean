@@ -117,7 +117,7 @@ theorem hasFDerivAt_integral_density
       θ₀ := by
   obtain ⟨ε, hε, hball⟩ := M.exists_ball_subset hθ₀
   exact hasFDerivAt_integral_of_dominated_of_fderiv_le
-    hε
+    (Metric.ball_mem_nhds θ₀ hε)   -- was: hε
     -- (hF_meas) ∀ᶠ θ in 𝓝 θ₀, AEStronglyMeasurable (p θ) μ
     (M.ae_density_meas_near hθ₀)
     -- (hF_int) Integrable (p θ₀) μ
@@ -327,15 +327,15 @@ theorem score_integrable_wrt_density
 
 /-- The full score vector `s(θ, ω) ∈ ℝⁿ`, whose `i`-th component
 is `sᵢ(θ, ω) = ∂ᵢ log p(θ, ω)`. -/
-def scoreVec (θ : ParamSpace n) (ω : Ω) :
-    ParamSpace n :=
-  fun i => M.score θ i ω
+def scoreVec (θ : ParamSpace n) (ω : Ω) : ParamSpace n :=
+  WithLp.toLp 2 (fun i => M.score θ i ω)
+
 
 /-- Each component of the score vector has vanishing expectation. -/
 theorem scoreVec_expectation_eq_zero
     {θ₀ : ParamSpace n} (hθ₀ : θ₀ ∈ M.paramDomain)
     (i : Fin n) :
-    ∫ ω, M.scoreVec θ₀ ω i * M.density θ₀ ω
+    ∫ ω, (M.scoreVec θ₀ ω).ofLp i * M.density θ₀ ω
       ∂M.refMeasure = 0 := by
   simp only [scoreVec]
   exact M.score_expectation_eq_zero hθ₀ i
