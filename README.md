@@ -1,4 +1,5 @@
-# Logos Library v1.3
+# Logos Library v2.0 migration in progress.
+**Stable release here:** https://github.com/adambornemann-glitch/Logos_Library/tree/lean-v4.23
 
 **Formally Verified Foundations for Quantum Mechanics, Information Geometry, Relativistic Thermodynamics, and Thermodynamic Computation**
 
