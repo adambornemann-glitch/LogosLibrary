@@ -1,257 +1,189 @@
-# Logos Library v2.0 migration in progress.
-**Stable release here:** https://github.com/adambornemann-glitch/Logos_Library/tree/lean-v4.23
+# Logos Library
 
-**Formally Verified Foundations for Quantum Mechanics, Information Geometry, Relativistic Thermodynamics, and Thermodynamic Computation**
+**Formally verified physics in Lean 4 — from Minkowski spacetime to rotating black holes to the thermodynamic origin of time, and a machine-checked methodology for discovering structural coincidences across physics.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Lean 4](https://img.shields.io/badge/Lean-4-blue.svg)](https://leanprover.github.io/lean4/doc/)
 
 ---
 
-**Note:** v2.0 using the newest stable release of Mathlib currently in production.
-
-
 ## What This Is
 
-Logos Library is a Lean 4 formalization project building verified
-mathematical foundations for quantum mechanics and related physics. It is
-built on [Mathlib](https://github.com/leanprover-community/mathlib4).
+Logos Library is a Lean 4 formalisation of physics built on [Mathlib](https://github.com/leanprover-community/mathlib4). The library contains ~109,000 lines of Lean across two interlocking parts:
 
-The library takes unbounded operators seriously. Quantum observables —
-position, momentum, Hamiltonians — are not bounded operators on
-finite-dimensional spaces. They are unbounded symmetric operators with
-dense domains on infinite-dimensional Hilbert spaces, and every textbook
-silently assumes the domain questions away. A proof assistant will not let
-you do this, nor should it. The type `UnboundedObservable H` enforces
-domain membership at the type level: you cannot apply an operator to a
-vector without proving it lives in the domain. This is more work than
-pretending everything is bounded. It is also correct.
+**Part I — Core Physics Library.** Four modules formalising quantum mechanics, information geometry, relativity, and quantum computing. ~48,000 lines. Every theorem is machine-checked; every physical assumption is an explicit `axiom` with a name you can grep for. The central thread: a dependency chain from special relativity through the Kerr metric for rotating black holes, through a resolution of the 60-year Ott–Landsberg debate on relativistic temperature, to a derivation of Einstein's field equations from thermodynamics, and finally to a proof that the Connes–Rovelli thermal time relation is the *unique* Lorentz-covariant connection between temperature and time. Time dilation emerges as a theorem, not a postulate.
 
-**Current scope:**
+**Part II — The Superior Method.** A methodology for using Lean's type-checker as a structural comparator across physics. Seventeen sub-modules — spanning QCD flux tubes, loop quantum gravity, entropic gravity, noncommutative geometry, causal set theory, and more — are formalised independently, then connected by bridge files that ask: does Lean accept that the structure built in Module A is definitionally equal to the structure built in Module B? If the bridge compiles, the two domains share algebraic structure. If it doesn't, they don't. The compiler is the comparator. ~1,684 theorems, 2 `sorry` (both genuine open problems), 22 axioms across the full framework.
 
-| Module | Lines | Axioms | Contents |
-|--------|------:|-------:|----------|
-| [**QuantumMechanics/**](LogosLibrary/QuantumMechanics/) | ~22,100 | 66 | Stone's theorem, spectral theorem (3 routes), uncertainty relations, Bell's theorem, Dirac equation, unitarity ↔ first law |
-| [**InformationGeometry/**](LogosLibrary/InformationGeometry/) | ~2,000 | 0 | Fisher–Rao metric from first principles, statistical manifolds, score functions |
-| [**Relativity/**](LogosLibrary/Relativity/) | ~12,800 | ~14 | Minkowski spacetime, Kerr metric, Ott–Landsberg resolution, thermal time uniqueness, SdS instability (original) |
-| [**QuantumComputing/**](LogosLibrary/QuantumComputing/) | ~2,500 | 8 | Thermal Turing machine, conditional P ≠ NP from information geometry *(experimental)* |
-| **Total** | **~39,400** | **~90** | |
+This is a formalisation of *physics*, not only of mathematics. The axioms are not deficiencies — they mark exactly where mathematics ends and physics begins. Every axiom names a physical principle whose proof would require infrastructure not yet available in Lean or Mathlib. The library makes these assumptions visible and auditable in a way that no informal physics paper can.
 
-Each module has its own detailed README. This document describes the
-architecture connecting them.
 
-**A note on line counts:** The Relativity section is heavily commented by
-design. The Lean code is interleaved with extensive physical motivation,
-historical context, and pedagogical explanation. These files are intended to
-be readable as self-contained introductions to the physics, not merely as
-machine-checkable artefacts. The proof content is a fraction of the stated
-line count. This is a deliberate choice.
+## Part I — Core Physics Library
 
----
+| Module | Lines | Axioms | Sorry | What it does |
+|--------|------:|-------:|------:|--------------|
+| [**Quantum Mechanics**](LogosLibrary/QuantumMechanics/) | ~26,000 | 69 | 0 | Unbounded operators, Stone's theorem, spectral theorem (3 routes), Schrödinger equation, Bell/CHSH/Tsirelson, Dirac equation, uncertainty relations (Robertson, Schrödinger, Heisenberg ×2), unitarity ↔ first law, Tomita–Takesaki modular theory, Connes cocycle, KMS condition, thermal time |
+| [**Information Geometry**](LogosLibrary/InformationGeometry/) | ~2,000 | 0 | 0 | Fisher–Rao metric from first principles, score functions, statistical manifolds, Cramér–Rao bound |
+| [**Relativity**](LogosLibrary/Relativity/) | ~12,800 | ~14 | 0 | Minkowski spacetime, Kerr black holes, Ott transformation (7 independent proofs), Jacobson's derivation, Connes–Rovelli thermal time uniqueness, SdS instability (original) |
+| [**Quantum Computing**](LogosLibrary/QuantumComputing/) | ~7,000 | 8 | 4 | Thermal Turing machine, conditional P ≠ NP from information geometry **(experimental)** |
 
-## Axiom Discipline
+Each module has its own detailed README with file-by-file descriptions, axiom inventories, and dependency graphs.
 
-The first ~14,000 lines of this library — the uncertainty relations, the
-entirety of Stone's theorem, Bell's theorem, and all of information
-geometry — use zero axioms beyond Lean's kernel and Mathlib. No `sorry`,
-no `axiom`, no escape hatches.
+**On the first ~12,000 lines of QM:** These contain zero axioms beyond Lean's kernel and Mathlib. That covers the full uncertainty relation hierarchy, Stone's theorem in both directions, and Bell's theorem — proved from nothing but the axioms of dependent type theory and whatever Mathlib provides. The 69 axioms enter only when you hit spectral measure construction, PDE machinery, and modular theory, overwhelmingly asserting standard results from measure theory and harmonic analysis that Mathlib does not yet cover.
 
-The remaining axioms enter when the development reaches spectral measure
-construction, PDE machinery, general-relativistic infrastructure, and
-thermodynamic principles not yet formalizable in Lean/Mathlib. They fall
-into clear categories:
+**On line counts:** The Relativity and Quantum Computing files interleave Lean code with physical motivation, historical context, and pedagogical explanation. They are intended to be readable as self-contained introductions to the physics, not merely as machine-checkable artefacts. The proof content is a fraction of the stated line count in those sections. The Quantum Mechanics and Information Geometry sections are leaner.
 
-| Category | Count | Example |
-|----------|------:|---------|
-| Measure-theoretic machinery | ~24 | Bochner's theorem, DCT applications, Fubini |
-| Spectral integral construction | ~22 | Simple function approximation, spectral integrals |
-| PDE / analysis results | ~11 | Divergence theorem, continuity equation |
-| GR infrastructure | ~5 | Raychaudhuri equation, Bekenstein–Hawking, proper time integrals |
-| Thermodynamic principles | ~5 | Entropy invariance, thermal equilibrium, thermal excitation |
-| Spectral existence | 1 | Compatible spectral measures exist |
-| Phase transition / combinatorics | 8 | SAT transition barrier, restricted path length (QuantumComputing) |
-| Miscellaneous | ~4 | Lorentzian approximation, Fourier uniqueness |
 
-Every axiom is documented in the file where it appears. The intent is to
-discharge them as Mathlib grows. The axiom-free sections demonstrate that
-this is feasible: they were written without axioms from the start.
-
----
-
-## Highlights
-
-### Stone's Theorem (~11,000 lines, axiom-free)
-
-The bijection between strongly continuous one-parameter unitary groups and
-self-adjoint operators. Both directions: forward via Bochner integrals and
-deficiency indices, reverse via Yosida approximation and Duhamel's formula.
-The Schrödinger equation falls out as a one-page corollary — not an axiom,
-but a theorem equivalent to probability conservation plus continuous
-dynamics.
-
-### Spectral Theorem (~10,100 lines, 66 axioms)
-
-The spectral theorem for unbounded self-adjoint operators via three
-independent routes — Bochner, resolvent/Stieltjes inversion, and Cayley
-transform — proved to agree. The Borel functional calculus follows.
-
-### Bell's Theorem (~3,000 lines, axiom-free in definitions)
-
-The CHSH inequality, Tsirelson's bound (proved tight in both directions),
-and quantum violation via explicit computation on the Bell state. Ported
-from Echenim & Mhalla's Isabelle/HOL formalization with proper attribution,
-then substantially extended. This section works with finite-dimensional
-matrices throughout — CHSH is inherently finite-dimensional and does not
-require the unbounded operator machinery.
-
-### Uncertainty Relations (~1,200 lines, axiom-free)
-
-Robertson, Schrödinger (with covariance), and Heisenberg — proved twice.
-Once via Cauchy–Schwarz (the textbook route) and once via the Cramér–Rao
-bound from information geometry, making explicit that quantum uncertainty is
-a manifestation of the Fisher metric. The fact that both proofs compile
-against the same type-theoretic infrastructure is a stronger statement about
-the library's design than either proof alone.
-
-### Fisher–Rao Metric (~2,000 lines, axiom-free)
-
-The Fisher information metric constructed from first principles: parametric
-family of densities → score function → vanishing expectation → Fisher matrix
-→ symmetry, positive definiteness, bilinearity → Riemannian metric on the
-statistical manifold. The central exchange of limits (differentiating under
-the integral sign) is justified via Mathlib's dominated convergence
-infrastructure with explicit bounds at every step.
-
-### Ott–Landsberg Resolution (~2,700 lines, 1 axiom)
-
-The 60-year debate on relativistic temperature transformation, resolved.
-Seven independent arguments — Landauer's principle, entropy invariance,
-free energy, partition function, 4-vector structure, detailed balance,
-specific heat — each forcing Ott's law T → γT and each refuting Landsberg.
-A unification theorem shows all seven reduce to: information is physical
-(Landauer) + physics is covariant (Lorentz) ⟹ T → γT. Applied to Kerr
-black holes with explicit proofs for strictly subextremal cases.
-
-### Thermal Time Uniqueness (~3,800 lines, axiom-free beyond the ansatz)
-
-Connes and Rovelli (1994) proposed t = τ/T relating physical time to modular
-flow. This library proves the form is not a proposal but is forced: any
-function f(T, τ) satisfying positivity, linearity in τ, and Lorentz
-covariance must equal c · τ/T. Time dilation emerges as a consequence, not
-a postulate.
-
-### SdS Instability — Original Research (~1,200 lines, 1 load-bearing axiom)
-
-An original result (Bornemann) arguing that Schwarzschild–de Sitter
-spacetime is dynamically forbidden in any universe with a thermal bath at
-T > 0. Robertson's uncertainty principle for angular momentum (properly
-formalized for unbounded operators) combined with thermal excitation makes
-the J = 0 state unstable on timescales shorter than 10⁻²⁴ seconds for
-stellar-mass objects. The load-bearing axiom — that thermal baths generically
-excite angular momentum — is supported by three physical arguments given in
-the source. Everything downstream is machine-checked.
-
-### Unitarity ↔ First Law (976 lines, 66 axioms)
-
-A bijection between unitary quantum time evolution and the first law of
-thermodynamics, connecting the Ott–Landsberg resolution to the quantum
-mechanical foundations.
-
-### The Dirac Equation (within SpectralTheory, 66 axioms)
-
-Clifford algebra (all 16 gamma matrix relations verified by computation,
-axiom-free), the Dirac Hamiltonian as an unbounded operator, spectral gap,
-particle–antiparticle decomposition, positive-definite probability density,
-and probability conservation.
-
-### Thermal Turing Machine (sorry-free core)
-
-A standard Turing machine augmented with a thermal reservoir, per-transition
-dissipation, and the structural invariant that every logically irreversible
-step dissipates at least kT ln 2 (Landauer's principle). Temperature
-grounded by the KMS condition, not postulated.
-
-### Conditional P ≠ NP *(experimental)*
-
-A conditional result: if the SAT phase transition creates an
-information-geometric bottleneck for sequential local computation, then no
-polynomial-time algorithm can solve SAT. The logical chain from 8 named
-axioms to conclusion is machine-checked. **This is not a claimed proof of
-P ≠ NP.** It is a framework with an explicit axiom manifest. The
-formalization has already caught one inconsistency in its own axiom system
-— the type checker found a contradiction between an assumed exponential
-Fisher–Rao distance and a proved constant upper bound on the simplex
-diameter. The corrected argument is mathematically stronger than the
-original. See the [QuantumComputing README](LogosLibrary/QuantumComputing/)
-for details.
-
----
-
-## Architecture
+### How the Core Modules Connect
 
 ```
-                         Logos Library
-                              │
-          ┌───────────────────┼──────────────────────┐
-          │                   │                      │
-          ▼                   ▼                      ▼
- InformationGeometry    QuantumMechanics        Relativity
- (Fisher–Rao metric)    (operator theory      (Minkowski, Kerr,
-                         → spectral thm)       Ott, Jacobson,
-                              │                thermal time)
-               ┌──────────────┼──────────────┐       │
-               │              │              │       │
-               ▼              ▼              ▼       │
-          Uncertainty    UnitaryEvo     BellsTheorem │
-          Relations      (Stone's thm)  (CHSH)       │
-               │              │                      │
-               │              ▼                      │
-               │        SpectralTheory               │
-               │         (3 routes)                  │
-               │              │                      │
-               │       ┌──────┼──────┐               │
-               │       ▼      ▼      ▼               │
-               │     Dirac  RelThermo ◄──────────────┘
-               │             (↔ first law)
-               │
-               └──► CramerRao
-                    (info geometry route
-                     to Heisenberg)
-                         │
-                         ▼
-                  QuantumComputing *(experimental)*
-                  (TTM + conditional P≠NP)
-                  imports Fisher metric,
-                  Landauer, KMS
+            Information Geometry                Quantum Mechanics
+           +----------------------+         +----------------------------+
+           | Fisher-Rao metric    |         | Stone's theorem            |
+           | Statistical manifold |         | Spectral theorem (×3)      |
+           | Cramer-Rao bound     |         | Bell / Tsirelson           |
+           +-------+------+-------+         | Dirac equation             |
+                   |      |                 | Unitarity <-> 1st law      |
+                   |      |                 | Tomita-Takesaki / KMS      |
+                   |      |                 | Connes cocycle / Ott forced |
+                   |      |                 +-------+--------------------+
+                   |      |                         |
+        +----------+      +----------+              |
+        v                            v              v
+  Quantum Computing              Relativity
+  +------------------+        +--------------------------+
+  | Thermal TM       |        | Minkowski spacetime       |
+  | Fisher metric on |        | Kerr black holes          |
+  |  computation     |        | Ott transformation (x7)   |
+  |  paths           |        | Jacobson's derivation     |
+  | P != NP          |        | Thermal time uniqueness   |
+  |  (conditional)   |        | SdS instability (original)|
+  +------------------+        +--------------------------+
+
+Cross-module imports:
+  * Info Geometry -> QM:     Cramer-Rao gives a second proof of Heisenberg
+  * Info Geometry -> QC:     Fisher metric provides the geometric backbone
+  * QM -> Relativity:        Unitarity <-> 1st law resolves Ott-Landsberg
+  * QM -> Relativity:        Robertson uncertainty used in SdS instability
+  * QM -> Relativity:        Modular theory / cocycle forces Ott covariance
+  * Relativity -> QM:        Lorentz structure feeds back into Dirac equation
 ```
 
-The CramerRao module bridges QuantumMechanics and InformationGeometry:
-Heisenberg's uncertainty principle derived from the Fisher metric rather
-than Cauchy–Schwarz. The Relativity module connects to QuantumMechanics
-through the unitarity ↔ first law bijection. The QuantumComputing module
-draws on information geometry (Fisher metric on computation paths) and
-thermodynamic infrastructure (Landauer cost, KMS grounding) from both
-parent modules.
 
----
+## Part II — The Superior Method
+
+The Superior Method uses Curry–Howard as an experimental instrument. The idea:
+
+1. Formalise a domain of physics in Lean 4, with every physical assumption as an explicit named structure field.
+2. Formalise a second domain independently — different file, different starting assumptions, no imports between them.
+3. Write a bridge file. Ask: does Lean's type-checker accept that the structure built in Module A is *definitionally equal* to the structure built in Module B?
+
+If the bridge compiles, the two domains share algebraic structure. If it doesn't, they don't. Structural coincidence becomes a checkable fact rather than a hand-wavy analogy.
+
+**What is verified:** Algebraic and dimensional consistency. Every theorem is machine-checked. Every physical assumption is an explicit, named structure field. There are no hidden gaps.
+
+**What is not verified:** Physical truth. The compiler checks mathematics, not physics. Whether the structures that recur across modules reflect something about nature is an empirical question.
+
+See the [Superior README](Superior/README.md) for the full methodology, architecture, and cluster descriptions.
+
+
+### Superior — Cluster Overview
+
+| Cluster | Modules | Theorems | Sorry | Axioms | What it covers |
+|---------|---------|:--------:|:-----:|:------:|----------------|
+| [**CommonResources**](Superior/CommonResources/) | Thermal Time, Super-Causets, Division Algebras, Hopf Tower | ~211 | 2 | 1 | Shared foundations: Connes–Rovelli, Second Law → causal order, ℝ ↪ ℂ ↪ ℍ ↪ 𝕆 |
+| [**KnotTheory**](Superior/KnotTheory/) | Strings, Yang–Mills, Knots | ~235 | 0 | 10 | QCD flux tubes, topological mass gap, Hopf knot unification |
+| [**HotGravity**](Superior/HotGravity/) | Entropic Gravity, LQG, NanoThermo, Shape Dynamics, Objective Reduction | ~714 | 0 | 0 | Five thermodynamic routes to gravity and measurement |
+| [**SpectralTriples**](Superior/SpectralTriples/) | Triples, Geometric Unity, Spectral Bridge | ~386 | 0 | 3 | Noncommutative geometry, the observerse U⁹, spectral action |
+| [**SplitMechanics**](Superior/SplitMechanics/) | — | ~75 | 0 | 8 | Subsystem decomposition: Born rule = KMS, modular Bohm |
+| [**Bridges**](Superior/Bridges/) | CProcess, Gravity (×4) | ~63 | 0 | 0 | Lateral connections across clusters |
+| **Total** | | **~1,684** | **2** | **22** | |
+
+The two `sorry` are in Super-Causets and correspond to the Gibbs inequality and the causal set Hauptvermutung — both genuine open problems in the literature.
+
+
+### The Organising Observation
+
+The modular automorphism group of a faithful state on a von Neumann algebra — the mathematical core of Tomita–Takesaki — appears independently across modules:
+
+| Structure | Where it appears independently |
+|-----------|-------------------------------|
+| 2π nats = one modular cycle | Thermal Time, NanoThermo, Objective Reduction, Shape Dynamics, Split Mechanics, Entropic Gravity, LQG, Super-Causets |
+| Ott transformation T → γT | Thermal Time (×7), Strings, NanoThermo, Shape Dynamics, Entropic Gravity, Super-Causets |
+| K = H/T Lorentz-invariant | Thermal Time, Strings, NanoThermo, Split Mechanics, Super-Causets |
+| Cl(9) ≅ M₁₆(ℂ) from Bott periodicity | Geometric Unity, Spectral Triples, Spectral Bridge, Super-Causets |
+| D_spatial = 3 from Hopf base | Strings, Super-Causets |
+
+Each module derives these from its own starting point. The recurrence is discovered by bridge files, not assumed by shared imports.
+
+
+## Combined Statistics
+
+| | Theorems | Sorry | Axioms | Lines |
+|---|:---:|:---:|:---:|---:|
+| **Core Physics Library** | | 4 | ~91 | ~48,000 |
+| Quantum Mechanics | | 0 | 69 | ~26,000 |
+| Information Geometry | | 0 | 0 | ~2,000 |
+| Relativity | | 0 | ~14 | ~12,800 |
+| Quantum Computing | | 4 | 8 | ~7,000 |
+| **Superior Method** | ~1,684 | 2 | 22 | ~62,000 |
+| **Library total** | | **6** | **~113** | **~109,000** |
+
+**On axioms:** Every axiom names a specific mathematical result (Bochner's theorem, dominated convergence, Adams' theorem) or a specific physical principle (the thermal time ansatz, Landauer's bound, the Bekenstein–Hawking area law). Structure fields — explicit physical postulates like "entropy is monotone along the causal order" — are not counted as axioms; they are visible in the type signature of every theorem that uses them.
+
+**On sorry:** The 4 in Quantum Computing mark an experimental, conditional argument (P ≠ NP from information geometry). The 2 in Super-Causets mark genuine open problems. Every other theorem in the library is complete.
+
+
+## What Is Proven vs. What Is Axiomatised
+
+**Fully machine-checked (no axioms, no sorry):** Minkowski spacetime. Lorentz boosts. Causal trichotomy. Robertson, Schrödinger, and Heisenberg uncertainty (twice: algebraic and information-geometric). Stone's theorem (both directions). Schrödinger equation as a corollary. Bell/CHSH inequality. Tsirelson's bound (tight in both directions). Kerr horizon structure, ergosphere, ring singularity characterisation. Seven independent refutations of Landsberg. Uniqueness of Ott's temperature transformation from Clausius preservation. Uniqueness of the thermal time relation. Time dilation as a theorem. Thermal Turing machine core. Landauer compliance. Fisher–Rao metric construction. Entropic gravity (Newton, Einstein, Schrödinger from holographic postulates). Loop quantum gravity (SU(2) representations through EPRL vertex). Nanothermodynamics as restricted modular flow. Shape dynamics with QM–classical interpolation. The spectral action on U⁹. All Superior bridge files (0 axioms across all bridges).
+
+**Axiomatised (physically standard, not yet formalisable in Lean):** Bochner's theorem. Dominated convergence applications. The Raychaudhuri equation. The Bekenstein–Hawking area law. Entropy invariance under Lorentz transformations. The thermal time ansatz. Adams' theorem on Hopf invariant one. Closability from dense adjoint (Reed–Simon VIII.1). These are textbook results or well-established physical principles whose formal proofs require measure theory on infinite-dimensional spaces, differential geometry, algebraic topology, or PDE infrastructure that Mathlib does not yet provide.
+
+**Under construction:** Modular theory is proved through the Connes cocycle identity; KMS discharge (proving the vacuum state satisfies the KMS condition as a theorem rather than a hypothesis) is the next target. Several bundled structure hypotheses in the Tomita–Takesaki development are intended for discharge as the spectral calculus matures.
+
+**Experimental (conditional, axioms open):** The P ≠ NP development in Quantum Computing. This is a conditional proof: *if* the SAT phase transition creates an information-geometric bottleneck for sequential local computation, *then* P ≠ NP. See the [Quantum Computing README](LogosLibrary/QuantumComputing/) for full details.
+
+
+## Design Decisions
+
+**Unbounded operators, honestly.** The type `UnboundedObservable H` models quantum observables as genuinely partial functions with `Submodule ℂ H` domains. You cannot apply an operator to a vector without proving it lives in the domain. Computing a commutator `[A,B]ψ` requires four domain membership proofs, bundled in `DomainConditions`. This is more work than pretending everything is bounded. It is also correct.
+
+**Physics axioms are features, not bugs.** A formalisation of physics must distinguish between mathematical theorems (which the machine checks) and physical postulates (which the machine takes as axioms). The axioms in this library are not gaps in proofs — they are the *physical content*. Flagging them explicitly is the entire point.
+
+**Multiple proof routes.** Heisenberg is proved twice (Cauchy–Schwarz and Cramér–Rao). The spectral theorem is constructed via three independent routes proved to agree. Relativistic thermodynamics is approached from two directions: spectral theory (unitarity ↔ first law) and modular theory (Connes cocycle forces Ott). When different branches of mathematics produce the same result through different architectures, the agreement is evidence that the abstractions are sound.
+
+**Independent construction, then bridging.** The Superior modules are built without importing each other. When two modules produce the same structure, this is *discovered* by a bridge file, not *assumed* by shared imports. The bridge files contain zero axioms — every identification is a theorem.
+
+**Expository source files.** The Relativity, Quantum Computing, and several Superior modules interleave Lean code with physical motivation, historical context, and pedagogical explanation. Whether you find this helpful or maddening is a matter of taste, but the intent is that these files serve as self-contained introductions to the physics for anyone with a working knowledge of Lean.
+
+
+## Why Formalise Physics?
+
+Most formalisation efforts target pure mathematics — and for good reason. Pure mathematics has no axioms beyond the foundational system, so a complete formalisation is a complete verification. Physics is different: at some point you must assert that entropy counts microstates, or that thermal equilibrium exists, or that Landauer's bound holds. No amount of type theory will derive these from first principles.
+
+The value of formalising physics is twofold.
+
+**First: the machine forces you to say exactly what you assume.** Every informal physics paper implicitly assumes dozens of things — Lorentz invariance, thermodynamic equilibrium, the existence of well-defined temperatures — and buries them in phrases like "it is well known that" or "we may assume without loss of generality." A proof assistant does not accept hand-waving. The result is a document that separates the mathematical content (which is verified) from the physical content (which is explicit) with a precision that no informal paper can match.
+
+**Second: the machine can discover structural coincidences.** When two domains of physics are formalised independently and a bridge file compiles, proving their output structures are definitionally equal, you have learned something that would be extraordinarily difficult to establish informally. The identification is not a claim about physics — it is a machine-checked fact about the algebraic structure of the two formalisations. Whether nature respects that algebraic structure is a question for experiment. But the algebraic fact is exact, and it is verified.
+
 
 ## Quick Start
 
 ```bash
 # Clone
-git clone https://github.com/adambornemann-glitch/Logos_Library
+git clone https://gitlab.com/pedagogical/logos_library
 cd Logos_Library
 
 # Install Lean 4 (if needed)
 curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh
 
-# Get mathlib cache
+# Fetch Mathlib cache (saves a long build)
 lake exe cache get
 
-# Update dependencies
-lake update
-
 # Build everything
+# Note: First build takes a while
 lake build
 
 # Or build individual modules
@@ -259,46 +191,37 @@ lake build LogosLibrary.QuantumMechanics
 lake build LogosLibrary.InformationGeometry
 lake build LogosLibrary.Relativity
 lake build LogosLibrary.QuantumComputing
+lake build Superior
 ```
 
----
+**Requirements:** Lean 4 (version pinned in `lean-toolchain`), Mathlib4 (commit pinned in `lakefile.lean`). At least 16 GB RAM recommended; 8 GB is the practical minimum.
 
-## Dependencies
-
-- **Lean 4**: Version pinned in `lean-toolchain`
-- **Mathlib4**: Commit pinned in `lakefile.lean`
-
----
 
 ## References
 
-Each module README contains full references. The primary sources are:
+Each module and sub-module README contains full references. The primary sources for the core library:
 
 - M. Reed, B. Simon, *Methods of Modern Mathematical Physics I*, Academic Press, 1980.
 - K. Schmüdgen, *Unbounded Self-adjoint Operators on Hilbert Space*, Springer, 2012.
 - B. C. Hall, *Quantum Theory for Mathematicians*, Springer, 2013.
+- M. Takesaki, *Theory of Operator Algebras I–III*, Springer, 1979–2003.
 - S. Amari, *Information Geometry and Its Applications*, Springer, 2016.
 - M. Echenim, M. Mhalla, "A formalization of the CHSH inequality and Tsirelson's upper-bound in Isabelle/HOL", 2023.
 - H. Ott, "Lorentz-Transformation der Wärme und der Temperatur," *Z. Physik* 175, 70–104, 1963.
-- T. Jacobson, "Thermodynamics of Spacetime: The Einstein Equation of State," *Phys. Rev. Lett.* 75, 1260–1263, 1995.
+- T. Jacobson, "Thermodynamics of Spacetime," *Phys. Rev. Lett.* 75, 1260–1263, 1995.
 - A. Connes, C. Rovelli, "Von Neumann algebra automorphisms and time-thermodynamics relation," *Class. Quantum Grav.* 11, 2899–2917, 1994.
+- A. Connes, *Noncommutative Geometry*, Academic Press, 1994.
+- E. Verlinde, "On the origin of gravity and the laws of Newton," *JHEP* 2011:029, 2011.
 
----
 
-## Contact
+## Author
 
-**Author:** Adam Bornemann
-**Email:** AdamBornemann@gmail.com
-
----
+Adam Bornemann — [AdamBornemann@gmail.com](mailto:AdamBornemann@gmail.com)
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).
 
----
+## Acknowledgements
 
-## Acknowledgments
-
-Built with [Lean 4](https://leanprover.github.io/lean4/doc/) and
-[Mathlib](https://github.com/leanprover-community/mathlib4).
+Built with [Lean 4](https://leanprover.github.io/lean4/doc/) and [Mathlib](https://github.com/leanprover-community/mathlib4). The Bell's theorem development is ported from Echenim and Mhalla's Isabelle/HOL formalisation with proper attribution and substantial extension.
