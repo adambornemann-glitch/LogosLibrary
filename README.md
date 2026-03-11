@@ -173,7 +173,7 @@ The value of formalising physics is twofold.
 
 ```bash
 # Clone
-git clone https://gitlab.com/pedagogical/logos_library
+git clone https://github.com/adambornemann-glitch/Logos_Library.git
 cd Logos_Library
 
 # Install Lean 4 (if needed)
