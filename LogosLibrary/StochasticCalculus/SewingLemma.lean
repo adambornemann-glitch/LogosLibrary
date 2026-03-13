@@ -7,6 +7,11 @@ Filename: StochasticCalculus/SewingLemma.lean
 import LogosLibrary.StochasticCalculus.SewingLemma.Defs
 import LogosLibrary.StochasticCalculus.SewingLemma.Condition
 import LogosLibrary.StochasticCalculus.SewingLemma.LayerOne.Map
+import LogosLibrary.StochasticCalculus.SewingLemma.LayerTwo.Decay
 import LogosLibrary.StochasticCalculus.SewingLemma.LayerTwo.Map
+import LogosLibrary.StochasticCalculus.SewingLemma.LayerThree.Partition
+import LogosLibrary.StochasticCalculus.SewingLemma.LayerThree.ContinuousControl
+import LogosLibrary.StochasticCalculus.SewingLemma.LayerThree.ThetaEnergy
+import LogosLibrary.StochasticCalculus.SewingLemma.LayerThree.DyadicPartition
 import LogosLibrary.StochasticCalculus.SewingLemma.LayerThree.Map
 import LogosLibrary.StochasticCalculus.SewingLemma.API
