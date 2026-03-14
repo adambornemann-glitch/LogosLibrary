@@ -8,7 +8,6 @@ A $p$-rough path is not just a path — it is a path *enhanced* with area data, 
 
 The critical output of this stage is the `RoughPath` structure that Stage 4 consumes: a complete metric space of driving signals, ready for the integration and differential equation machinery.
 
-
 ## Mathematical content
 
 ### The rough path
@@ -19,11 +18,11 @@ A **$p$-rough path** over $V$ on $[0, T]$ (for $p \in [2,3)$) is a pair $\mathbf
 
 $$X_{s,t} = X_{s,u} + X_{u,t}$$
 
-$$\mathbb{X}_{s,t} = \mathbb{X}_{s,u} + \mathbb{X}_{u,t} + X_{s,u} \otimes X_{u,t}$$
+$$\mathbb{X}\_{s,t} = \mathbb{X}\_{s,u} + \mathbb{X}\_{u,t} + X_{s,u} \otimes X_{u,t}$$
 
 **Regularity:**
 
-$$\|X\|_{p\text{-var};\,[s,t]} < \infty, \qquad \|\mathbb{X}\|_{p/2\text{-var};\,[s,t]} < \infty.$$
+$$\|X\|\_{p\text{-var};\,[s,t]} < \infty, \qquad \|\mathbb{X}\|\_{p/2\text{-var};\,[s,t]} < \infty.$$
 
 The level-1 identity is ordinary additivity. The level-2 identity — with its cross-term $X_{s,u} \otimes X_{u,t}$ — is the algebraic heart of rough path theory: it encodes the fact that iterated integrals do not split additively.
 
@@ -31,11 +30,11 @@ The level-1 identity is ordinary additivity. The level-2 identity — with its c
 
 The **rough path control** combines both levels:
 
-$$\omega_{\mathbf{X}}(s,t) \;=\; \|X\|_{p\text{-var};\,[s,t]}^p \;+\; \|\mathbb{X}\|_{p/2\text{-var};\,[s,t]}^{p/2}.$$
+$$\omega\_{\mathbf{X}}(s,t) \;=\; \|X\|\_{p\text{-var};\,[s,t]}^p \;+\; \|\mathbb{X}\|\_{p/2\text{-var};\,[s,t]}^{p/2}.$$
 
 This is a super-additive control satisfying the graded bounds
 
-$$\|X_{s,t}\| \;\leq\; \omega_{\mathbf{X}}(s,t)^{1/p}, \qquad \|\mathbb{X}_{s,t}\| \;\leq\; \omega_{\mathbf{X}}(s,t)^{2/p},$$
+$$\|X_{s,t}\| \;\leq\; \omega\_{\mathbf{X}}(s,t)^{1/p}, \qquad \|\mathbb{X}_{s,t}\| \;\leq\; \omega\_{\mathbf{X}}(s,t)^{2/p},$$
 
 which are the analytical content of rough path regularity. The exponents $1/p$ and $2/p$ reflect the grading: area scales as length$^2$.
 
@@ -43,23 +42,23 @@ which are the analytical content of rough path regularity. The exponents $1/p$ a
 
 A rough path $\mathbf{X}$ is **geometric** if $(1, X_{s,t}, \mathbb{X}_{s,t}) \in G^{(2)}(V)$ for all $s \leq t$, i.e.,
 
-$$	ext{}{Sym}(\mathbb{X}_{s,t}) \;=\; \frac{X_{s,t} \otimes X_{s,t}}{2}.$$
+$$\mathrm{Sym}(\mathbb{X}_{s,t}) \;=\; \frac{X_{s,t} \otimes X_{s,t}}{2}.$$
 
-Every geometric rough path is determined by its path increment $X$ and its Lévy area $A_{s,t} = 	ext{}{Anti}(\mathbb{X}_{s,t})$. Smooth paths always produce geometric rough paths via the iterated integral construction. The geometric condition is preserved by limits — so the geometric rough paths form a closed (hence complete) subspace.
+Every geometric rough path is determined by its path increment $X$ and its Lévy area $A_{s,t} = \mathrm{Anti}(\mathbb{X}_{s,t})$. Smooth paths always produce geometric rough paths via the iterated integral construction. The geometric condition is preserved by limits — so the geometric rough paths form a closed (hence complete) subspace.
 
 ### The rough path metric
 
 The $p$-variation distance between rough paths $\mathbf{X}$ and $\mathbf{Y}$ is
 
-$$d_p(\mathbf{X}, \mathbf{Y}) \;=\; \|X - Y\|_{p\text{-var}} \;+\; \|\mathbb{X} - \mathbb{Y}\|_{p/2\text{-var}}^{1/2}.$$
+$$d\_p(\mathbf{X}, \mathbf{Y}) \;=\; \|X - Y\|\_{p\text{-var}} \;+\; \|\mathbb{X} - \mathbb{Y}\|\_{p/2\text{-var}}^{1/2}.$$
 
 The square root on the level-2 term ensures correct homogeneity: under $\mathbf{X} \mapsto \lambda \mathbf{X}$ (scaling $X$ by $\lambda$ and $\mathbb{X}$ by $\lambda^2$), both terms scale like $|\lambda|$.
 
 ### Completeness
 
-The space of $p$-rough paths with $d_p$ is **complete**. The proof extracts pointwise limits from a Cauchy sequence (using completeness of $V$ and $V \otimes V$), verifies that Chen's identity passes to the limit, and checks that $p$-variation is lower semicontinuous:
+The space of $p$-rough paths with $d\_p$ is **complete**. The proof extracts pointwise limits from a Cauchy sequence (using completeness of $V$ and $V \otimes V$), verifies that Chen's identity passes to the limit, and checks that $p$-variation is lower semicontinuous:
 
-$$\|X\|_{p\text{-var}} \;\leq\; \liminf_n \|X_n\|_{p\text{-var}}.$$
+$$\|X\|\_{p\text{-var}} \;\leq\; \liminf\_n \|X\_n\|\_{p\text{-var}}.$$
 
 This follows because for any fixed partition, the Riemann sum of the limit equals the limit of the Riemann sums, and the supremum over partitions is a supremum of continuous functions — hence lower semicontinuous.
 
@@ -69,7 +68,7 @@ The geometric rough paths form a closed subspace (the geometric condition is a c
 
 For $p < 2$, the situation simplifies dramatically: a path $\gamma$ with finite $p$-variation has a **unique** geometric rough path lift, defined by the Young integral
 
-$$\mathbb{X}_{s,t} \;=\; \int_s^t (\gamma(r) - \gamma(s)) \otimes d\gamma(r).$$
+$$\mathbb{X}\_{s,t} \;=\; \int\_s^t (\gamma(r) - \gamma(s)) \otimes d\gamma(r).$$
 
 This exists because $1/p + 1/p = 2/p > 1$ when $p < 2$. For $p \geq 2$, the lift is *not* unique — different choices of $\mathbb{X}$ (different Lévy areas) give different rough paths above the same $\gamma$. This non-uniqueness is the fundamental reason rough path theory exists: for Brownian motion, the Stratonovich and Itô lifts differ by $\delta^{ij}(t-s)/2$ in the area, producing different integrals.
 
@@ -96,7 +95,7 @@ This exists because $1/p + 1/p = 2/p > 1$ when $p < 2$. For $p \geq 2$, the lift
 |---|---|
 | Level-1 $p$-variation distance | Planned |
 | Level-2 $p/2$-variation distance (with square root) | Planned |
-| Combined metric $d_p$ | Planned |
+| Combined metric $d\_p$ | Planned |
 | Metric space instance | Planned |
 
 ### Phase 3.4: Completeness
@@ -191,3 +190,4 @@ Phase 3.6 ─── Young lift (p < 2) ──→ non-uniqueness (p ≥ 2) ──
 ## Authors
 
 Adam Bornemann & Doctor Professor Baron von Wobble-Bob
+
