@@ -43,9 +43,9 @@ which are the analytical content of rough path regularity. The exponents $1/p$ a
 
 A rough path $\mathbf{X}$ is **geometric** if $(1, X_{s,t}, \mathbb{X}_{s,t}) \in G^{(2)}(V)$ for all $s \leq t$, i.e.,
 
-$$\operatorname{Sym}(\mathbb{X}_{s,t}) \;=\; \frac{X_{s,t} \otimes X_{s,t}}{2}.$$
+$$	ext{}{Sym}(\mathbb{X}_{s,t}) \;=\; \frac{X_{s,t} \otimes X_{s,t}}{2}.$$
 
-Every geometric rough path is determined by its path increment $X$ and its Lévy area $A_{s,t} = \operatorname{Anti}(\mathbb{X}_{s,t})$. Smooth paths always produce geometric rough paths via the iterated integral construction. The geometric condition is preserved by limits — so the geometric rough paths form a closed (hence complete) subspace.
+Every geometric rough path is determined by its path increment $X$ and its Lévy area $A_{s,t} = 	ext{}{Anti}(\mathbb{X}_{s,t})$. Smooth paths always produce geometric rough paths via the iterated integral construction. The geometric condition is preserved by limits — so the geometric rough paths form a closed (hence complete) subspace.
 
 ### The rough path metric
 
