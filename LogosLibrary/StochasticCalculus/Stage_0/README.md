@@ -15,25 +15,25 @@ Classical Riemann–Stieltjes integration requires the integrator to have bounde
 
 The sewing lemma replaces the classical Riemann–Stieltjes limit with an algebraic-analytic construction that works in this low-regularity regime. Given a two-parameter map $\Xi(s,t)$ that is "almost additive" — meaning the defect $\delta\Xi(s,u,t) = \Xi(s,t) - \Xi(s,u) - \Xi(u,t)$ is small in a quantifiable sense — the sewing lemma produces a genuinely additive functional $I$ that approximates $\Xi$.
 
-The interplay is direct: if $X$ has finite $p$-variation and $Y$ has finite $q$-variation with $1/p + 1/q > 1$, then $\Xi(s,t) = Y(s) \cdot (X(t) - X(s))$ satisfies a sewing condition, and the sewn map $I$ is the Young integral $\int Y \, dX$.
+The interplay is direct: if $X$ is $\gamma$-Hölder and $Y$ is $\delta$-Hölder with $\gamma + \delta > 1$, then $\Xi(s,t) = Y(s) \cdot (X(t) - X(s))$ satisfies a sewing condition, and the sewn map $I$ is the Young integral $\int Y \, dX$. This application is proved as `young_integral_holder` in the API.
 
 ## Modules
 
-### [SewingLemma/](SewingLemma/README.md)
+### [SewingLemma/](SewingLemma/)
 
 A three-layer formalization of the sewing lemma with increasing generality:
 
-- **Layer 1** — defect controlled by $K \cdot |t-s|^\theta$, $\theta > 1$. Fully proved.
-- **Layer 2** — defect controlled by $K \cdot \omega_1(s,u)^\alpha \cdot \omega_2(u,t)^\beta$, $\alpha + \beta > 1$ with Lipschitz controls. Fully proved, including general additivity and mesh-convergence.
+- **Layer 1** — defect controlled by $K \cdot |t-s|^\theta$, $\theta > 1$. Fully proved, with general additivity obtained via specialization from Layer 2.
+- **Layer 2** — defect controlled by $K \cdot \omega\_1(s,u)^\alpha \cdot \omega\_2(u,t)^\beta$, $\alpha + \beta > 1$ with Lipschitz controls. Fully proved, including general additivity and mesh-convergence.
 - **Layer 3** — defect controlled by $K \cdot \omega(s,t)^\theta$ with continuous super-additive control. Fully proved except general additivity (see `TODO.lean`).
 
 See [SewingLemma/README.md](SewingLemma/README.md) for detailed documentation.
 
-### [PVariation/](PVariation/README.md)
+### [PVariation/](PVariation/)
 
 The $p$-variation of a function $f$ on a set $s$:
 
-$$\|f\|_{p\text{-var}; s}^p \;=\; \sup_{\mathcal{P}} \sum_i d\bigl(f(t_{i+1}),\, f(t_i)\bigr)^p$$
+$$\|f\|\_{p\text{-var}; s}^p \;=\; \sup\_{\mathcal{P}} \sum\_i d\bigl(f(t\_{i+1}),\, f(t\_i)\bigr)^p$$
 
 where the supremum is over all finite partitions $\mathcal{P}$ of $s$.
 
@@ -49,14 +49,26 @@ where the supremum is over all finite partitions $\mathcal{P}$ of $s$.
 
 **Open problems (see `TODO.lean`):**
 
-- *Continuity of $p$-variation*: for continuous $f$ with finite $p$-variation ($p \geq 1$), the map $t \mapsto \|f\|_{p\text{-var}; [a,t]}^p$ is continuous. This is Friz–Victoir Proposition 5.3. The key intermediate step — that $p$-variation on small intervals tends to zero — requires a greedy extraction of disjoint intervals and a compactness argument on $[a,b]$.
+- *Continuity of $p$-variation*: for continuous $f$ with finite $p$-variation ($p \geq 1$), the map $t \mapsto \|f\|\_{p\text{-var}; [a,t]}^p$ is continuous. This is Friz–Victoir Proposition 5.3.
+
+### [API.lean](API.lean)
+
+Bundled convenience theorems wrapping the sewing lemma infrastructure:
+
+- `sewing_lemma₁` — Layer 1 existence, uniqueness, approximation, and additivity (the last via Layer 2)
+- `sewing_lemma₂` — Layer 2 existence, uniqueness, approximation, and additivity
+- `young_integral_holder` — **Young integration for Hölder paths** as a direct application of Layer 2: given $\gamma$-Hölder $X : \mathbb{R} \to \mathbb{R}$ and $\delta$-Hölder $Y : \mathbb{R} \to E$ with $\gamma + \delta > 1$, there exists a unique additive functional $I$ satisfying
+
+$$\|I(s,t) - (X(t) - X(s)) \cdot Y(s)\| \;\leq\; C \cdot |t - s|^{\gamma + \delta}.$$
+
+This is the first concrete integration result and the bridge to Stage 1 (full Young integration with $p$-variation controls).
 
 ## File structure
 
 ```
 Stage_0/
 ├── README.md
-├── API.lean                          -- Bundled API for the sewing lemma
+├── API.lean                          -- Bundled sewing lemma + Young integration
 ├── SewingLemma/
 │   ├── README.md
 │   ├── Defs.lean
@@ -84,6 +96,7 @@ Built on [Mathlib](https://github.com/leanprover-community/mathlib4). Key import
 - Friz, P.; Hairer, M., *A Course on Rough Paths*, 2nd ed., Springer (2020)
 - Friz, P.; Victoir, N., *Multidimensional Stochastic Processes as Rough Paths*, Cambridge (2010)
 - Lyons, T., *Differential equations driven by rough signals*, Rev. Mat. Iberoam. **14** (1998), 215–310
+- Young, L.C., *An inequality of the Hölder type, connected with Stieltjes integration*, Acta Math. **67** (1936), 251–282
 
 ## Authors
 
