@@ -22,7 +22,7 @@ $$\|\delta\Xi(s, u, t)\| \;\leq\; K \cdot |t - s|^\theta, \qquad \theta > 1.$$
 
 The interval length distributes perfectly over dyadic subdivision: at level $n$, each sub-interval has length exactly $|t - s| / 2^n$, giving clean geometric decay
 
-$$\|S_{n+1} - S_n\| \;\leq\; K \cdot |t - s|^\theta \cdot 2^{-n(\theta - 1)}$$
+$$\|S\_{n+1} - S\_n\| \;\leq\; K \cdot |t - s|^\theta \cdot 2^{-n(\theta - 1)}$$
 
 with no additional hypotheses on a control function. The condition $\theta > 1$ is sharp — it is precisely what makes the geometric series $\sum 2^{-n(\theta-1)}$ converge.
 
@@ -32,13 +32,15 @@ This version covers all standard Hölder-regularity applications: Brownian motio
 
 $$\|I(s,t) - \Xi(s,t)\| \;\leq\; \frac{K}{1 - 2^{-(\theta-1)}} \cdot |t - s|^\theta.$$
 
+Full additivity for Layer 1 is obtained by specialization from Layer 2: the two sewn maps are literally the same `limUnder`, so Layer 2's additivity transfers directly.
+
 ### Layer 2: Cross-controlled (product) defect bound
 
 The defect satisfies
 
-$$\|\delta\Xi(s, u, t)\| \;\leq\; K \cdot \omega_1(s, u)^\alpha \cdot \omega_2(u, t)^\beta, \qquad \alpha + \beta > 1,$$
+$$\|\delta\Xi(s, u, t)\| \;\leq\; K \cdot \omega\_1(s, u)^\alpha \cdot \omega\_2(u, t)^\beta, \qquad \alpha + \beta > 1,$$
 
-where each $\omega_i$ is a super-additive control satisfying a Lipschitz-in-length condition $\omega_i(s, t) \leq L_i \cdot (t - s)$.
+where each $\omega\_i$ is a super-additive control satisfying a Lipschitz-in-length condition $\omega\_i(s, t) \leq L\_i \cdot (t - s)$.
 
 The product structure is not a mere generalization — it is the *natural* form of the defect in integration theory. When $\Xi(s,t) = Y(s) \cdot (X(t) - X(s))$, the defect
 
@@ -46,11 +48,11 @@ $$\delta\Xi(s, u, t) = -(Y(u) - Y(s)) \cdot (X(t) - X(u))$$
 
 separates into a factor depending on $[s, u]$ (integrand variation) and a factor depending on $[u, t]$ (integrator variation). This separation is what makes the refinement cost bound work — see the discussion under [Open problem](#open-problem-layer-3-general-additivity) below.
 
-Layer 1 is the special case $\omega_1 = \omega_2 = |\cdot|$, $\alpha + \beta = \theta$, $L_1 = L_2 = 1$.
+Layer 1 is the special case $\omega\_1 = \omega\_2 = |\cdot|$, $\alpha + \beta = \theta$, $L\_1 = L\_2 = 1$.
 
 **Main output.** There exists a unique additive $I$ with
 
-$$\|I(s,t) - \Xi(s,t)\| \;\leq\; \frac{K \cdot L_1^\alpha \cdot L_2^\beta}{2^{\alpha+\beta}\,(1 - 2^{-(\alpha+\beta-1)})} \cdot |t - s|^{\alpha + \beta}.$$
+$$\|I(s,t) - \Xi(s,t)\| \;\leq\; \frac{K \cdot L\_1^\alpha \cdot L\_2^\beta}{2^{\alpha+\beta}\,(1 - 2^{-(\alpha+\beta-1)})} \cdot |t - s|^{\alpha + \beta}.$$
 
 Additionally, Riemann sums over *any* sequence of partitions with mesh $\to 0$ converge to $I$ (`riemannSum_tendsto_sewingMap₂`).
 
@@ -64,19 +66,19 @@ where $\omega$ is a continuous super-additive control (vanishing on the diagonal
 
 The key convergence mechanism is the **$\theta$-energy**
 
-$$\Phi_\theta(P) \;=\; \sum_i \omega(t_i, t_{i+1})^\theta,$$
+$$\Phi\_\theta(P) \;=\; \sum\_i \omega(t\_i, t\_{i+1})^\theta,$$
 
 which satisfies
 
-$$\Phi_\theta(P) \;\leq\; \Bigl(\max_i\, \omega(t_i, t_{i+1})\Bigr)^{\theta - 1} \cdot \omega(s, t).$$
+$$\Phi\_\theta(P) \;\leq\; \Bigl(\max\_i\, \omega(t\_i, t\_{i+1})\Bigr)^{\theta - 1} \cdot \omega(s, t).$$
 
-Since $\theta > 1$, the max term vanishes as the mesh refines (by continuity of $\omega$), while the sum $\sum \omega_i$ stays bounded by super-additivity. For $\theta = 1$ this mechanism fails — $\Phi_1$ is bounded but does not vanish. This is the analytical reason $\theta > 1$ is necessary.
+Since $\theta > 1$, the max term vanishes as the mesh refines (by continuity of $\omega$), while the sum $\sum \omega\_i$ stays bounded by super-additivity. For $\theta = 1$ this mechanism fails — $\Phi\_1$ is bounded but does not vanish. This is the analytical reason $\theta > 1$ is necessary.
 
 **Main output.** There exists a unique additive $I$ with
 
-$$\|I(s,t) - \Xi(s,t)\| \;\leq\; K \cdot \sum_{n=0}^{\infty} \Phi_\theta(D_n(s,t)),$$
+$$\|I(s,t) - \Xi(s,t)\| \;\leq\; K \cdot \sum\_{n=0}^{\infty} \Phi\_\theta(D\_n(s,t)),$$
 
-where $D_n$ is the $n$-th dyadic partition. Full additivity is proved for dyadic split points; general additivity for arbitrary split points is an open formalization problem (see below).
+where $D\_n$ is the $n$-th dyadic partition. Full additivity is proved for dyadic split points; general additivity for arbitrary split points is an open formalization problem (see below).
 
 ## Main results
 
@@ -89,6 +91,7 @@ where $D_n$ is the $n$-th dyadic partition. Full additivity is proved for dyadic
 | Uniqueness | `sewingMap₁_unique` | ✓ |
 | Midpoint additivity | `sewingMap₁_midpoint` | ✓ |
 | Dyadic additivity | `sewingMap₁_dyadicSum` | ✓ |
+| General additivity (via Layer 2) | `sewingMap₁_additive` | ✓ |
 
 ### Layer 2 (`SewingCondition₂`)
 | Result | Theorem | Status |
@@ -116,6 +119,12 @@ where $D_n$ is the $n$-th dyadic partition. Full additivity is proved for dyadic
 | θ-energy monotone under refinement | `thetaEnergy_le_of_refinement` | ✓ |
 | General additivity | `sewingMap₃_additive` | **TODO** |
 
+### Cross-layer results
+| Result | Theorem | Status |
+|---|---|---|
+| Layer 1 = Layer 2 (same limit) | `sewingMap₁_eq_sewingMap₂` | ✓ |
+| Lipschitz implies continuous control | `contControl_of_lipControl` | ✓ |
+
 ### Supporting infrastructure
 | Result | Theorem |
 |---|---|
@@ -123,14 +132,13 @@ where $D_n$ is the $n$-th dyadic partition. Full additivity is proved for dyadic
 | Merge refines both inputs | `merge_refines_left/right` |
 | Mesh decreases under refinement | `mesh_refinement_le` |
 | Riemann sum splitting at a point | `riemannSum_split` |
-| Lipschitz implies continuous control | `contControl_of_lipControl` |
 | Super-additivity over partitions | `ContControl.sum_le` |
 
 ## Open problem: Layer 3 general additivity
 
 The one unproved result is `sewingMap₃_additive`: full additivity $I(s,t) = I(s,u) + I(u,t)$ for arbitrary $u \in [s,t]$ under a general continuous control.
 
-**Why it's hard.** In Layer 2, the product structure $\omega_1(s,u)^\alpha \cdot \omega_2(u,t)^\beta$ is what makes the refinement cost bound factorable. Right-peeling keeps the left endpoint fixed at $a$, so the $\omega_1(a, q_j)^\alpha$ terms are monotone and factor out; the remaining $\omega_2(q_j, q_{j+1})^\beta$ terms collapse via super-additivity. The product *separates* the two roles.
+**Why it's hard.** In Layer 2, the product structure $\omega\_1(s,u)^\alpha \cdot \omega\_2(u,t)^\beta$ is what makes the refinement cost bound factorable. Right-peeling keeps the left endpoint fixed at $a$, so the $\omega\_1(a, q\_j)^\alpha$ terms are monotone and factor out; the remaining $\omega\_2(q\_j, q\_{j+1})^\beta$ terms collapse via super-additivity. The product *separates* the two roles.
 
 In Layer 3, the single control $\omega(s,t)^\theta$ does not decompose this way. Super-additivity gives
 
@@ -153,7 +161,7 @@ SewingLemma/
 ├── Defs.lean                         -- Definitions for all three layers
 ├── Condition.lean                    -- Layer 1 dyadic machinery, cocycle identity
 ├── LayerOne/
-│   └── Map.lean                      -- Layer 1 sewn map and properties
+│   └── Map.lean                      -- Layer 1 sewn map, properties, full additivity
 ├── LayerTwo/
 │   ├── ContinuousControl.lean        -- ContControl monotonicity, partition sums
 │   ├── RightPe.lean                  -- Right-peeling telescoping identity
@@ -165,7 +173,8 @@ SewingLemma/
 │       ├── Merge.lean                -- Common refinement (partition merge)
 │       ├── Partition.lean            -- Splitting, mesh bounds, two-point partition
 │       ├── Additive.lean             -- General additivity
-│       └── GenConv.lean              -- General convergence (mesh → 0)
+│       ├── GenConv.lean              -- General convergence (mesh → 0)
+│       └── Specialize.lean           -- Layer 1 = Layer 2 bridge
 ├── LayerThree/
 │   ├── DyadicPartition.lean          -- Dyadic bounds and Cauchy sequence
 │   └── Map.lean                      -- Layer 3 sewn map and properties
