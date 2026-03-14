@@ -40,13 +40,13 @@ For a smooth path $\gamma$, the canonical enhancement $\mathbb{X}_{s,t} = \int_s
 
 An element $(1, x, \mathfrak{x}) \in T^{(2)}(V)$ is **group-like** if
 
-$$	ext{}{Sym}(\mathfrak{x}) \;=\; \frac{x \otimes x}{2},$$
+$$	ext{Sym}(\mathfrak{x}) \;=\; \frac{x \otimes x}{2},$$
 
-where $	ext{}{Sym}(\mathfrak{x}) = (\mathfrak{x} + \tau(\mathfrak{x}))/2$ is the symmetric part and $\tau$ is the tensor swap. Equivalently, every group-like element decomposes as
+where $	ext{Sym}(\mathfrak{x}) = (\mathfrak{x} + \tau(\mathfrak{x}))/2$ is the symmetric part and $\tau$ is the tensor swap. Equivalently, every group-like element decomposes as
 
 $$\mathfrak{x} \;=\; \frac{x \otimes x}{2} + A, \qquad A \in \Lambda^2(V),$$
 
-where $A = 	ext{}{Anti}(\mathfrak{x})$ is the **Lévy area** — the antisymmetric part, representing the signed area swept out by the path. This is the genuinely free parameter: a group-like element is completely determined by $(x, A) \in V \times \Lambda^2(V)$.
+where $A = 	ext{Anti}(\mathfrak{x})$ is the **Lévy area** — the antisymmetric part, representing the signed area swept out by the path. This is the genuinely free parameter: a group-like element is completely determined by $(x, A) \in V \times \Lambda^2(V)$.
 
 The group-like elements $G^{(2)}(V)$ form a group under truncated multiplication. In the coordinates $(x, A)$, the group law is
 
