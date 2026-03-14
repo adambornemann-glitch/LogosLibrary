@@ -14,9 +14,9 @@ The construction is direct: define the approximation $\Xi(s,t) = Y(s) \cdot (X(t
 
 ### The defect identity
 
-The approximation map $\Xi(s,t) = \sigma(Y_s,\, X_t - X_s)$, where $\sigma : F \to V \to W$ is a continuous bilinear map, has defect
+The approximation map $\Xi(s,t) = \sigma(Y\_s,\, X\_t - X\_s)$, where $\sigma : F \to V \to W$ is a continuous bilinear map, has defect
 
-$$\delta\Xi(s, u, t) \;=\; -\sigma\bigl(Y_u - Y_s,\; X_t - X_u\bigr).$$
+$$\delta\Xi(s, u, t) \;=\; -\sigma\bigl(Y\_u - Y\_s,\; X\_t - X\_u\bigr).$$
 
 This is pure algebra — expand and use bilinearity.
 
@@ -24,29 +24,29 @@ This is pure algebra — expand and use bilinearity.
 
 The defect bound takes the *product form* required by `SewingCondition₂`:
 
-$$\|\delta\Xi(s, u, t)\| \;\leq\; \|\sigma\| \cdot \omega_Y(s, u)^{1/q} \cdot \omega_X(u, t)^{1/p}$$
+$$\|\delta\Xi(s, u, t)\| \;\leq\; \|\sigma\| \cdot \omega\_Y(s, u)^{1/q} \cdot \omega\_X(u, t)^{1/p}$$
 
-where $\omega_Y(s,t) = \|Y\|_{q\text{-var};\,[s,t]}^q$ and $\omega_X(s,t) = \|X\|_{p\text{-var};\,[s,t]}^p$ are the $p$-variation controls. The exponents satisfy $\alpha = 1/q$, $\beta = 1/p$, with $\alpha + \beta = 1/q + 1/p > 1$.
+where $\omega\_Y(s,t) = \|Y\|\_{q\text{-var};\,[s,t]}^q$ and $\omega\_X(s,t) = \|X\|\_{p\text{-var};\,[s,t]}^p$ are the $p$-variation controls. The exponents satisfy $\alpha = 1/q$, $\beta = 1/p$, with $\alpha + \beta = 1/q + 1/p > 1$.
 
 ### The Young integral
 
 The Young integral *is* the sewn map:
 
-$$\int_s^t Y \, dX \;:=\; \texttt{sewingMap₂}\;\Xi\;\omega_Y\;\omega_X\;\tfrac{1}{q}\;\tfrac{1}{p}\;\cdots$$
+$$\int\_s^t Y \, dX \;:=\; \texttt{sewingMap₂}\;\Xi\;\omega\_Y\;\omega\_X\;\tfrac{1}{q}\;\tfrac{1}{p}\;\cdots$$
 
 Everything else — existence, additivity, the approximation bound — falls out of Stage 0.
 
 ### The Young–Loève estimate
 
-$$\left\|\int_s^t Y\, dX \;-\; \sigma(Y_s,\, X_t - X_s)\right\| \;\leq\; C_{p,q} \cdot \|\sigma\| \cdot \|Y\|_{q\text{-var};\,[s,t]} \cdot \|X\|_{p\text{-var};\,[s,t]}$$
+$$\left\|\int\_s^t Y\, dX \;-\; \sigma(Y\_s,\, X\_t - X\_s)\right\| \;\leq\; C\_{p,q} \cdot \|\sigma\| \cdot \|Y\|\_{q\text{-var};\,[s,t]} \cdot \|X\|\_{p\text{-var};\,[s,t]}$$
 
 This is a direct corollary of `sewingMap₂_dist_le`.
 
 ### Regularity of the integral
 
-The indefinite integral $t \mapsto \int_0^t Y\, dX$ has finite $p$-variation:
+The indefinite integral $t \mapsto \int\_0^t Y\, dX$ has finite $p$-variation:
 
-$$\left\|\int Y\, dX\right\|_{p\text{-var};\,[s,t]} \;\leq\; C \cdot \bigl(\|Y\|_\infty \cdot \|X\|_{p\text{-var};\,[s,t]} \;+\; \|Y\|_{q\text{-var};\,[s,t]} \cdot \|X\|_{p\text{-var};\,[s,t]}\bigr)$$
+$$\left\|\int Y\, dX\right\|\_{p\text{-var};\,[s,t]} \;\leq\; C \cdot \bigl(\|Y\|\_\infty \cdot \|X\|\_{p\text{-var};\,[s,t]} \;+\; \|Y\|\_{q\text{-var};\,[s,t]} \cdot \|X\|\_{p\text{-var};\,[s,t]}\bigr)$$
 
 This result is *essential* for Stage 4: it shows the rough integral preserves regularity, which is what allows iteration in the Picard fixed-point scheme.
 
@@ -56,7 +56,7 @@ This result is *essential* for Stage 4: it shows the rough integral preserves re
 | Result | Status |
 |---|---|
 | $p$-variation seminorm via `Partition` | Planned |
-| Super-additivity of $\omega_X = \|X\|_{p\text{-var}}^p$ | Planned |
+| Super-additivity of $\omega\_X = \|X\|\_{p\text{-var}}^p$ | Planned |
 | Bridge: `pVarControl_is_contControl` | Planned |
 | Hölder paths have finite $p$-variation | **Done** (Stage 0) |
 | Lipschitz control from Hölder regularity | Planned |
@@ -64,7 +64,7 @@ This result is *essential* for Stage 4: it shows the rough integral preserves re
 ### Phase 1.2: Existence of the Young integral
 | Result | Status |
 |---|---|
-| Approximation map $\Xi(s,t) = \sigma(Y_s, X_t - X_s)$ | Planned |
+| Approximation map $\Xi(s,t) = \sigma(Y\_s, X\_t - X\_s)$ | Planned |
 | Defect identity (algebraic) | Planned |
 | Defect bound (Layer 2 form) | Planned |
 | Young integral via `sewingMap₂` | Planned |
@@ -90,7 +90,7 @@ This result is *essential* for Stage 4: it shows the rough integral preserves re
 
 ## The key insight: why Layer 2 is the right tool
 
-The defect $\delta\Xi(s,u,t) = -\sigma(Y_u - Y_s,\, X_t - X_u)$ naturally *separates* into a factor depending on $[s,u]$ and a factor depending on $[u,t]$. This is not an accident — it is the algebraic structure of integration itself. The integrand's variation on the left of the split point and the integrator's variation on the right are independent quantities with different regularity.
+The defect $\delta\Xi(s,u,t) = -\sigma(Y\_u - Y\_s,\, X\_t - X\_u)$ naturally *separates* into a factor depending on $[s,u]$ and a factor depending on $[u,t]$. This is not an accident — it is the algebraic structure of integration itself. The integrand's variation on the left of the split point and the integrator's variation on the right are independent quantities with different regularity.
 
 This product structure is precisely what `SewingCondition₂` captures. Layer 1 (with its single control $|t-s|^\theta$) would work only when both paths have the same Hölder exponent. Layer 2 handles the general case where $X$ and $Y$ have genuinely different regularity — which is the situation in every interesting application.
 
@@ -114,7 +114,7 @@ This product structure is precisely what `SewingCondition₂` captures. Layer 1 
 | `NormedSpace`, `NormedAddCommGroup` | Banach space structure |
 | Possibly `IntervalIntegral` | Riemann–Stieltjes consistency |
 
-## Recommended build order
+## Build order
 
 The dependency graph has a clear critical path:
 
