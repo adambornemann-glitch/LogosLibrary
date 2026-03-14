@@ -34,19 +34,19 @@ $$\mathbb{X}_{s,t} \;=\; \mathbb{X}_{s,u} + \mathbb{X}_{u,t} + X_{s,u} \otimes X
 
 The level-1 identity is ordinary additivity of increments. The level-2 identity is the key new content: the cross-term $X_{s,u} \otimes X_{u,t}$ encodes the fact that iterated integrals do not split additively — they have a correction from the ordering of integration variables.
 
-For a smooth path $\gamma$, the canonical enhancement $\mathbb{X}_{s,t} = \int_s^t (\gamma(r) - \gamma(s)) \otimes d\gamma(r)$ satisfies Chen's identity by splitting the integration domain.
+For a smooth path $\gamma$, the canonical enhancement $\mathbb{X}\_{s,t} = \int\_s^t (\gamma(r) - \gamma(s)) \otimes d\gamma(r)$ satisfies Chen's identity by splitting the integration domain.
 
 ### Group-like elements
 
 An element $(1, x, \mathfrak{x}) \in T^{(2)}(V)$ is **group-like** if
 
-$$	{Sym}(\mathfrak{x}) \;=\; \frac{x \otimes x}{2},$$
+$$\mathrm{Sym}(\mathfrak{x}) \;=\; \frac{x \otimes x}{2},$$
 
-where $	{Sym}(\mathfrak{x}) = (\mathfrak{x} + \tau(\mathfrak{x}))/2$ is the symmetric part and $\tau$ is the tensor swap. Equivalently, every group-like element decomposes as
+where $\mathrm{Sym}(\mathfrak{x}) = (\mathfrak{x} + \tau(\mathfrak{x}))/2$ is the symmetric part and $\tau$ is the tensor swap. Equivalently, every group-like element decomposes as
 
 $$\mathfrak{x} \;=\; \frac{x \otimes x}{2} + A, \qquad A \in \Lambda^2(V),$$
 
-where $A = 	ext{Anti}(\mathfrak{x})$ is the **Lévy area** — the antisymmetric part, representing the signed area swept out by the path. This is the genuinely free parameter: a group-like element is completely determined by $(x, A) \in V \times \Lambda^2(V)$.
+where $A = \mathrm{Anti}(\mathfrak{x})$ is the **Lévy area** — the antisymmetric part, representing the signed area swept out by the path. This is the genuinely free parameter: a group-like element is completely determined by $(x, A) \in V \times \Lambda^2(V)$.
 
 The group-like elements $G^{(2)}(V)$ form a group under truncated multiplication. In the coordinates $(x, A)$, the group law is
 
@@ -58,7 +58,7 @@ which is the group law of the **free step-2 nilpotent group** — a generalizati
 
 The Carnot–Carathéodory (quasi-)metric on $G^{(2)}(V)$ is
 
-$$d_{cc}(g, h) \;=\; \|g^{-1} \otimes_t h\|_{cc}, \qquad \|(1, x, \mathfrak{x})\|_{cc} \;=\; \max\bigl(\|x\|,\; \|\mathfrak{x} - x \otimes x / 2\|^{1/2}\bigr).$$
+$$d_{cc}(g, h) \;=\; \|g^{-1} \otimes_t h\|\_{cc}, \qquad \|(1, x, \mathfrak{x})\|\_{cc} \;=\; \max\bigl(\|x\|,\; \|\mathfrak{x} - x \otimes x / 2\|^{1/2}\bigr).$$
 
 The $1/2$ exponent on the area term reflects parabolic scaling: area scales as length$^2$. This metric controls all the estimates in rough path theory.
 
@@ -76,11 +76,10 @@ The $1/2$ exponent on the area term reflects parabolic scaling: area scales as l
 ### Phase 2.2: Chen's identity
 | Result | Status |
 |---|---|
-| Multiplicative form: $\mathbf{X}(s,t) = \mathbf{X}(s,u) \otimes_t \mathbf{X}(u,t)$ | Planned |
+| Multiplicative form | Planned |
 | Component form: additivity + area rule | Planned |
 | Verification for smooth paths | Planned |
-| Diagonal: $\mathbf{X}(s,s) = \mathbf{1}$ | Planned |
-| Inverse relation | Planned |
+| Diagonal and inverse relation | Planned |
 
 ### Phase 2.3: Group-like elements and the free nilpotent group
 | Result | Status |
@@ -146,7 +145,6 @@ Phase 2.3 ────── Sym/Anti ──→ group-like ──→ closure ─
                                                 ▼
 Phase 2.4 ──────────────────────── homogeneous norm ──→ metric
 ```
-
 
 ## References
 
