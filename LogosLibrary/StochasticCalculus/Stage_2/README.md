@@ -40,9 +40,9 @@ For a smooth path $\gamma$, the canonical enhancement $\mathbb{X}_{s,t} = \int_s
 
 An element $(1, x, \mathfrak{x}) \in T^{(2)}(V)$ is **group-like** if
 
-$$	ext{Sym}(\mathfrak{x}) \;=\; \frac{x \otimes x}{2},$$
+$$	{Sym}(\mathfrak{x}) \;=\; \frac{x \otimes x}{2},$$
 
-where $	ext{Sym}(\mathfrak{x}) = (\mathfrak{x} + \tau(\mathfrak{x}))/2$ is the symmetric part and $\tau$ is the tensor swap. Equivalently, every group-like element decomposes as
+where $	{Sym}(\mathfrak{x}) = (\mathfrak{x} + \tau(\mathfrak{x}))/2$ is the symmetric part and $\tau$ is the tensor swap. Equivalently, every group-like element decomposes as
 
 $$\mathfrak{x} \;=\; \frac{x \otimes x}{2} + A, \qquad A \in \Lambda^2(V),$$
 
