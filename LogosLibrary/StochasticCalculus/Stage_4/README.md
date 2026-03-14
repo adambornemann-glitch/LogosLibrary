@@ -66,7 +66,7 @@ The exponent $3/p$ comes from: 2 from the remainder (which has $p/2$-variation) 
 
 The sewing lemma applied to $\Xi$ produces the **rough integral**:
 
-$$\int_s^t Y_r\, d\mathbf{X}_r \;:=\; \operatorname{Sew}(\Xi)(s,t)$$
+$$\int_s^t Y_r\, d\mathbf{X}_r \;:=\; 	ext{Sew}(\Xi)(s,t)$$
 
 with approximation bound
 
