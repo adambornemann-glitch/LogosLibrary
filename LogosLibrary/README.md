@@ -144,7 +144,7 @@ General and special relativity, plus gravitational thermodynamics.
 
 Rough paths theory: p-variation for paths and the sewing lemma. These
 are foundational tools for stochastic analysis that appear to feed into the
-thermodynamic arguments elsewhere.
+thermodynamic arguments elsewhere.  See the [Stochastic Calculus README](StochasticCalculus/README.md).
 
 ### `Superior/`
 
