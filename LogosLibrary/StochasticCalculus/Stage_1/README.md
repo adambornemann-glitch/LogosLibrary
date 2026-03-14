@@ -2,140 +2,112 @@
 
 ## Overview
 
-Young integration constructs the integral $\int Y \, dX$ when $X$ has finite $p$-variation and $Y$ has finite $q$-variation with
+This module constructs the **Young integral** $\int Y\, dX$ for paths of complementary Hölder regularity and develops its full theory: existence, uniqueness, additivity, regularity, linearity, integration by parts, and continuity in the input paths.
 
-$$\frac{1}{p} + \frac{1}{q} > 1.$$
+Young integration is the first non-trivial application of the [Stage 0](../Stage_0/README.md) sewing lemma and the base case of the rough path integration hierarchy. It extends classical Riemann–Stieltjes integration beyond bounded variation, reaching paths as rough as — but not including — Brownian motion.
 
-This is the first non-trivial application of the sewing lemma and the base case of the rough path integration hierarchy. It extends classical Riemann–Stieltjes integration beyond bounded variation — reaching paths as rough as (but not including) Brownian motion.
+## Mathematical context
 
-The construction is direct: define the approximation $\Xi(s,t) = Y(s) \cdot (X(t) - X(s))$, verify that its defect has the cross-controlled product structure required by the Layer 2 sewing lemma, and apply the machine. Existence, uniqueness, additivity, and the approximation bound are then *immediate consequences* of the Stage 0 infrastructure.
+The Riemann–Stieltjes integral $\int Y\, dX$ exists whenever $X$ has bounded variation, but Brownian motion has infinite variation on every interval. Young (1936) observed that an integral can still be defined when the regularity lost by the integrator is compensated by the integrand: if $X$ is $\gamma$-Hölder and $Y$ is $\delta$-Hölder with
 
-## Mathematical content
+$$\gamma + \delta > 1$$
 
-### The defect identity
+then $\int_s^t Y\, dX$ exists as the limit of left-point Riemann sums. For Brownian motion ($\gamma$ slightly below $1/2$), this requires $\delta > 1/2$ — the integrand must be at least as regular as the integrator. This is the boundary of what can be achieved without the enhanced path-space structure of rough paths (Stage 2).
 
-The approximation map $\Xi(s,t) = \sigma(Y\_s,\, X\_t - X\_s)$, where $\sigma : F \to V \to W$ is a continuous bilinear map, has defect
+The construction is direct. Define the left-point approximation
 
-$$\delta\Xi(s, u, t) \;=\; -\sigma\bigl(Y\_u - Y\_s,\; X\_t - X\_u\bigr).$$
+$$\Xi(s, t) = (X(t) - X(s)) \cdot Y(s)$$
 
-This is pure algebra — expand and use bilinearity.
+and observe that its defect factorises:
 
-### The sewing condition
+$$\delta\Xi(s, u, t) = (X(u) - X(t)) \cdot (Y(u) - Y(s)).$$
 
-The defect bound takes the *product form* required by `SewingCondition₂`:
+This product structure — an integrator increment on $[u, t]$ times an integrand increment on $[s, u]$ — is precisely what the Layer 2 sewing lemma requires. The Hölder bounds give
 
-$$\|\delta\Xi(s, u, t)\| \;\leq\; \|\sigma\| \cdot \omega\_Y(s, u)^{1/q} \cdot \omega\_X(u, t)^{1/p}$$
+$$\|\delta\Xi(s, u, t)\| \leq C_X \cdot C_Y \cdot |t - u|^{\gamma} \cdot |u - s|^{\delta}$$
 
-where $\omega\_Y(s,t) = \|Y\|\_{q\text{-var};\,[s,t]}^q$ and $\omega\_X(s,t) = \|X\|\_{p\text{-var};\,[s,t]}^p$ are the $p$-variation controls. The exponents satisfy $\alpha = 1/q$, $\beta = 1/p$, with $\alpha + \beta = 1/q + 1/p > 1$.
+with $\gamma + \delta > 1$, so the sewing machine converges and produces a unique additive functional: the Young integral.
 
-### The Young integral
+Everything else — the approximation estimate, regularity, linearity, integration by parts, continuity — follows from this construction, most of it through a single structural principle: the Young integral is **characterised** as the unique additive functional with a super-linear approximation bound, and any candidate satisfying this specification must agree with it.
 
-The Young integral *is* the sewn map:
+## Modules
 
-$$\int\_s^t Y \, dX \;:=\; \texttt{sewingMap₂}\;\Xi\;\omega\_Y\;\omega\_X\;\tfrac{1}{q}\;\tfrac{1}{p}\;\cdots$$
+### [YoungIntegration/](YoungIntegration/)
 
-Everything else — existence, additivity, the approximation bound — falls out of Stage 0.
+The complete Young integration theory, organised into the algebraic core (defect and sewing condition), the integral construction, and its properties. See [YoungIntegration/README.md](YoungIntegration/README.md) for detailed file-by-file documentation with full mathematical statements.
 
-### The Young–Loève estimate
+**Proved results:**
 
-$$\left\|\int\_s^t Y\, dX \;-\; \sigma(Y\_s,\, X\_t - X\_s)\right\| \;\leq\; C\_{p,q} \cdot \|\sigma\| \cdot \|Y\|\_{q\text{-var};\,[s,t]} \cdot \|X\|\_{p\text{-var};\,[s,t]}$$
+- Approximation map and defect identity, in both scalar and bilinear generality
+- Verification of `SewingCondition₂` for Hölder paths
+- Existence of the Young integral via `sewingMap₂`
+- The Young–Loève estimate: $\left\|\int_s^t Y\, dX - (X(t) - X(s)) \cdot Y(s)\right\| \leq C_{\gamma,\delta} \cdot C_X \cdot C_Y \cdot |t - s|^{\gamma + \delta}$
+- Additivity (Chasles property)
+- Uniqueness: any additive functional with a super-linear approximation bound equals the Young integral
+- Regularity: the indefinite integral $t \mapsto \int_a^t Y\, dX$ is $\gamma$-Hölder
+- Linearity in the integrand ($\int c Y\, dX = c \int Y\, dX$) and in the integrator ($\int Y\, d(X_1 + X_2) = \int Y\, dX_1 + \int Y\, dX_2$)
+- Integration by parts: $\int_s^t Y\, dX + \int_s^t X\, dY = X(t)Y(t) - X(s)Y(s)$
+- Continuity estimate for the difference $\int Y_1\, dX_1 - \int Y_2\, dX_2$
+- Composition with Lipschitz functions: $\int (f \circ Y)\, dX$ for Lipschitz $f$
+- Bundled API (`YoungIntegralData`) packaging the integral with all properties
 
-This is a direct corollary of `sewingMap₂_dist_le`.
+**Open problems:**
 
-### Regularity of the integral
+- *Riemann–Stieltjes consistency*: when $X$ has bounded variation ($\gamma = 1$), the Young integral should agree with the classical Riemann–Stieltjes integral. This requires a bridge to Mathlib's `IntervalIntegral` API. (See `Consistency.lean`.)
 
-The indefinite integral $t \mapsto \int\_0^t Y\, dX$ has finite $p$-variation:
+## File structure
 
-$$\left\|\int Y\, dX\right\|\_{p\text{-var};\,[s,t]} \;\leq\; C \cdot \bigl(\|Y\|\_\infty \cdot \|X\|\_{p\text{-var};\,[s,t]} \;+\; \|Y\|\_{q\text{-var};\,[s,t]} \cdot \|X\|\_{p\text{-var};\,[s,t]}\bigr)$$
+```
+Stage_1/
+├── README.md
+├── API.lean                              -- Bundled Stage 1 → Stage 2 interface
+└── YoungIntegration/
+    ├── README.md                         -- Detailed documentation
+    ├── PVarCont.lean                     -- IsHolderOn, control functions, Lipschitz bridge
+    ├── Defect.lean                       -- Approximation map, defect identity, SewingCondition₂
+    └── Integral/
+        ├── Def.lean                      -- Young integral definition via sewingMap₂
+        ├── Properties.lean               -- Diagonal, Young–Loève estimate, additivity
+        ├── Unique.lean                   -- Uniqueness (dyadic telescoping argument)
+        ├── Regular.lean                  -- Increment bound, p-variation bound
+        ├── Linear.lean                   -- Linearity in integrand and integrator
+        ├── ByParts.lean                  -- Integration by parts
+        └── Consistency.lean              -- Riemann–Stieltjes compatibility (sorry)
+```
 
-This result is *essential* for Stage 4: it shows the rough integral preserves regularity, which is what allows iteration in the Picard fixed-point scheme.
+## Build status
 
-## Planned results
+All files compile without warnings. One `sorry` in `Consistency.lean` (Riemann–Stieltjes compatibility), deferred pending a bridge to Mathlib's interval integral. All other results are fully proved.
 
-### Phase 1.1: $p$-Variation infrastructure
-| Result | Status |
-|---|---|
-| $p$-variation seminorm via `Partition` | Planned |
-| Super-additivity of $\omega\_X = \|X\|\_{p\text{-var}}^p$ | Planned |
-| Bridge: `pVarControl_is_contControl` | Planned |
-| Hölder paths have finite $p$-variation | **Done** (Stage 0) |
-| Lipschitz control from Hölder regularity | Planned |
+## What Stage 2 needs
 
-### Phase 1.2: Existence of the Young integral
-| Result | Status |
-|---|---|
-| Approximation map $\Xi(s,t) = \sigma(Y\_s, X\_t - X\_s)$ | Planned |
-| Defect identity (algebraic) | Planned |
-| Defect bound (Layer 2 form) | Planned |
-| Young integral via `sewingMap₂` | Planned |
-| Young–Loève approximation bound | Planned |
-| Additivity | **Done** (via `sewingMap₂_additive`) |
+The [API](API.lean) is designed as the import boundary for Stage 2 (rough path integration). It exports five capabilities:
 
-### Phase 1.3: Properties of the Young integral
-| Result | Status |
-|---|---|
-| Consistency with Riemann–Stieltjes ($p = 1$) | Planned |
-| $p$-variation bound on the indefinite integral | Planned |
-| Linearity in integrand and integrator | Planned |
-| Continuity of $(X, Y) \mapsto \int Y\, dX$ | Planned |
-| Integration by parts | Planned |
-| Composition with smooth functions | Planned |
-
-### Phase 1.4: Structural lemmas for later stages
-| Result | Status |
-|---|---|
-| Reparametrization invariance | Planned |
-| Restriction and concatenation | Planned |
-| Abstract $p$-variation bound for sewn maps | Planned |
-
-## The key insight: why Layer 2 is the right tool
-
-The defect $\delta\Xi(s,u,t) = -\sigma(Y\_u - Y\_s,\, X\_t - X\_u)$ naturally *separates* into a factor depending on $[s,u]$ and a factor depending on $[u,t]$. This is not an accident — it is the algebraic structure of integration itself. The integrand's variation on the left of the split point and the integrator's variation on the right are independent quantities with different regularity.
-
-This product structure is precisely what `SewingCondition₂` captures. Layer 1 (with its single control $|t-s|^\theta$) would work only when both paths have the same Hölder exponent. Layer 2 handles the general case where $X$ and $Y$ have genuinely different regularity — which is the situation in every interesting application.
+1. **Young–Loève estimate** — bounds the controlled remainder $R^Y_{s,t} = Y_t - Y_s - Y'_s \cdot X_{s,t}$ in the rough integral's defect.
+2. **Additivity** — the rough integral inherits additivity from its Young component.
+3. **Uniqueness** — identifies the rough integral by the same method, one level up.
+4. **$\gamma$-Hölder bound** — closes the Picard contraction for $dY = f(Y)\, d\mathbf{X}$: the Young integral of a $2\gamma$-Hölder remainder against a $\gamma$-Hölder path produces a $\gamma$-Hölder output, since $2\gamma + \gamma = 3\gamma > 1$ for $\gamma > 1/3$.
+5. **Continuity** — an ingredient of the Itô–Lyons continuity theorem at the rough level.
 
 ## Dependencies
 
-### From Stage 0
+### From [Stage 0](../Stage_0/README.md)
+
 | What | Used for |
 |---|---|
 | `SewingCondition₂`, `sewingMap₂` | Defining the Young integral |
-| `sewingMap₂_additive` | Additivity of the integral |
-| `sewingMap₂_dist_le` | Young–Loève estimate |
-| `sewingMap₂_unique` | Linearity, integration by parts |
-| `riemannSum_tendsto_sewingMap₂` | Riemann–Stieltjes consistency |
-| `LipControl`, `ContControl` | Control function packaging |
-| `ePVariationOn`, `isControl_ePVariationOn` | $p$-variation infrastructure |
+| `sewingMap₂_additive`, `sewingMap₂_dist_le` | Additivity and Young–Loève estimate |
+| `sewingConst₂`, `sewingConst₂_pos` | Explicit constants |
+| `dyadicSum₁`, `dyadicPt` | Uniqueness proof |
+| `LipControl` | Control function packaging |
 
 ### From Mathlib
+
 | What | Used for |
 |---|---|
-| `ContinuousLinearMap`, `ContinuousMultilinearMap` | Bilinear map $\sigma$ |
-| `NormedSpace`, `NormedAddCommGroup` | Banach space structure |
-| Possibly `IntervalIntegral` | Riemann–Stieltjes consistency |
-
-## Build order
-
-The dependency graph has a clear critical path:
-
-```
-Phase 1.1 ─── p-variation seminorm ──→ control function ──→ Lipschitz bound ─┐
-                                                                             │
-Phase 1.2 ─── Ξ definition ──→ defect identity ──→ defect bound ─────────────┤
-                                                                             │
-              ┌──────────────────────────────────────────────────────────────┘
-              ▼
-         existence ──→ approximation bound
-              │              │
-              ▼              ▼
-         additivity    p-var estimate (hardest in Stage 1)
-              │              │
-              ▼              ▼
-         linearity     continuity (second hardest)
-              │
-              ▼
-     integration by parts, RS consistency
-```
+| `NormedAddCommGroup`, `NormedSpace`, `CompleteSpace` | Banach space structure |
+| `ContinuousLinearMap` | Bilinear pairing (bilinear defect version) |
+| `rpow_le_rpow`, `rpow_add'`, etc. | Power function estimates throughout |
 
 ## References
 
@@ -143,6 +115,7 @@ Phase 1.2 ─── Ξ definition ──→ defect identity ──→ defect bou
 - Lyons, T., *Differential equations driven by rough signals*, Rev. Mat. Iberoam. **14** (1998), 215–310
 - Friz, P.; Hairer, M., *A Course on Rough Paths*, 2nd ed., Springer (2020), Chapter 1
 - Friz, P.; Victoir, N., *Multidimensional Stochastic Processes as Rough Paths*, Cambridge (2010), Chapter 1
+- Gubinelli, M., *Controlling rough paths*, J. Funct. Anal. **216** (2004), 86–140
 
 ## Authors
 
