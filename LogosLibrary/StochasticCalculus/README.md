@@ -17,25 +17,25 @@ The formalization is organized into five stages, each building on the previous:
 ### [Stage 0: Foundations](Stage_0/README.md)
 The sewing lemma and $p$-variation theory. The sewing lemma constructs additive functionals from almost-additive approximations — it is the integration machine that powers everything downstream. The $p$-variation provides the regularity framework that measures how rough a path is.
 
-**Status**: Substantially complete. Three layers of the sewing lemma (interval-length control, cross-controlled, general continuous control) are formalized, with full additivity proved for Layers 1–2. The $p$-variation module includes the core definition, super-additivity, exponent monotonicity, Hölder regularity, and Brownian motion finite $p$-variation.
+**Status**: Complete. All three layers of the sewing lemma (interval-length control, cross-controlled, general continuous control) are fully proved, including existence, uniqueness, approximation bounds, and general additivity. Layer 3 additivity uses a direct point-insertion strategy rather than compactness or density arguments. The $p$-variation module includes the core definition, super-additivity, exponent monotonicity, Hölder regularity, Brownian motion finite $p$-variation, and the control function bridge to rough path theory.
 
 ### [Stage 1: Young Integration](Stage_1/README.md)
-Constructs $\int Y\, dX$ when $X$ has finite $p$-variation and $Y$ has finite $q$-variation with $1/p + 1/q > 1$. The Young integral is defined as the sewn map from Stage 0 — existence, uniqueness, and additivity are immediate consequences of the sewing lemma infrastructure.
+Constructs $\int Y\, dX$ when $X$ is $\gamma$-Hölder and $Y$ is $\delta$-Hölder with $1/p + 1/q > 1$ (equivalently $\gamma + \delta > 1$). The Young integral is defined as the sewn map from Stage 0, and the full theory is developed: the Young–Loève estimate, additivity, uniqueness, $\gamma$-Hölder regularity of the indefinite integral, linearity in both integrand and integrator, integration by parts, continuity in the input paths, and composition with Lipschitz functions.
+
+**Status**: Complete. One `sorry` remains in Riemann–Stieltjes consistency (compatibility with Mathlib's `IntervalIntegral` when $X$ has bounded variation), deferred pending a bridge to Mathlib's interval integral API. All other results are fully proved.
+
+### [Stage 2: Rough Path Integration](Stage_2/README.md)
+The complete integration theory for rough paths with $p$-variation regularity in the range $p \in [2,3)$. This module builds four layers: the truncated tensor algebra $T^{(2)}(V)$ and its group-like elements $G^{(2)}(V)$; the definition of $p$-rough paths with Chen's identity and Hölder regularity; the Gubinelli derivative framework for controlled paths; and the rough integral itself, constructed via the Stage 0 sewing lemma. The main results are the closure theorem (the integral of a controlled path is controlled), the Itô–Lyons continuity estimate (the integral depends continuously on both the driving rough path and the integrand), and a bundled API packaging everything Stage 3 needs for the Picard fixed-point argument.
+
+**Status**: Complete. All files compile without warnings or sorries. The tensor product cross-norm is axiomatised via a `NormedTensorSquare` typeclass pending Mathlib's projective tensor norm.
+
+### [Stage 3: Rough Differential Equations](Stage_3/README.md)
+Controlled paths, the Picard fixed-point argument for rough differential equations on small intervals, and the patching construction that extends local solutions to a global existence and uniqueness theorem. This is where the closure theorem and contraction estimates from Stage 2 pay off.
 
 **Status**: Planned.
 
-### [Stage 2: The Algebraic Layer](Stage_2/README.md)
-The truncated tensor algebra $T^{(2)}(V)$, Chen's identity, group-like elements, and the free step-2 nilpotent group. This is the algebraic framework that houses the "area" data of a rough path. Largely independent of Stage 1 and can be developed in parallel.
-
-**Status**: Planned.
-
-### [Stage 3: The Space of Rough Paths](Stage_3/README.md)
-Merges the analytical infrastructure (Stages 0–1) with the algebraic infrastructure (Stage 2) to define the space of $p$-rough paths, equip it with a $p$-variation metric, and prove completeness. This is where the two streams of development meet, producing the `RoughPath` structure that Stage 4 consumes.
-
-**Status**: Planned.
-
-### [Stage 4: The Itô–Lyons Map](Stage_4/README.md)
-Controlled paths, the rough integral, the Picard fixed-point argument for rough differential equations, and the Universal Limit Theorem. This is the summit: every previous stage feeds into it, and the ULT is the payoff theorem that justifies the entire programme.
+### [Stage 4: The Universal Limit Theorem](Stage_4/README.md)
+The Itô–Lyons continuity theorem: the solution map $\mathbf{X} \mapsto Y^{\mathbf{X}}$ is continuous in the $p$-variation rough path metric. This is the summit — every previous stage feeds into it, and the ULT is the payoff theorem that justifies the entire programme.
 
 **Status**: Planned.
 
@@ -51,23 +51,32 @@ The dependency flow:
 Stage 0 ─── sewing lemma + p-variation
   │
   ├──→ Stage 1 ─── Young integration
-  │                      │
-  │                      ├──────────────────┐
-  │                      │                  │
-  │    Stage 2 ─── tensor algebra           │
-  │         │            │                  │
-  │         └────────────┤                  │
-  │                      ▼                  │
-  │              Stage 3 ─── rough paths ◄──┘
-  │                      │
-  │                      ▼
-  └────────────→ Stage 4 ─── Itô–Lyons map + ULT
+  │         │
+  │         ├──→ Stage 2 ─── rough path integration
+  │         │         │
+  └─────────┘         │
+                      ▼
+              Stage 3 ─── rough differential equations (planned)
+                      │
+                      ▼
+              Stage 4 ─── Universal Limit Theorem (planned)
 ```
-
 
 ## Dependencies
 
 Built on [Mathlib](https://github.com/leanprover-community/mathlib4). Key areas used include normed spaces and functional analysis, tensor products, metric space completeness, the Banach fixed-point theorem, and Fréchet differentiation.
+
+## Citation
+
+```bibtex
+@software{bornemann2026stochastic,
+  author = {Bornemann, Adam},
+  title = {Rough Path Theory and Stochastic Calculus:
+           A Machine-Verified Formalization in Lean 4},
+  year = {2026},
+  url = {https://gitlab.com/pedagogical/logos_library}
+}
+```
 
 ## References
 
@@ -82,4 +91,3 @@ Built on [Mathlib](https://github.com/leanprover-community/mathlib4). Key areas 
 ## Authors
 
 Adam Bornemann & Doctor Professor Baron von Wobble-Bob
-
