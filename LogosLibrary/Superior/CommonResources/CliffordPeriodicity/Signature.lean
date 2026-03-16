@@ -6,7 +6,7 @@ Filename: CliffordPeriodicity/Signature.lean
 -/
 import LogosLibrary.Superior.CommonResources.CliffordPeriodicity.Table
 import LogosLibrary.Superior.CommonResources.CliffordPeriodicity.Clock
-import LogosLibrary.Superior.CommonResources.CliffordPeriodicity.Mobius
+import LogosLibrary.Superior.CommonResources.CliffordPeriodicity.MobiusClock
 /-!
 =====================================================================
 # INDEFINITE CLIFFORD ALGEBRAS: Cl(p,q)
