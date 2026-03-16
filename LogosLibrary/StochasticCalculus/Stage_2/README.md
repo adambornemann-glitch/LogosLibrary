@@ -29,13 +29,21 @@ The sum norm $|a^0| + \|a^1\| + \|a^2\|$ is submultiplicative (`normT_tmul_le`).
 
 ### Group-like elements and Chen's identity
 
-An element $(1, x, \mathfrak{x}) \in T^{(2)}(V)$ is **group-like** if $\operatorname{Sym}(\mathfrak{x}) = \frac{1}{2}(x \otimes x)$. Every group-like element decomposes as
+An element $(1, x, \mathfrak{x}) \in T^{(2)}(V)$ is **group-like** if its symmetric part satisfies $\text{Sym}(\mathfrak{x}) = \frac{1}{2}(x \otimes x)$. Every group-like element decomposes as
 
 $$\mathfrak{x} \;=\; \tfrac{1}{2}(x \otimes x) + A, \qquad A \in \Lambda^2(V),$$
 
 where $A$ is the **Lévy area**. The group-like elements $G^{(2)}(V)$ form a group under truncated multiplication.
 
-A **rough path** is a two-parameter function $\mathbf{X}(s,t) = (1, X_{s,t}, \mathbb{X}_{s,t}) \in G^{(2)}(V)$ satisfying **Chen's identity** $\mathbf{X}(s,t) = \mathbf{X}(s,u) \otimes_t \mathbf{X}(u,t)$ and **Hölder regularity** $\|\mathbf{X}(s,t)\|_{cc} \leq C \cdot |t - s|^\gamma$ with $\gamma \in (1/3, 1/2]$. In components, Chen's identity gives:
+A **rough path** is a two-parameter function
+
+$$\mathbf{X}(s,t) = (1,\, X_{s,t},\, \mathbb{X}_{s,t}) \;\in\; G^{(2)}(V)$$
+
+satisfying **Chen's identity** and **Hölder regularity**:
+
+$$\mathbf{X}(s,t) = \mathbf{X}(s,u) \otimes_t \mathbf{X}(u,t), \qquad \|\mathbf{X}(s,t)\|_{cc} \leq C \cdot |t - s|^\gamma$$
+
+with $\gamma \in (1/3,\, 1/2]$. In components, Chen's identity gives:
 
 $$X_{s,t} = X_{s,u} + X_{u,t}, \qquad \mathbb{X}_{s,t} = \mathbb{X}_{s,u} + X_{s,u} \otimes X_{u,t} + \mathbb{X}_{u,t}.$$
 
@@ -43,7 +51,7 @@ $$X_{s,t} = X_{s,u} + X_{u,t}, \qquad \mathbb{X}_{s,t} = \mathbb{X}_{s,u} + X_{s
 
 The homogeneous (quasi-)norm on $G^{(2)}(V)$ is
 
-$$\|g\|_{cc} \;=\; \max\bigl(\|x\|,\; \|\operatorname{Anti}(\mathfrak{x})\|^{1/2}\bigr),$$
+$$\|g\|_{cc} \;=\; \max\bigl(\|x\|,\; \|\text{Anti}(\mathfrak{x})\|^{1/2}\bigr),$$
 
 where the $1/2$ exponent on the area reflects parabolic scaling. This defines a left-invariant quasi-metric $d(g, h) = \|g^{-1} \cdot h\|_{cc}$.
 
@@ -143,7 +151,7 @@ where $D_{\text{path}}$, $D_{\text{deriv}}$, and $D_{\text{rough}}$ measure the 
 
 **The `NormedTensorSquare` axiom.** Mathlib does not yet equip the algebraic tensor product with the projective tensor norm satisfying $\|v \otimes w\| \leq \|v\| \cdot \|w\|$. We axiomatize a minimal interface (the type `T₂ V`, a bilinear map `tprod` with cross-norm, and an isometric swap). When Mathlib gains the projective norm, this file becomes a single `instance`.
 
-**Geometric rough paths only.** The group-like condition $\operatorname{Sym}(\mathbb{X}) = \frac{1}{2}(x \otimes x)$ is baked into `GroupLike₂`. This restricts to geometric (Stratonovich) rough paths. Non-geometric (Itô) rough paths would use elements of $T^{(2)}(V)$ with $a_0 = 1$ but without the symmetric constraint.
+**Geometric rough paths only.** The group-like condition $\text{Sym}(\mathbb{X}) = \frac{1}{2}(x \otimes x)$ is baked into `GroupLike₂`. This restricts to geometric (Stratonovich) rough paths. Non-geometric (Itô) rough paths would use elements of $T^{(2)}(V)$ with $a_0 = 1$ but without the symmetric constraint.
 
 **Hölder regularity.** We use Hölder exponents ($|t-s|^\gamma$) rather than $p$-variation controls. This matches the Stage 0 sewing lemma interface directly and covers all standard examples. The $p$-variation formulation can be added as a generalization.
 
