@@ -15,25 +15,25 @@ Classical Riemann–Stieltjes integration requires the integrator to have bounde
 
 The sewing lemma replaces the classical Riemann–Stieltjes limit with an algebraic-analytic construction that works in this low-regularity regime. Given a two-parameter map $\Xi(s,t)$ that is "almost additive" — meaning the defect $\delta\Xi(s,u,t) = \Xi(s,t) - \Xi(s,u) - \Xi(u,t)$ is small in a quantifiable sense — the sewing lemma produces a genuinely additive functional $I$ that approximates $\Xi$.
 
-The interplay is direct: if $X$ is $\gamma$-Hölder and $Y$ is $\delta$-Hölder with $\gamma + \delta > 1$, then $\Xi(s,t) = Y(s) \cdot (X(t) - X(s))$ satisfies a sewing condition, and the sewn map $I$ is the Young integral $\int Y \, dX$. This application is proved as `young_integral_holder` in the API.
+The interplay is direct: if $X$ is $\gamma$-Hölder and $Y$ is $\delta$-Hölder with $\gamma + \delta > 1$, then $\Xi(s,t) = Y(s) \cdot (X(t) - X(s))$ satisfies a sewing condition, and the sewn map $I$ is the Young integral $\int Y \, dX$. This application is proved as `young_integral_holder` in the API and developed fully in [Stage 1](../Stage_1/README.md).
 
 ## Modules
 
 ### [SewingLemma/](SewingLemma/)
 
-A three-layer formalization of the sewing lemma with increasing generality:
+A three-layer formalization of the sewing lemma with increasing generality. **All three layers are fully proved**, including existence, uniqueness, approximation bounds, and general additivity.
 
-- **Layer 1** — defect controlled by $K \cdot |t-s|^\theta$, $\theta > 1$. Fully proved, with general additivity obtained via specialization from Layer 2.
-- **Layer 2** — defect controlled by $K \cdot \omega\_1(s,u)^\alpha \cdot \omega\_2(u,t)^\beta$, $\alpha + \beta > 1$ with Lipschitz controls. Fully proved, including general additivity and mesh-convergence.
-- **Layer 3** — defect controlled by $K \cdot \omega(s,t)^\theta$ with continuous super-additive control. Fully proved except general additivity (see `TODO.lean`).
+- **Layer 1** — defect controlled by $K \cdot |t-s|^\theta$, $\theta > 1$. Additivity obtained via specialization from Layer 2.
+- **Layer 2** — defect controlled by $K \cdot \omega_1(s,u)^\alpha \cdot \omega_2(u,t)^\beta$, $\alpha + \beta > 1$ with Lipschitz controls. Includes general convergence (mesh $\to 0$).
+- **Layer 3** — defect controlled by $K \cdot \omega(s,t)^\theta$ with continuous super-additive control. General additivity proved via a point-insertion strategy with quantitative merge-gap analysis.
 
-See [SewingLemma/README.md](SewingLemma/README.md) for detailed documentation.
+See [SewingLemma/README.md](SewingLemma/README.md) for full mathematical content, proof strategies, and file-by-file documentation.
 
 ### [PVariation/](PVariation/)
 
 The $p$-variation of a function $f$ on a set $s$:
 
-$$\|f\|\_{p\text{-var}; s}^p \;=\; \sup\_{\mathcal{P}} \sum\_i d\bigl(f(t\_{i+1}),\, f(t\_i)\bigr)^p$$
+$$\|f\|_{p\text{-var}; s}^p \;=\; \sup_{\mathcal{P}} \sum_i d\bigl(f(t_{i+1}),\, f(t_i)\bigr)^p$$
 
 where the supremum is over all finite partitions $\mathcal{P}$ of $s$.
 
@@ -49,42 +49,83 @@ where the supremum is over all finite partitions $\mathcal{P}$ of $s$.
 
 **Open problems (see `TODO.lean`):**
 
-- *Continuity of $p$-variation*: for continuous $f$ with finite $p$-variation ($p \geq 1$), the map $t \mapsto \|f\|\_{p\text{-var}; [a,t]}^p$ is continuous. This is Friz–Victoir Proposition 5.3.
+- *Continuity of $p$-variation*: for continuous $f$ with finite $p$-variation ($p \geq 1$), the map $t \mapsto \|f\|_{p\text{-var}; [a,t]}^p$ is continuous. This is Friz–Victoir Proposition 5.3.
 
 ### [API.lean](API.lean)
 
-Bundled convenience theorems wrapping the sewing lemma infrastructure:
+Bundled convenience theorems wrapping the sewing lemma infrastructure. This file serves as the primary import boundary for [Stage 1](../Stage_1/README.md) (Young integration).
 
 - `sewing_lemma₁` — Layer 1 existence, uniqueness, approximation, and additivity (the last via Layer 2)
 - `sewing_lemma₂` — Layer 2 existence, uniqueness, approximation, and additivity
+- `sewing_lemma₃` — Layer 3 existence, uniqueness, approximation, and additivity under general continuous control
 - `young_integral_holder` — **Young integration for Hölder paths** as a direct application of Layer 2: given $\gamma$-Hölder $X : \mathbb{R} \to \mathbb{R}$ and $\delta$-Hölder $Y : \mathbb{R} \to E$ with $\gamma + \delta > 1$, there exists a unique additive functional $I$ satisfying
 
 $$\|I(s,t) - (X(t) - X(s)) \cdot Y(s)\| \;\leq\; C \cdot |t - s|^{\gamma + \delta}.$$
 
-This is the first concrete integration result and the bridge to Stage 1 (full Young integration with $p$-variation controls).
+This is a self-contained demonstration of the sewing lemma applied to integration. The full Young integration theory — linearity, regularity, integration by parts, continuity — is developed in [Stage 1](../Stage_1/README.md).
 
 ## File structure
 
 ```
 Stage_0/
 ├── README.md
-├── API.lean                          -- Bundled sewing lemma + Young integration
+├── API.lean                              -- Bundled sewing lemma + Young integration
 ├── SewingLemma/
 │   ├── README.md
 │   ├── Defs.lean
 │   ├── Condition.lean
-│   ├── LayerOne/ ...
-│   ├── LayerTwo/ ...
-│   ├── LayerThree/ ...
-│   └── TODO.lean
+│   ├── LayerOne/
+│   │   └── Map.lean
+│   ├── LayerTwo/
+│   │   ├── ContinuousControl.lean
+│   │   ├── RightPe.lean
+│   │   ├── Decay.lean
+│   │   ├── ThetaEnergy.lean
+│   │   ├── RefiCo.lean
+│   │   └── Map/
+│   │       ├── Unique.lean
+│   │       ├── Merge.lean
+│   │       ├── Partition.lean
+│   │       ├── Additive.lean
+│   │       ├── GenConv.lean
+│   │       └── Specialize.lean
+│   └── LayerThree/
+│       ├── DyadicPartition.lean
+│       ├── RefiCo.lean
+│       ├── Insert.lean
+│       ├── MinSpacing.lean
+│       ├── MergeGap.lean
+│       └── Map/
+│           ├── Unique.lean
+│           ├── MultiBlock.lean
+│           ├── Wrappers.lean
+│           ├── LeftComp.lean
+│           ├── RightComp.lean
+│           └── Additive.lean
 └── PVariation/
-    ├── Basic.lean                    -- Definitions, core properties, Hölder, BM
-    └── TODO.lean                     -- Continuous p-variation (open)
+    ├── Basic.lean                        -- Definitions, core properties, Hölder, BM
+    └── TODO.lean                         -- Continuous p-variation (open)
 ```
 
 ## Build status
 
 All files compile without warnings or sorries. Open problems are isolated in commented-out `TODO.lean` files with proof sketches and references.
+
+## What Stage 1 needs
+
+[Stage 1](../Stage_1/README.md) (Young integration) imports Stage 0 through `API.lean`. The key dependencies are:
+
+| What | Used for |
+|---|---|
+| `SewingCondition₂`, `sewingMap₂` | Defining the Young integral |
+| `sewingMap₂_additive`, `sewingMap₂_dist_le` | Additivity and Young–Loève estimate |
+| `sewingMap₂_unique` | Linearity, integration by parts |
+| `riemannSum_tendsto_sewingMap₂` | Riemann–Stieltjes consistency |
+| `sewingConst₂`, `sewingConst₂_pos` | Explicit constants |
+| `dyadicSum₁`, `dyadicPt` | Uniqueness proof (dyadic telescoping) |
+| `LipControl`, `ContControl` | Control function packaging |
+
+Layer 3 is not needed for Young integration (Hölder paths have Lipschitz controls, so Layer 2 suffices). It becomes essential at Stage 2, where rough path lifts carry genuinely non-Lipschitz controls.
 
 ## Dependencies
 
