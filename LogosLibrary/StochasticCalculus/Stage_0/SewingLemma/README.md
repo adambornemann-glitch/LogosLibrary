@@ -10,9 +10,9 @@ is controlled by a quantity that decays under refinement, the sewing lemma produ
 
 This is the foundational construction underlying rough path integration, Young integration, and controlled-path theory. It replaces the classical Riemann–Stieltjes limit with a robust algebraic-analytic framework that extends integration to paths of low regularity — precisely the regime needed for stochastic calculus.
 
-## Mathematical content
+The formalization proceeds in three layers of increasing generality. **All three layers are fully proved**, including existence, uniqueness, approximation bounds, and general additivity.
 
-The formalization proceeds in three layers of increasing generality. Each layer strengthens the hypotheses on the defect control, with Layer 1 being the simplest and Layer 3 the most general.
+## Mathematical content
 
 ### Layer 1: Interval-length control
 
@@ -22,7 +22,7 @@ $$\|\delta\Xi(s, u, t)\| \;\leq\; K \cdot |t - s|^\theta, \qquad \theta > 1.$$
 
 The interval length distributes perfectly over dyadic subdivision: at level $n$, each sub-interval has length exactly $|t - s| / 2^n$, giving clean geometric decay
 
-$$\|S\_{n+1} - S\_n\| \;\leq\; K \cdot |t - s|^\theta \cdot 2^{-n(\theta - 1)}$$
+$$\|S_{n+1} - S_n\| \;\leq\; K \cdot |t - s|^\theta \cdot 2^{-n(\theta - 1)}$$
 
 with no additional hypotheses on a control function. The condition $\theta > 1$ is sharp — it is precisely what makes the geometric series $\sum 2^{-n(\theta-1)}$ converge.
 
@@ -38,21 +38,21 @@ Full additivity for Layer 1 is obtained by specialization from Layer 2: the two 
 
 The defect satisfies
 
-$$\|\delta\Xi(s, u, t)\| \;\leq\; K \cdot \omega\_1(s, u)^\alpha \cdot \omega\_2(u, t)^\beta, \qquad \alpha + \beta > 1,$$
+$$\|\delta\Xi(s, u, t)\| \;\leq\; K \cdot \omega_1(s, u)^\alpha \cdot \omega_2(u, t)^\beta, \qquad \alpha + \beta > 1,$$
 
-where each $\omega\_i$ is a super-additive control satisfying a Lipschitz-in-length condition $\omega\_i(s, t) \leq L\_i \cdot (t - s)$.
+where each $\omega_i$ is a super-additive control satisfying a Lipschitz-in-length condition $\omega_i(s, t) \leq L_i \cdot (t - s)$.
 
 The product structure is not a mere generalization — it is the *natural* form of the defect in integration theory. When $\Xi(s,t) = Y(s) \cdot (X(t) - X(s))$, the defect
 
 $$\delta\Xi(s, u, t) = -(Y(u) - Y(s)) \cdot (X(t) - X(u))$$
 
-separates into a factor depending on $[s, u]$ (integrand variation) and a factor depending on $[u, t]$ (integrator variation). This separation is what makes the refinement cost bound work — see the discussion under [Open problem](#open-problem-layer-3-general-additivity) below.
+separates into a factor depending on $[s, u]$ (integrand variation) and a factor depending on $[u, t]$ (integrator variation). This separation is what makes the refinement cost bound factorable — right-peeling keeps the left endpoint fixed at $a$, so the $\omega_1(a, q_j)^\alpha$ terms are monotone and factor out; the remaining $\omega_2(q_j, q_{j+1})^\beta$ terms collapse via super-additivity.
 
-Layer 1 is the special case $\omega\_1 = \omega\_2 = |\cdot|$, $\alpha + \beta = \theta$, $L\_1 = L\_2 = 1$.
+Layer 1 is the special case $\omega_1 = \omega_2 = |\cdot|$, $\alpha + \beta = \theta$, $L_1 = L_2 = 1$.
 
 **Main output.** There exists a unique additive $I$ with
 
-$$\|I(s,t) - \Xi(s,t)\| \;\leq\; \frac{K \cdot L\_1^\alpha \cdot L\_2^\beta}{2^{\alpha+\beta}\,(1 - 2^{-(\alpha+\beta-1)})} \cdot |t - s|^{\alpha + \beta}.$$
+$$\|I(s,t) - \Xi(s,t)\| \;\leq\; \frac{K \cdot L_1^\alpha \cdot L_2^\beta}{2^{\alpha+\beta}\,(1 - 2^{-(\alpha+\beta-1)})} \cdot |t - s|^{\alpha + \beta}.$$
 
 Additionally, Riemann sums over *any* sequence of partitions with mesh $\to 0$ converge to $I$ (`riemannSum_tendsto_sewingMap₂`).
 
@@ -66,19 +66,35 @@ where $\omega$ is a continuous super-additive control (vanishing on the diagonal
 
 The key convergence mechanism is the **$\theta$-energy**
 
-$$\Phi\_\theta(P) \;=\; \sum\_i \omega(t\_i, t\_{i+1})^\theta,$$
+$$\Phi_\theta(P) \;=\; \sum_i \omega(t_i, t_{i+1})^\theta,$$
 
 which satisfies
 
-$$\Phi\_\theta(P) \;\leq\; \Bigl(\max\_i\, \omega(t\_i, t\_{i+1})\Bigr)^{\theta - 1} \cdot \omega(s, t).$$
+$$\Phi_\theta(P) \;\leq\; \Bigl(\max_i\, \omega(t_i, t_{i+1})\Bigr)^{\theta - 1} \cdot \omega(s, t).$$
 
-Since $\theta > 1$, the max term vanishes as the mesh refines (by continuity of $\omega$), while the sum $\sum \omega\_i$ stays bounded by super-additivity. For $\theta = 1$ this mechanism fails — $\Phi\_1$ is bounded but does not vanish. This is the analytical reason $\theta > 1$ is necessary.
+Since $\theta > 1$, the max term vanishes as the mesh refines (by continuity of $\omega$), while the sum $\sum \omega_i$ stays bounded by super-additivity. For $\theta = 1$ this mechanism fails — $\Phi_1$ is bounded but does not vanish. This is the analytical reason $\theta > 1$ is necessary.
 
 **Main output.** There exists a unique additive $I$ with
 
-$$\|I(s,t) - \Xi(s,t)\| \;\leq\; K \cdot \sum\_{n=0}^{\infty} \Phi\_\theta(D\_n(s,t)),$$
+$$\|I(s,t) - \Xi(s,t)\| \;\leq\; K \cdot \sum_{n=0}^{\infty} \Phi_\theta(D_n(s,t)),$$
 
-where $D\_n$ is the $n$-th dyadic partition. Full additivity is proved for dyadic split points; general additivity for arbitrary split points is an open formalization problem (see below).
+where $D_n$ is the $n$-th dyadic partition.
+
+#### Proof of general additivity (Layer 3)
+
+General additivity — $I(s,t) = I(s,u) + I(u,t)$ for arbitrary $u \in [s,t]$ — was the last result proved in this module and required substantial new infrastructure. In Layers 1–2, the product structure of the defect bound makes the refinement cost factorable. In Layer 3, the single control $\omega(s,t)^\theta$ does not decompose this way: super-additivity gives $\omega(s,u) + \omega(u,t) \leq \omega(s,t)$, but for $\theta > 1$ the inequality $(a + b)^\theta \geq a^\theta + b^\theta$ goes the wrong direction.
+
+The proof sidesteps this obstruction entirely via a **point-insertion strategy**:
+
+1. **Insert $u$ into each dyadic partition.** Given $D_n$ (the $n$-th dyadic partition of $[s,t]$), find the block $[d_k, d_{k+1}]$ containing $u$ and insert $u$ to form $Q_n = D_n.\text{insertAt}(k, u)$. The Riemann sum changes by exactly one defect: $\text{RS}(D_n) - \text{RS}(Q_n) = \delta\Xi(d_k, u, d_{k+1})$, which vanishes as $n \to \infty$ because $\omega(d_k, d_{k+1}) \to 0$.
+
+2. **Split and compare.** Restrict $Q_n$ at $u$ to obtain $\text{QL}_n$ (a partition of $[s,u]$) and $\text{QR}_n$ (a partition of $[u,t]$). By the Riemann sum splitting identity, $\text{RS}(Q_n) = \text{RS}(\text{QL}_n) + \text{RS}(\text{QR}_n)$.
+
+3. **Show each half converges independently.** Compare $\text{RS}(\text{QL}_n)$ against the independent dyadic partition of $[s,u]$, and $\text{RS}(\text{QR}_n)$ against that of $[u,t]$. The comparison uses the common refinement (merge) and bounds the per-block multiplicity via a **good/bad point decomposition**: most merge points inherit the dyadic spacing $\geq (t-s)/2^n$ ("good"), while at most one inserted point ("bad") can violate it. A pigeonhole argument (`points_in_interval_le`) then bounds the merge gap per block. Both comparison errors are controlled by $\theta$-energies that vanish as $n \to \infty$.
+
+4. **Conclude by uniqueness of limits.** $\text{RS}(Q_n) \to I(s,t)$ from step 1, and $\text{RS}(\text{QL}_n) + \text{RS}(\text{QR}_n) \to I(s,u) + I(u,t)$ from step 3. Since these are the same sequence, $I(s,t) = I(s,u) + I(u,t)$.
+
+This avoids both the compactness argument of Friz–Hairer and any density argument via dyadic rationals, instead giving a direct quantitative comparison at every refinement level.
 
 ## Main results
 
@@ -117,7 +133,8 @@ where $D\_n$ is the $n$-th dyadic partition. Full additivity is proved for dyadi
 | Dyadic additivity | `sewingMap₃_dyadicSum` | ✓ |
 | θ-energy vanishes under refinement | `thetaEnergy_tendsto_zero` | ✓ |
 | θ-energy monotone under refinement | `thetaEnergy_le_of_refinement` | ✓ |
-| General additivity | `sewingMap₃_additive` | **TODO** |
+| **General additivity** | `sewingMap₃_additive` | ✓ |
+| Bundled API | `sewing_lemma₃` | ✓ |
 
 ### Cross-layer results
 | Result | Theorem | Status |
@@ -125,65 +142,85 @@ where $D\_n$ is the $n$-th dyadic partition. Full additivity is proved for dyadi
 | Layer 1 = Layer 2 (same limit) | `sewingMap₁_eq_sewingMap₂` | ✓ |
 | Lipschitz implies continuous control | `contControl_of_lipControl` | ✓ |
 
-### Supporting infrastructure
+### Point insertion infrastructure
+| Result | Theorem |
+|---|---|
+| Insert point into partition block | `Partition.insertAt` |
+| Find block containing a point | `Partition.findBlock` |
+| Insertion changes RS by one defect | `riemannSum_insertAt` |
+| Insertion defect vanishes | `insertion_defect_tendsto` |
+| Inserted RS → sewn map | `riemannSum_insertAt_tendsto` |
+| Restrict partition at known index (left) | `Partition.restrictLeftAt` |
+| Restrict partition at known index (right) | `Partition.restrictRightAt` |
+| Split RS at known index | `riemannSum_splitAt` |
+
+### Merge-gap and comparison infrastructure
+| Result | Theorem |
+|---|---|
+| Pigeonhole counting in intervals | `points_in_interval_le` |
+| Merge gap (uniform spacing) | `merge_gap_of_min_spacing` |
+| Merge gap (with bad points) | `refinement_gap_with_exceptions` |
+| Monotone-embedding wrappers | `merge_gap_of_min_spacing_mono` |
+| Per-block defect bound (Layer 3) | `block_bound₃` |
+| Refinement cost (Layer 3) | `riemannSum_refinement_bound₃` |
+| Max ω vanishes with mesh | `maxOmega_tendsto_zero` |
+| Left half comparison (per-$n$) | `left_comparison_bound` |
+| Left half comparison (limit) | `left_comparison_tendsto` |
+| Right half comparison (per-$n$) | `right_comparison_bound` |
+| Right half comparison (limit) | `right_comparison_tendsto` |
+| Triangle via common refinement | `riemannSum_comparison_bound` |
+
+### Supporting partition infrastructure
 | Result | Theorem |
 |---|---|
 | Partition merge (common refinement) | `Partition.merge` |
 | Merge refines both inputs | `merge_refines_left/right` |
+| Merge points strictly monotone | `merge_pts_strict_mono` |
 | Mesh decreases under refinement | `mesh_refinement_le` |
 | Riemann sum splitting at a point | `riemannSum_split` |
 | Super-additivity over partitions | `ContControl.sum_le` |
-
-## Open problem: Layer 3 general additivity
-
-The one unproved result is `sewingMap₃_additive`: full additivity $I(s,t) = I(s,u) + I(u,t)$ for arbitrary $u \in [s,t]$ under a general continuous control.
-
-**Why it's hard.** In Layer 2, the product structure $\omega\_1(s,u)^\alpha \cdot \omega\_2(u,t)^\beta$ is what makes the refinement cost bound factorable. Right-peeling keeps the left endpoint fixed at $a$, so the $\omega\_1(a, q\_j)^\alpha$ terms are monotone and factor out; the remaining $\omega\_2(q\_j, q\_{j+1})^\beta$ terms collapse via super-additivity. The product *separates* the two roles.
-
-In Layer 3, the single control $\omega(s,t)^\theta$ does not decompose this way. Super-additivity gives
-
-$$\omega(s,u) + \omega(u,t) \;\leq\; \omega(s,t),$$
-
-but this is an *additive* bound on a quantity raised to the $\theta$-th power. For $\theta > 1$, the inequality $(a + b)^\theta \geq a^\theta + b^\theta$ goes the wrong direction — summing $\omega$-values before raising to $\theta$ gives a *larger* bound, not a smaller one. This is the precise point where the Layer 2 strategy breaks down.
-
-**What's needed.** Either:
-1. A **compactness-based argument** (as in Friz–Hairer), using sequential compactness of partition sequences with bounded point count, or
-2. A proof that **uniqueness plus dyadic additivity implies full additivity** via continuity of the sewn map — the idea being that dyadic rationals are dense in $[s,t]$, and $I(s,\cdot)$ is continuous (which follows from the approximation bound and continuity of $\Xi$).
-
-See `TODO.lean` for the precise statement and further discussion.
-
-**What's available without it.** Everything *except* general additivity is proved sorry-free. The sewn map exists, satisfies the approximation bound, is unique among additive maps with the bound, and is additive over all dyadic partitions. For applications requiring full additivity, Layer 2 provides it for all Lipschitz-control settings — which covers the standard stochastic processes.
+| Per-block multiplicity bound | `merge_block_mult` |
+| Dyadic min spacing | `dyadicPartition_min_spacing` |
 
 ## File structure
 
 ```
 SewingLemma/
-├── Defs.lean                         -- Definitions for all three layers
-├── Condition.lean                    -- Layer 1 dyadic machinery, cocycle identity
+├── Defs.lean                             -- Definitions for all three layers
+├── Condition.lean                        -- Layer 1 dyadic machinery, cocycle identity
 ├── LayerOne/
-│   └── Map.lean                      -- Layer 1 sewn map, properties, full additivity
+│   └── Map.lean                          -- Layer 1 sewn map, properties, full additivity
 ├── LayerTwo/
-│   ├── ContinuousControl.lean        -- ContControl monotonicity, partition sums
-│   ├── RightPe.lean                  -- Right-peeling telescoping identity
-│   ├── Decay.lean                    -- Layer 2 geometric decay
-│   ├── ThetaEnergy.lean              -- θ-energy estimates, refinement monotonicity
-│   ├── RefiCo.lean                   -- Refinement cost bound
+│   ├── ContinuousControl.lean            -- ContControl monotonicity, partition sums
+│   ├── RightPe.lean                      -- Right-peeling telescoping identity
+│   ├── Decay.lean                        -- Layer 2 geometric decay
+│   ├── ThetaEnergy.lean                  -- θ-energy estimates, refinement monotonicity
+│   ├── RefiCo.lean                       -- Refinement cost bound (Layer 2)
 │   └── Map/
-│       ├── Unique.lean               -- Cauchy, approximation, uniqueness
-│       ├── Merge.lean                -- Common refinement (partition merge)
-│       ├── Partition.lean            -- Splitting, mesh bounds, two-point partition
-│       ├── Additive.lean             -- General additivity
-│       ├── GenConv.lean              -- General convergence (mesh → 0)
-│       └── Specialize.lean           -- Layer 1 = Layer 2 bridge
+│       ├── Unique.lean                   -- Cauchy, approximation, uniqueness
+│       ├── Merge.lean                    -- Common refinement (partition merge)
+│       ├── Partition.lean                -- Splitting, mesh bounds, two-point partition
+│       ├── Additive.lean                 -- General additivity (Layer 2)
+│       ├── GenConv.lean                  -- General convergence (mesh → 0)
+│       └── Specialize.lean              -- Layer 1 = Layer 2 bridge
 ├── LayerThree/
-│   ├── DyadicPartition.lean          -- Dyadic bounds and Cauchy sequence
-│   └── Map.lean                      -- Layer 3 sewn map and properties
-└── TODO.lean                         -- Layer 3 general additivity (see inside)
+│   ├── DyadicPartition.lean              -- Dyadic bounds and Cauchy sequence (Layer 3)
+│   ├── RefiCo.lean                       -- Block bound, refinement cost (Layer 3)
+│   ├── Insert.lean                       -- Partition.insertAt, findBlock, RS identity
+│   ├── MinSpacing.lean                   -- Pigeonhole: points_in_interval_le
+│   ├── MergeGap.lean                     -- Refinement gap with good/bad decomposition
+│   └── Map/
+│       ├── Unique.lean                   -- Cauchy, approximation, uniqueness (Layer 3)
+│       ├── MultiBlock.lean               -- insertAt convergence, merge multiplicity
+│       ├── Wrappers.lean                 -- Monotone-embedding wrappers
+│       ├── LeftComp.lean                 -- Left half comparison lemma
+│       ├── RightComp.lean                -- Right half comparison lemma
+│       └── Additive.lean                 -- General additivity (Layer 3)
 ```
 
-## Dependencies
+## Build status
 
-Built on [Mathlib](https://github.com/leanprover-community/mathlib4). Key imports include `Analysis.Normed.Group.Basic`, `Analysis.SpecialFunctions.Pow.Real`, `Topology.UniformSpace.Cauchy`, and `Topology.Algebra.InfiniteSum.Basic`.
+All files compile without warnings or sorries.
 
 ## References
 
