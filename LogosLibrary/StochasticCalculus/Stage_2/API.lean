@@ -4,6 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Adam Bornemann & Doctor Professor Baron von Wobble-Bob
 Filename: Stage_2/API.lean
 -/
+import LogosLibrary.StochasticCalculus.Stage_2.Axioms.TensorLift
 import LogosLibrary.StochasticCalculus.Stage_2.Integral.ItoLyons
 /-!
 # Stage 2 API — Rough Integration
