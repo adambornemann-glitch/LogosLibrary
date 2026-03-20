@@ -28,7 +28,8 @@ We construct the spectral measure via three routes that are proven to agree:
    ⟨E(a,b]ψ, ψ⟩ = lim_{ε→0⁺} (1/π) ∫_a^b Im⟨R(t+iε)ψ, ψ⟩ dt.
 
 3. **Cayley route**: The Cayley transform U = (A−i)(A+i)⁻¹ is unitary;
-   its spectral measure pulls back to give E for A.
+   its spectral measure pulls back to give E for A. It's README can be
+   found here [`CayleyTansform/`](CayleyTransform/README.md)
 
 
 
