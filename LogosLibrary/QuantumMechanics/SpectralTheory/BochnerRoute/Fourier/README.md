@@ -1,6 +1,6 @@
 # Fourier Uniqueness for Finite Measures
 
-> *A finite positive Borel measure on $\mathbb{R}$ is uniquely determined by its characteristic function.*
+> *A finite positive Borel measure on ℝ is uniquely determined by its characteristic function.*
 
 This is the **uniqueness half** of Bochner's theorem, formalised in Lean 4
 against Mathlib. It replaces the axiom `measure_eq_of_fourier_eq` that was
@@ -73,7 +73,7 @@ This is proved by splitting into half-lines $(-\infty,0]$ and $(0,\infty)$,
 evaluating each via the half-line integral
 
 $$
-\int_0^\infty e^{-at}\,dt = a^{-1}, \qquad \operatorname{Re}(a) > 0,
+\int_0^\infty e^{-at}\,dt = a^{-1}, \qquad \mathrm{Re}(a) > 0,
 $$
 
 (proved by FTC for Bochner integrals), and combining via the algebraic identity
@@ -116,14 +116,14 @@ $$
 \int_{\mathbb{R}} P_\varepsilon(s - \omega)\,d\mu(\omega)
 \;=\;
 \frac{1}{2\pi}\int_{\mathbb{R}}
-\operatorname{Re}\!\Big(e^{-ist}\,e^{-\varepsilon|t|}\,\varphi(t)\Big)\,dt.
+\mathrm{Re}\!\Big(e^{-ist}\,e^{-\varepsilon|t|}\,\varphi(t)\Big)\,dt.
 $$
 
 The proof uses:
 1. Fubini (justified by the global bound
    $P_\varepsilon(x) \leq 1/(\pi\varepsilon)$ making the joint integrand
    dominated by an integrable constant on the product space)
-2. A **conjugation trick**: $\operatorname{Re}(z) = \operatorname{Re}(\bar{z})$
+2. A **conjugation trick**: $\mathrm{Re}(z) = \mathrm{Re}(\bar{z})$
    applied to swap the sign in the exponential, converting $\int e^{-i\omega t}\,d\mu$
    into $\int e^{i\omega t}\,d\mu$
 
@@ -168,8 +168,9 @@ $\mu\{a\} = \mu\{b\} = 0$), dominated convergence gives:
 
 $$
 \int_{\mathbb{R}} \varphi_\varepsilon(\omega;\,a,b)\,d\mu(\omega)
-\;\xrightarrow{\varepsilon \to 0^+}\;
-\mu\!\left((a,b]\right).
+\;\longrightarrow\;
+\mu\!\left((a,b]\right)
+\qquad (\varepsilon \to 0^+).
 $$
 
 ### §6 · Agreement on intervals (`Agreement.lean`)
@@ -250,17 +251,17 @@ coefficients):
 | Coefficients | Result |
 |:---|:---|
 | $n=1,\; c_1=1$ | $f(0) \geq 0$ (real part) |
-| $n=2,\; c = (1,1)$ | $0 \leq 2\operatorname{Re} f(0) + \operatorname{Re}(f(t)+f(-t))$ |
-| $n=2,\; c = (1,-1)$ | $0 \leq 2\operatorname{Re} f(0) - \operatorname{Re}(f(t)+f(-t))$ |
+| $n=2,\; c = (1,1)$ | $0 \leq 2\mathrm{Re} f(0) + \mathrm{Re}(f(t)+f(-t))$ |
+| $n=2,\; c = (1,-1)$ | $0 \leq 2\mathrm{Re} f(0) - \mathrm{Re}(f(t)+f(-t))$ |
 | $n=2,\; c = (1,i)$ | imaginary part lower bound |
 | $n=2,\; c = (1,-i)$ | imaginary part upper bound |
 
 Under **Hermitian symmetry** $f(-t) = \overline{f(t)}$ (which holds for
 unitary correlation functions and Fourier transforms of positive measures,
-but does *not* follow from the $\operatorname{Re} \geq 0$ condition alone):
+but does *not* follow from the $\mathrm{Re} \geq 0$ condition alone):
 
 $$
-\|f(t)\| \;\leq\; \operatorname{Re}\,f(0).
+\|f(t)\| \;\leq\; \mathrm{Re}\,f(0).
 $$
 
 This is the **sharp norm bound**, proved by choosing the optimised coefficients
