@@ -138,9 +138,9 @@ indicator function:
 $$
 \varphi_\varepsilon(\omega;\,a,b) \;\longrightarrow\;
 \begin{cases}
-1   & \text{if } \omega \in (a,b), \\[4pt]
-\tfrac{1}{2} & \text{if } \omega = b, \\[4pt]
-0   & \text{if } \omega < a \text{ or } \omega > b.
+1 & \text{if } \omega \in (a,b), \\
+\tfrac{1}{2} & \text{if } \omega = b, \\
+0 & \text{if } \omega < a \text{ or } \omega > b.
 \end{cases}
 $$
 
