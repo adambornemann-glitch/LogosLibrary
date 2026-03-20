@@ -30,14 +30,8 @@ We construct the spectral measure via three routes that are proven to agree:
 3. **Cayley route**: The Cayley transform U = (A−i)(A+i)⁻¹ is unitary;
    its spectral measure pulls back to give E for A.
 
-## File structure
 
-| File | Lines | Description |
-|:---|:---|:---|
-| `Cayley.lean` | ~2000 | Cayley transform U = (A−i)(A+i)⁻¹ and spectral correspondence |
-| `Routes.lean` | ~1000 | Bochner and resolvent routes to spectral measures |
-| `FunctionalCalc.lean` | ~1400 | Borel functional calculus f(A) = ∫f dE |
-| `DiracOperator.lean` | ~2000 | Dirac equation, Clifford algebra, probability conservation |
+
 
 ## Dependency graph
 ```
